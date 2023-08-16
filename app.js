@@ -8,5 +8,8 @@ app.use(express.json());
 app.use(cors());
 
 app.use(cookieParser());
+const studentRoutes=require('./routes/studentRoutes');
+
+app.use('/api/v1',studentRoutes);
 
 module.exports = app;
