@@ -20,6 +20,7 @@ const {
   disconnectHandler,
   questionsHandler,
   stopProducingHandler,
+  raisHandHandler,
 } = require("./socketcontrollers");
 
 let worker;
@@ -77,7 +78,7 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   socket.on(SOCKET_EVENTS.CONSUMER_RESUME, (data) => {
     consumerResumeHandler(data, socket, worker);
   });
-  socket.on(SOCKET_EVENTS.CHAT_MSG_RECV, (data) => {
+  socket.on(SOCKET_EVENTS.CHAT_MSG_TO_SERVER, (data) => {
     chatMsgHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.QUESTION_POSTED, (data) => {
@@ -85,6 +86,9 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   });
   socket.on(SOCKET_EVENTS.STOP_PRODUCING, (data) => {
     stopProducingHandler(data, socket);
+  });
+  socket.on(SOCKET_EVENTS.RAISE_HAND_TO_SERVER, (data) => {
+    raisHandHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.DISCONNECT, () => {
     disconnectHandler(socket, worker, io);

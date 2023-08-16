@@ -18,13 +18,15 @@ const SOCKET_EVENTS = Object.freeze({
   TRANSPORT_CLOSE: "transportclose",
   PRODUCERCLOSE: "producerclose",
   PRODUCER_CLOSED: "producer-closed",
-  CHAT_MSG_RECV: "chat_msg_receive",
-  CHAT_MSG_SENT: "chat_msg_sent",
+  CHAT_MSG_TO_SERVER: "chat_msg_to_server",
+  CHAT_MSG_FROM_SERVER: "chat_msg_from_server",
   QUESTION_POSTED: "question_posted",
   QUESTION_SENT: "question_sent",
   PEER_LEAVED: "peer_leave",
   STOP_PRODUCING: "stop_producing",
   SOME_PRODUCER_CLOSED: "some_producer_closed",
+  RAISE_HAND_TO_SERVER: "raise_hand_to_server",
+  RAISE_HAND_FROM_SERVER: "raise_hand_from_server",
 });
 
 module.exports = SOCKET_EVENTS;

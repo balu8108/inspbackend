@@ -323,9 +323,12 @@ const removeItems = (items, socketId, type) => {
 };
 
 const chatMsgHandler = (data, socket) => {
-  const { roomId } = peers[socket.id];
+  const { roomId, peerDetails } = peers[socket.id];
   const { msg } = data;
-  io.to(roomId).emit(SOCKET_EVENTS.CHAT_MSG_SENT, { msg: msg }); // sent chat messages to all includin the one who sent it
+  socket.broadcast.to(roomId).emit(SOCKET_EVENTS.CHAT_MSG_FROM_SERVER, {
+    msg: msg,
+    peerDetails: peerDetails,
+  }); // broadcast message to all
 };
 
 const disconnectHandler = (socket, worker, io) => {
@@ -377,6 +380,14 @@ const stopProducingHandler = (data, socket) => {
   });
 };
 
+const raisHandHandler = (data, socket) => {
+  const { isHandRaised } = data;
+  const { roomId, peerDetails } = peers[socket.id];
+  socket.broadcast
+    .to(roomId)
+    .emit(SOCKET_EVENTS.RAISE_HAND_FROM_SERVER, { isHandRaised, peerDetails });
+};
+
 module.exports = {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -391,4 +402,5 @@ module.exports = {
   disconnectHandler,
   questionsHandler,
   stopProducingHandler,
+  raisHandHandler,
 };
