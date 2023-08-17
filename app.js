@@ -9,7 +9,8 @@ app.use(cors());
 
 app.use(cookieParser());
 const studentRoutes=require('./routes/studentRoutes');
+const meetingRoutes=require('./routes/meetingRoute');
 
 app.use('/api/v1',studentRoutes);
-
+app.use('/api/v1',meetingRoutes);
 module.exports = app;

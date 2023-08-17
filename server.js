@@ -41,6 +41,7 @@
 
 const app = require("./app");
 const dotenv = require("dotenv");
+
 const { sequelize} = require("./config/databaseConnection");
 
 dotenv.config({ path: "config/variable.env" });

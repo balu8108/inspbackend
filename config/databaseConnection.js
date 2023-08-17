@@ -8,6 +8,6 @@ const sequelize = new Sequelize({
   database: 'INSP',
 });
 
-const Student = require("../models/studentModel")
+const Student = require("../models/studentModel");
 
 module.exports = { sequelize, Student };
