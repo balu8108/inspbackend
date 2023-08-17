@@ -1,8 +1,8 @@
 const twilio = require('twilio');
 
-const twilioPhoneNumber = '+918287241918';
+const twilioPhoneNumber = '+16184924131';
 
-const client = twilio("AC650264f0854dfd7b95c7ce2c0d3c2cfc", "2a56e1bc0df42204d7d952f273ecd874");
+const client = twilio("AC6496c0d388d3e43505d872d23848d158", "306a0ee3f0bbbee3c785982ae748f0d9");
 
 async function sendMeetingInvitation(mobileNumber) {
   const message = `Hello! This is a reminder for our upcoming meeting. Please join us at the scheduled time. Looking forward to your participation!`;
