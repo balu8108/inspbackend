@@ -21,6 +21,7 @@ const {
   questionsHandler,
   stopProducingHandler,
   raisHandHandler,
+  uploadFileHandler,
 } = require("./socketcontrollers");
 
 let worker;
@@ -89,6 +90,9 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   });
   socket.on(SOCKET_EVENTS.RAISE_HAND_TO_SERVER, (data) => {
     raisHandHandler(data, socket);
+  });
+  socket.on(SOCKET_EVENTS.UPLOAD_FILE_TO_SERVER, (data) => {
+    uploadFileHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.DISCONNECT, () => {
     disconnectHandler(socket, worker, io);

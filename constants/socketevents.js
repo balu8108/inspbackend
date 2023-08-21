@@ -27,6 +27,8 @@ const SOCKET_EVENTS = Object.freeze({
   SOME_PRODUCER_CLOSED: "some_producer_closed",
   RAISE_HAND_TO_SERVER: "raise_hand_to_server",
   RAISE_HAND_FROM_SERVER: "raise_hand_from_server",
+  UPLOAD_FILE_TO_SERVER: "upload_file_to_server",
+  UPLOAD_FILE_FROM_SERVER: "upload_file_from_server",
 });
 
 module.exports = SOCKET_EVENTS;

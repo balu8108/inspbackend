@@ -388,6 +388,13 @@ const raisHandHandler = (data, socket) => {
     .emit(SOCKET_EVENTS.RAISE_HAND_FROM_SERVER, { isHandRaised, peerDetails });
 };
 
+const uploadFileHandler = (data, socket) => {
+  console.log("data file", data);
+  // will receive array of files and then broadcast to all
+  const { roomId } = peers[socket.id];
+  socket.broadcast.to(roomId).emit(SOCKET_EVENTS.UPLOAD_FILE_FROM_SERVER, data);
+};
+
 module.exports = {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -403,4 +410,5 @@ module.exports = {
   questionsHandler,
   stopProducingHandler,
   raisHandHandler,
+  uploadFileHandler,
 };
