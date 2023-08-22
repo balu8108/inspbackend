@@ -361,7 +361,9 @@ const disconnectHandler = (socket, worker, io) => {
 const questionsHandler = (data, socket) => {
   const { roomId } = peers[socket.id];
   // there can be polls mcq and qna
-  socket.broadcast.to(roomId).emit(SOCKET_EVENTS.QUESTION_SENT, { data });
+  socket.broadcast
+    .to(roomId)
+    .emit(SOCKET_EVENTS.QUESTION_SENT_FROM_SERVER, { data });
 };
 
 const stopProducingHandler = (data, socket) => {
@@ -380,7 +382,7 @@ const stopProducingHandler = (data, socket) => {
   });
 };
 
-const raisHandHandler = (data, socket) => {
+const raiseHandHandler = (data, socket) => {
   const { isHandRaised } = data;
   const { roomId, peerDetails } = peers[socket.id];
   socket.broadcast
@@ -409,6 +411,6 @@ module.exports = {
   disconnectHandler,
   questionsHandler,
   stopProducingHandler,
-  raisHandHandler,
+  raiseHandHandler,
   uploadFileHandler,
 };

@@ -20,7 +20,7 @@ const {
   disconnectHandler,
   questionsHandler,
   stopProducingHandler,
-  raisHandHandler,
+  raiseHandHandler,
   uploadFileHandler,
 } = require("./socketcontrollers");
 
@@ -82,18 +82,19 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   socket.on(SOCKET_EVENTS.CHAT_MSG_TO_SERVER, (data) => {
     chatMsgHandler(data, socket);
   });
-  socket.on(SOCKET_EVENTS.QUESTION_POSTED, (data) => {
+  socket.on(SOCKET_EVENTS.QUESTION_SENT_TO_SERVER, (data) => {
     questionsHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.STOP_PRODUCING, (data) => {
     stopProducingHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.RAISE_HAND_TO_SERVER, (data) => {
-    raisHandHandler(data, socket);
+    raiseHandHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.UPLOAD_FILE_TO_SERVER, (data) => {
     uploadFileHandler(data, socket);
   });
+
   socket.on(SOCKET_EVENTS.DISCONNECT, () => {
     disconnectHandler(socket, worker, io);
     console.log("disconnected client with socket id", socket.id);
