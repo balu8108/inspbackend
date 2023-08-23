@@ -1,8 +1,40 @@
 const express = require("express");
 const app = express();
-//const bodyParser = require('body-parser');
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const http = require("http");
+const socketIo = require("socket.io");
+const mediasoup = require("mediasoup");
+const { SOCKET_EVENTS } = require("./constants");
+const {
+  joinRoomPreviewHandler,
+  joinRoomHandler,
+  createWebRtcTransportHandler,
+  connectWebRTCTransportSendHandler,
+  transportProduceHandler,
+  getProducersHandler,
+  connectWebRTCTransportRecvHandler,
+  consumeHandler,
+  consumerResumeHandler,
+  chatMsgHandler,
+  disconnectHandler,
+  questionsHandler,
+  stopProducingHandler,
+  raiseHandHandler,
+  uploadFileHandler,
+} = require("./socketcontrollers");
+
+let worker;
+
+(async () => {
+  worker = await mediasoup.createWorker({
+    logLevel: "warn",
+    rtcMinPort: 10000,
+    rtcMaxPort: 10100,
+  });
+
+  console.log("worker created", worker.pid);
+})();
 
 app.use(express.json());
 app.use(cors());
@@ -11,6 +43,64 @@ app.use(cookieParser());
 const studentRoutes=require('./routes/studentRoutes');
 const meetingRoutes=require('./routes/meetingRoute');
 
-app.use('/api/v1',studentRoutes);
-app.use('/api/v1',meetingRoutes);
-module.exports = app;
+const httpServer = http.createServer(app);
+const io = socketIo(httpServer, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
+
+io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
+  console.log("connected client with socket id", socket.id);
+
+  socket.on(SOCKET_EVENTS.JOIN_ROOM_PREVIEW, (data, callback) => {
+    joinRoomPreviewHandler(data, callback, socket, io);
+  });
+  socket.on(SOCKET_EVENTS.JOIN_ROOM, (data, callback) => {
+    joinRoomHandler(data, callback, socket, io, worker);
+  });
+  socket.on(SOCKET_EVENTS.CREATE_WEB_RTC_TRANSPORT, (data, callback) => {
+    createWebRtcTransportHandler(data, callback, socket, io, worker);
+  });
+  socket.on(SOCKET_EVENTS.TRANSPORT_SEND_CONNECT, (data) => {
+    connectWebRTCTransportSendHandler(data, socket, worker);
+  });
+  socket.on(SOCKET_EVENTS.TRANSPORT_PRODUCE, (data, callback) => {
+    transportProduceHandler(data, callback, socket, worker);
+  });
+  socket.on(SOCKET_EVENTS.GET_PRODUCERS, (callback) => {
+    getProducersHandler(callback, socket, worker);
+  });
+  socket.on(SOCKET_EVENTS.TRANSPORT_RECV_CONNECT, (data) => {
+    connectWebRTCTransportRecvHandler(data, socket, worker);
+  });
+  socket.on(SOCKET_EVENTS.CONSUME, (data, callback) => {
+    consumeHandler(data, callback, socket, worker);
+  });
+  socket.on(SOCKET_EVENTS.CONSUMER_RESUME, (data) => {
+    consumerResumeHandler(data, socket, worker);
+  });
+  socket.on(SOCKET_EVENTS.CHAT_MSG_TO_SERVER, (data) => {
+    chatMsgHandler(data, socket);
+  });
+  socket.on(SOCKET_EVENTS.QUESTION_SENT_TO_SERVER, (data) => {
+    questionsHandler(data, socket);
+  });
+  socket.on(SOCKET_EVENTS.STOP_PRODUCING, (data) => {
+    stopProducingHandler(data, socket);
+  });
+  socket.on(SOCKET_EVENTS.RAISE_HAND_TO_SERVER, (data) => {
+    raiseHandHandler(data, socket);
+  });
+  socket.on(SOCKET_EVENTS.UPLOAD_FILE_TO_SERVER, (data) => {
+    uploadFileHandler(data, socket);
+  });
+
+  socket.on(SOCKET_EVENTS.DISCONNECT, () => {
+    disconnectHandler(socket, worker, io);
+    console.log("disconnected client with socket id", socket.id);
+  });
+});
+
+module.exports = httpServer;
