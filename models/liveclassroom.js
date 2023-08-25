@@ -10,6 +10,15 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       LiveClassRoom.belongsTo(models.Subject, { foreignKey: "subjectId" });
+      LiveClassRoom.hasOne(models.LiveClassRoomDetail, {
+        foreignKey: "classRoomId",
+      });
+      LiveClassRoom.hasMany(models.LiveClassRoomRecording, {
+        foreignKey: "classRoomId",
+      });
+      LiveClassRoom.hasMany(models.LiveClassRoomFile, {
+        foreignKey: "classRoomId",
+      });
     }
   }
   LiveClassRoom.init(
@@ -19,6 +28,8 @@ module.exports = (sequelize, DataTypes) => {
       scheduledStartTime: DataTypes.TIME,
       scheduledEndTime: DataTypes.TIME,
       subjectId: DataTypes.INTEGER,
+      mentorId: DataTypes.STRING,
+      mentorName: DataTypes.STRING,
     },
     {
       sequelize,

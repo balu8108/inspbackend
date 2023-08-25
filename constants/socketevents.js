@@ -35,8 +35,11 @@ const SOCKET_EVENTS = Object.freeze({
   QUESTION_SENT_FROM_SERVER: "question_sent_from_server",
   START_RECORDING: "start_recording",
   STOP_RECORDING: "stop_recording",
-  PRODUCER_PAUSE: "producer_pause",
+  PRODUCER_PAUSE: "producer_pause", // for pausing producer if from frontend it is paused
   PRODUCER_RESUME: "producer_resume",
+  PRODUCER_PAUSED: "producer_paused", // for emitting producer_paused event to pause all the associated consumers in frontend
+  PRODUCER_RESUMED: "producer_resumed",
+  LEAVE_ROOM: "leave_room",
 });
 
 module.exports = SOCKET_EVENTS;

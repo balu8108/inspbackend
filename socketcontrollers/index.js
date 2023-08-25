@@ -284,9 +284,17 @@ const consumeHandler = async (data, callback, socket, worker) => {
       });
 
       consumer.on(SOCKET_EVENTS.PRODUCERPAUSE, () => {
-        console.log("producer paused");
-        console.log("producer id", remoteProducerId);
-        console.log("app data", appData);
+        socket.emit(SOCKET_EVENTS.PRODUCER_PAUSED, {
+          appData,
+          remoteProducerId,
+        });
+      });
+      consumer.on(SOCKET_EVENTS.PRODUCERRESUME, () => {
+        console.log("producer resmue");
+        socket.emit(SOCKET_EVENTS.PRODUCER_RESUMED, {
+          appData,
+          remoteProducerId,
+        });
       });
 
       // on transport close
@@ -372,6 +380,11 @@ const disconnectHandler = (socket, worker, io) => {
       });
     }
   }
+  console.log("rooms", rooms);
+  console.log("peers", peers);
+  console.log("producers", producers);
+  console.log("consumers", consumers);
+  console.log("transports", transports);
 };
 
 const questionsHandler = (data, socket) => {
@@ -524,6 +537,21 @@ const producerPauseHandler = (data, socket) => {
   }
 };
 
+const producerResumeHandler = (data, socket) => {
+  console.log("producer resume handler");
+  const { appData, producerId } = data;
+  const { roomId } = peers[socket.id];
+  const producer = producers.find(
+    (obj) =>
+      obj.roomId === roomId &&
+      obj.producer.id === producerId &&
+      obj.socketId === socket.id
+  );
+  if (producer) {
+    producer.producer.resume(); // pause the producer
+  }
+};
+
 module.exports = {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -542,4 +570,5 @@ module.exports = {
   uploadFileHandler,
   startRecordingHandler,
   producerPauseHandler,
+  producerResumeHandler,
 };

@@ -24,6 +24,7 @@ const {
   uploadFileHandler,
   startRecordingHandler,
   producerPauseHandler,
+  producerResumeHandler,
 } = require("./socketcontrollers");
 
 let worker;
@@ -99,8 +100,15 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   socket.on(SOCKET_EVENTS.PRODUCER_PAUSE, (data) => {
     producerPauseHandler(data, socket);
   });
+  socket.on(SOCKET_EVENTS.PRODUCER_RESUME, (data) => {
+    producerResumeHandler(data, socket);
+  });
   socket.on(SOCKET_EVENTS.START_RECORDING, (data) => {
     startRecordingHandler(data, socket);
+  });
+  socket.on(SOCKET_EVENTS.LEAVE_ROOM, () => {
+    disconnectHandler(socket, worker, io);
+    console.log("Client leaved the room", socket.id);
   });
   socket.on(SOCKET_EVENTS.DISCONNECT, () => {
     disconnectHandler(socket, worker, io);
