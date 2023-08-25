@@ -17,6 +17,8 @@ const SOCKET_EVENTS = Object.freeze({
   CLOSE: "close",
   TRANSPORT_CLOSE: "transportclose",
   PRODUCERCLOSE: "producerclose",
+  PRODUCERPAUSE: "producerpause",
+  PRODUCERRESUME: "producerresume",
   PRODUCER_CLOSED: "producer-closed",
   CHAT_MSG_TO_SERVER: "chat_msg_to_server",
   CHAT_MSG_FROM_SERVER: "chat_msg_from_server",
@@ -31,6 +33,10 @@ const SOCKET_EVENTS = Object.freeze({
   UPLOAD_FILE_FROM_SERVER: "upload_file_from_server",
   QUESTION_SENT_TO_SERVER: "question_sent_to_server",
   QUESTION_SENT_FROM_SERVER: "question_sent_from_server",
+  START_RECORDING: "start_recording",
+  STOP_RECORDING: "stop_recording",
+  PRODUCER_PAUSE: "producer_pause",
+  PRODUCER_RESUME: "producer_resume",
 });
 
 module.exports = SOCKET_EVENTS;

@@ -23,3 +23,17 @@ For installing node modules we can use the command `npm i --force`
 ```bash
 npx sequelize-cli model:generate --name User --attributes firstName:string,lastName:string,email:string
 ```
+
+### Migration files info :-
+- To add automatice dateTime field in createdAt field add a defaultValue 
+
+```bash
+  defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+```
+- To add automatice dateTime field in updatedAt field add a defaultValue 
+
+```bash
+  defaultValue: Sequelize.literal(
+          "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+        ),
+```

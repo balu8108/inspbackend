@@ -22,6 +22,8 @@ const {
   stopProducingHandler,
   raiseHandHandler,
   uploadFileHandler,
+  startRecordingHandler,
+  producerPauseHandler,
 } = require("./socketcontrollers");
 
 let worker;
@@ -94,7 +96,12 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   socket.on(SOCKET_EVENTS.UPLOAD_FILE_TO_SERVER, (data) => {
     uploadFileHandler(data, socket);
   });
-
+  socket.on(SOCKET_EVENTS.PRODUCER_PAUSE, (data) => {
+    producerPauseHandler(data, socket);
+  });
+  socket.on(SOCKET_EVENTS.START_RECORDING, (data) => {
+    startRecordingHandler(data, socket);
+  });
   socket.on(SOCKET_EVENTS.DISCONNECT, () => {
     disconnectHandler(socket, worker, io);
     console.log("disconnected client with socket id", socket.id);

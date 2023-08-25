@@ -9,6 +9,10 @@ let {
 const uuidv4 = require("uuid").v4;
 
 const { SOCKET_EVENTS, mediaCodecs } = require("../constants");
+const config = require("./config");
+const { getPort, releasePort } = require("./port");
+const FFmpeg = require("./ffmpeg");
+const RECORD_PROCESS_NAME = "FFmpeg";
 
 const createOrJoinRoomFunction = async (data, socketId, worker) => {
   // check if create room have this id or not
@@ -182,6 +186,7 @@ const addProducer = (producer, roomId, socket) => {
     ...peers[socket.id],
     producers: [...peers[socket.id].producers, producer.id],
   };
+  console.log("add producer", producers);
 };
 
 const transportProduceHandler = async (data, callback, socket, worker) => {
@@ -255,7 +260,12 @@ const addConsumer = (consumer, roomId, socket) => {
 };
 
 const consumeHandler = async (data, callback, socket, worker) => {
-  const { rtpCapabilities, remoteProducerId, serverConsumerTransportId } = data;
+  const {
+    rtpCapabilities,
+    remoteProducerId,
+    serverConsumerTransportId,
+    appData,
+  } = data;
 
   try {
     const { roomId } = peers[socket.id];
@@ -271,6 +281,12 @@ const consumeHandler = async (data, callback, socket, worker) => {
         producerId: remoteProducerId,
         rtpCapabilities,
         paused: true,
+      });
+
+      consumer.on(SOCKET_EVENTS.PRODUCERPAUSE, () => {
+        console.log("producer paused");
+        console.log("producer id", remoteProducerId);
+        console.log("app data", appData);
       });
 
       // on transport close
@@ -397,6 +413,117 @@ const uploadFileHandler = (data, socket) => {
   socket.broadcast.to(roomId).emit(SOCKET_EVENTS.UPLOAD_FILE_FROM_SERVER, data);
 };
 
+const publishProducerRTPStream = async (peer, producer, router) => {
+  const rtpTransportConfig = config.plainRtpTransport;
+  // create plain transport
+  const rtpTransport = await router.createPlainTransport(rtpTransportConfig);
+  const remoteRtpPort = await getPort();
+  let remoteRtcpPort;
+  // If rtpTransport rtcpMux is false also set the receiver RTCP ports, require for Gstreamer but not for ffmpeg
+  if (!rtpTransportConfig.rtcpMux) {
+    remoteRtcpPort = await getPort();
+  }
+  await rtpTransport.connect({
+    ip: "127.0.0.1",
+    port: remoteRtpPort,
+    rtcpPort: remoteRtcpPort,
+  });
+
+  const codecs = [];
+  // Codec passed to the RTP Consumer must match the codec in the Mediasoup router rtpCapabilities
+  const routerCodec = router.rtpCapabilities.codecs.find(
+    (codec) => codec.kind === producer.kind
+  );
+  codecs.push(routerCodec);
+
+  const rtpCapabilities = {
+    codecs,
+    rtcpFeedback: [],
+  };
+  const rtpConsumer = await rtpTransport.consume({
+    producerId: producer.id,
+    rtpCapabilities,
+    paused: true,
+  });
+
+  addConsumer(rtpConsumer, peer.roomId, peer.socket);
+  // consumers
+  console.log("record consumer", consumers);
+  return {
+    remoteRtpPort,
+    remoteRtcpPort,
+    localRtpPort: rtpTransport.tuple.localPort,
+    localRtcpPort: rtpTransport.rtcpTuple
+      ? rtpTransport.rtcpTuple.localPort
+      : undefined,
+    rtpCapabilities,
+    rtpParameters: rtpConsumer.rtpParameters,
+  };
+};
+
+const getProcess = (recordInfo) => {
+  switch (RECORD_PROCESS_NAME) {
+    case "FFmpeg":
+    default:
+      return new FFmpeg(recordInfo);
+  }
+};
+
+const startRecord = async (peer, producer, router) => {
+  let recordInfo = {};
+  recordInfo["producerId"] = producer.id;
+  recordInfo[producer.kind] = await publishProducerRTPStream(
+    peer,
+    producer,
+    router
+  );
+  recordInfo.fileName = producer.id;
+  console.log("Record info", recordInfo);
+  peer.recordProcess = getProcess(recordInfo);
+  setTimeout(async () => {
+    for (const consumer of consumers) {
+      if (
+        consumer.socketId === peer.socket.id &&
+        consumer.roomId === peer.roomId
+      ) {
+        await consumer.consumer.resume();
+        await consumer.consumer.requestKeyFrame();
+      }
+    }
+  }, 1000);
+};
+const startRecordingHandler = (data, socket) => {
+  const peer = peers[socket.id];
+  const router = rooms[peer.roomId].router;
+  const { _appData, _id } = data; // from user
+
+  const peerProducer = producers.find(
+    (obj) =>
+      obj.roomId === peer.roomId &&
+      obj.socketId === socket.id &&
+      obj.producer.id === _id
+  );
+
+  // At the moment we are expecting video type mainly screen share one
+  if (peerProducer) {
+    startRecord(peer, peerProducer.producer, router);
+  }
+};
+
+const producerPauseHandler = (data, socket) => {
+  const { appData, producerId } = data;
+  const { roomId } = peers[socket.id];
+  const producer = producers.find(
+    (obj) =>
+      obj.roomId === roomId &&
+      obj.producer.id === producerId &&
+      obj.socketId === socket.id
+  );
+  if (producer) {
+    producer.producer.pause(); // pause the producer
+  }
+};
+
 module.exports = {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -413,4 +540,6 @@ module.exports = {
   stopProducingHandler,
   raiseHandHandler,
   uploadFileHandler,
+  startRecordingHandler,
+  producerPauseHandler,
 };
