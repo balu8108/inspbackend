@@ -9,6 +9,11 @@ module.exports.createSdpText = (rtpParameters) => {
   t=0 0`;
   const { video, audio } = rtpParameters;
 
+  const metaInfo = {
+    isVideoAvailable: false,
+    isAudioAvailable: false,
+  };
+
   // Video codec info
   if (video) {
     const videoCodecInfo = getCodecInfoFromRtpParameters(
@@ -20,6 +25,7 @@ module.exports.createSdpText = (rtpParameters) => {
     m=video ${video.remoteRtpPort} RTP/AVP ${videoCodecInfo.payloadType} 
     a=rtpmap:${videoCodecInfo.payloadType} ${videoCodecInfo.codecName}/${videoCodecInfo.clockRate}
     a=sendonly`;
+    metaInfo.isVideoAvailable = true;
   }
 
   if (audio) {
@@ -33,7 +39,8 @@ module.exports.createSdpText = (rtpParameters) => {
     a=rtpmap:${audioCodecInfo.payloadType} ${audioCodecInfo.codecName}/${audioCodecInfo.clockRate}/${audioCodecInfo.channels}
     a=sendonly
     `;
+    metaInfo.isAudioAvailable = true;
   }
-
-  return sdpString;
+  console.log({ sdpString, ...metaInfo });
+  return { sdpString, ...metaInfo };
 };

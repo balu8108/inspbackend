@@ -6,8 +6,7 @@ const validateCreationOfLiveClass = (data) => {
     data.scheduledStartTime &&
     data.scheduledEndTime &&
     data.agenda &&
-    data.description &&
-    data.subjectId
+    data.description
   );
 };
 module.exports = {

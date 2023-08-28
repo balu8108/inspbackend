@@ -9,7 +9,6 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      LiveClassRoom.belongsTo(models.Subject, { foreignKey: "subjectId" });
       LiveClassRoom.hasOne(models.LiveClassRoomDetail, {
         foreignKey: "classRoomId",
       });
@@ -27,7 +26,6 @@ module.exports = (sequelize, DataTypes) => {
       scheduledDate: DataTypes.DATE,
       scheduledStartTime: DataTypes.TIME,
       scheduledEndTime: DataTypes.TIME,
-      subjectId: DataTypes.INTEGER,
       mentorId: DataTypes.STRING,
       mentorName: DataTypes.STRING,
       muteAllStudents: DataTypes.BOOLEAN,

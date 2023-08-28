@@ -461,7 +461,7 @@ const publishProducerRTPStream = async (peer, producer, router) => {
 
   addConsumer(rtpConsumer, peer.roomId, peer.socket);
   // consumers
-  console.log("record consumer", consumers);
+
   return {
     remoteRtpPort,
     remoteRtcpPort,
@@ -482,15 +482,19 @@ const getProcess = (recordInfo) => {
   }
 };
 
-const startRecord = async (peer, producer, router) => {
+const startRecord = async (peer, peerProducersList, router) => {
   let recordInfo = {};
-  recordInfo["producerId"] = producer.id;
-  recordInfo[producer.kind] = await publishProducerRTPStream(
-    peer,
-    producer,
-    router
-  );
-  recordInfo.fileName = producer.id;
+
+  for (const obj of peerProducersList) {
+    recordInfo["producerId"] = obj.producer.id;
+    recordInfo[obj.producer.kind] = await publishProducerRTPStream(
+      peer,
+      obj.producer,
+      router
+    );
+  }
+
+  recordInfo.fileName = `${peer.roomId}-${Date.now().toString()} `;
   console.log("Record info", recordInfo);
   peer.recordProcess = getProcess(recordInfo);
   setTimeout(async () => {
@@ -505,21 +509,23 @@ const startRecord = async (peer, producer, router) => {
     }
   }, 1000);
 };
+
 const startRecordingHandler = (data, socket) => {
   const peer = peers[socket.id];
   const router = rooms[peer.roomId].router;
-  const { _appData, _id } = data; // from user
-
-  const peerProducer = producers.find(
+  // expecting some producers like screenshare and audio share of mentor to record using FFmpeg
+  const { producerScreenShare, producerAudioShare } = data;
+  const peerProducersList = producers.filter(
     (obj) =>
       obj.roomId === peer.roomId &&
       obj.socketId === socket.id &&
-      obj.producer.id === _id
+      (obj.producer.id === producerScreenShare?._id ||
+        obj.producer.id === producerAudioShare?._id)
   );
+  console.log("peer producer list", peerProducersList);
 
-  // At the moment we are expecting video type mainly screen share one
-  if (peerProducer) {
-    startRecord(peer, peerProducer.producer, router);
+  if (peerProducersList.length > 0) {
+    startRecord(peer, peerProducersList, router);
   }
 };
 

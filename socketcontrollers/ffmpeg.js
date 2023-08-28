@@ -8,12 +8,19 @@ module.exports = class FFmpeg {
     this._rtpParameters = rtpParameters;
     this._process = undefined;
     this._observer = new EventEmitter();
+    this._isAudioAvailable = false;
+    this._isVideoAvailable = false;
     this._createProcess();
   }
 
   _createProcess() {
-    const sdpString = createSdpText(this._rtpParameters);
+    const { sdpString, isAudioAvailable, isVideoAvailable } = createSdpText(
+      this._rtpParameters
+    );
     const sdpStream = convertStringToStream(sdpString);
+
+    this._isAudioAvailable = isAudioAvailable;
+    this._isVideoAvailable = isVideoAvailable;
 
     console.log("createProcess() [sdpString:%s]", sdpString);
 
@@ -82,8 +89,12 @@ module.exports = class FFmpeg {
       "pipe:0",
     ];
 
-    // commandArgs = commandArgs.concat(this._videoArgs);
-    commandArgs = commandArgs.concat(this._audioArgs);
+    if (this._isVideoAvailable) {
+      commandArgs = commandArgs.concat(this._videoArgs);
+    }
+    if (this._isAudioAvailable) {
+      commandArgs = commandArgs.concat(this._audioArgs);
+    }
 
     commandArgs = commandArgs.concat([
       // "-flags",

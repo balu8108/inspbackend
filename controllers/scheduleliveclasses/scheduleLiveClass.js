@@ -26,6 +26,8 @@ const createLiveClass = async (req, res) => {
         scheduledDate: body.scheduledDate,
         scheduledStartTime: body.scheduledStartTime,
         scheduledEndTime: body.scheduledEndTime,
+        muteAllStudents: body.muteAllStudents || false,
+        blockStudentsCamera: body.blockStudentsCamera || false,
         mentorId: body.mentorId || 1,
         mentorName: body.mentorName || "Mentor",
       });
@@ -57,4 +59,25 @@ const createLiveClass = async (req, res) => {
     return res.status(400).json({ error: "Some fields are missing!!" });
   }
 };
-module.exports = { createLiveClass, getAllLiveClasses };
+
+const getLiveClassDetails = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    if (!roomId) {
+      return res.status(400).json({ error: "Room Id is required" });
+    }
+    const getLiveClassRoom = await LiveClassRoom.findOne({
+      where: { roomId: roomId },
+      include: [LiveClassRoomDetail],
+    });
+
+    if (getLiveClassRoom) {
+      return res.status(200).json({ data: getLiveClassRoom });
+    } else {
+      throw new Error("No Live Class Found with this Room Id");
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+};
+module.exports = { createLiveClass, getAllLiveClasses, getLiveClassDetails };
