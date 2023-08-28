@@ -30,6 +30,8 @@ module.exports = (sequelize, DataTypes) => {
       subjectId: DataTypes.INTEGER,
       mentorId: DataTypes.STRING,
       mentorName: DataTypes.STRING,
+      muteAllStudents: DataTypes.BOOLEAN,
+      blockStudentsCamera: DataTypes.BOOLEAN,
     },
     {
       sequelize,

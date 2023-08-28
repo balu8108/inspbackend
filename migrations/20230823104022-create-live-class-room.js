@@ -21,14 +21,6 @@ module.exports = {
       scheduledEndTime: {
         type: Sequelize.TIME,
       },
-      subjectId: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: "subjects",
-          key: "id",
-        },
-        onDelete: "CASCADE",
-      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

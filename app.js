@@ -5,7 +5,11 @@ const cors = require("cors");
 const http = require("http");
 const socketIo = require("socket.io");
 const mediasoup = require("mediasoup");
+const bodyParser = require("body-parser");
 const { SOCKET_EVENTS } = require("./constants");
+const { routesConstants } = require("./constants");
+const scheduleLiveClass = require("./routes/scheduleliveclasses/scheduleLiveClass");
+const genericRoutes = require("./routes/genericroutes/genericroutes");
 const {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -40,9 +44,11 @@ let worker;
 })();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
-
 app.use(cookieParser());
+app.use(routesConstants.SCHEDULE_LIVE_CLASS, scheduleLiveClass);
+app.use(routesConstants.GENERIC_API, genericRoutes);
 
 const httpServer = http.createServer(app);
 const io = socketIo(httpServer, {
