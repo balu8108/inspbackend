@@ -6,8 +6,10 @@ const router = express.Router();
 const { routesConstants } = require("../../constants");
 const {
   getAllSubjects,
+  openFile,
 } = require("../../controllers/genericcontrollers/genericcontrollers");
 
 router.get(routesConstants.GET_ALL_SUBJECTS, getAllSubjects);
+router.get(`${routesConstants.OPEN_FILE}/:id`, openFile);
 
 module.exports = router;

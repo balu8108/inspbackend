@@ -1,3 +1,9 @@
 const generateRandomCharacters = require("./generateRandomCharacters");
 const { validateCreationOfLiveClass } = require("./validators");
-module.exports = { generateRandomCharacters, validateCreationOfLiveClass };
+const { uploadFilesToS3, generatePresignedUrls } = require("./awsFunctions");
+module.exports = {
+  generateRandomCharacters,
+  validateCreationOfLiveClass,
+  uploadFilesToS3,
+  generatePresignedUrls,
+};

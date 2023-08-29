@@ -24,6 +24,14 @@ For installing node modules we can use the command `npm i --force`
 npx sequelize-cli model:generate --name User --attributes firstName:string,lastName:string,email:string
 ```
 
+- The below will create one file in migration only not model (Good if we want to change db schema)
+- Please note: after adding new columns or any changes to schema make sure it is added or removed from main model file
+
+```bash
+npx sequelize-cli migration:generate --name modify-users-table
+
+```
+
 ### Migration files info :-
 - To add automatice dateTime field in createdAt field add a defaultValue 
 

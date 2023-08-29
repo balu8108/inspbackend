@@ -6,6 +6,7 @@ const http = require("http");
 const socketIo = require("socket.io");
 const mediasoup = require("mediasoup");
 const bodyParser = require("body-parser");
+const upload = require("express-fileupload");
 const { SOCKET_EVENTS } = require("./constants");
 const { routesConstants } = require("./constants");
 const scheduleLiveClass = require("./routes/scheduleliveclasses/scheduleLiveClass");
@@ -30,7 +31,17 @@ const {
   producerPauseHandler,
   producerResumeHandler,
 } = require("./socketcontrollers");
-
+app.use(express.json());
+app.use(bodyParser.json());
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+  })
+);
+app.use(express.urlencoded({ extended: true }));
+app.use(upload()); // this is required for uploading multipart/formData
+app.use(cors());
+app.use(cookieParser());
 let worker;
 
 (async () => {
@@ -43,10 +54,6 @@ let worker;
   console.log("worker created", worker.pid);
 })();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cors());
-app.use(cookieParser());
 app.use(routesConstants.SCHEDULE_LIVE_CLASS, scheduleLiveClass);
 app.use(routesConstants.GENERIC_API, genericRoutes);
 

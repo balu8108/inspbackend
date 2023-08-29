@@ -495,8 +495,14 @@ const startRecord = async (peer, peerProducersList, router) => {
   }
 
   recordInfo.fileName = `${peer.roomId}-${Date.now().toString()} `;
-  console.log("Record info", recordInfo);
-  peer.recordProcess = getProcess(recordInfo);
+
+  if (peer.recordProcess) {
+    peer.recordProcess.kill();
+    return;
+  }
+  ffmpegProcess = getProcess(recordInfo);
+  peers[peer.socket.id] = { ...peer, recordProcess: ffmpegProcess };
+
   setTimeout(async () => {
     for (const consumer of consumers) {
       if (
@@ -522,10 +528,10 @@ const startRecordingHandler = (data, socket) => {
       (obj.producer.id === producerScreenShare?._id ||
         obj.producer.id === producerAudioShare?._id)
   );
-  console.log("peer producer list", peerProducersList);
 
   if (peerProducersList.length > 0) {
     startRecord(peer, peerProducersList, router);
+    console.log("peer recording..", peer);
   }
 };
 
