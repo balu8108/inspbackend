@@ -5,7 +5,12 @@ const cors = require("cors");
 const http = require("http");
 const socketIo = require("socket.io");
 const mediasoup = require("mediasoup");
+const bodyParser = require("body-parser");
+const upload = require("express-fileupload");
 const { SOCKET_EVENTS } = require("./constants");
+const { routesConstants } = require("./constants");
+const scheduleLiveClass = require("./routes/scheduleliveclasses/scheduleLiveClass");
+const genericRoutes = require("./routes/genericroutes/genericroutes");
 const {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -22,8 +27,21 @@ const {
   stopProducingHandler,
   raiseHandHandler,
   uploadFileHandler,
+  startRecordingHandler,
+  producerPauseHandler,
+  producerResumeHandler,
 } = require("./socketcontrollers");
-
+app.use(express.json());
+app.use(bodyParser.json());
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+  })
+);
+app.use(express.urlencoded({ extended: true }));
+app.use(upload()); // this is required for uploading multipart/formData
+app.use(cors());
+app.use(cookieParser());
 let worker;
 
 (async () => {
@@ -36,12 +54,10 @@ let worker;
   console.log("worker created", worker.pid);
 })();
 
-app.use(express.json());
-app.use(cors());
 
-app.use(cookieParser());
-const studentRoutes=require('./routes/studentRoutes');
-const meetingRoutes=require('./routes/meetingRoute');
+
+app.use(routesConstants.SCHEDULE_LIVE_CLASS, scheduleLiveClass);
+app.use(routesConstants.GENERIC_API, genericRoutes);
 
 const httpServer = http.createServer(app);
 const io = socketIo(httpServer, {
@@ -96,7 +112,19 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   socket.on(SOCKET_EVENTS.UPLOAD_FILE_TO_SERVER, (data) => {
     uploadFileHandler(data, socket);
   });
-
+  socket.on(SOCKET_EVENTS.PRODUCER_PAUSE, (data) => {
+    producerPauseHandler(data, socket);
+  });
+  socket.on(SOCKET_EVENTS.PRODUCER_RESUME, (data) => {
+    producerResumeHandler(data, socket);
+  });
+  socket.on(SOCKET_EVENTS.START_RECORDING, (data) => {
+    startRecordingHandler(data, socket);
+  });
+  socket.on(SOCKET_EVENTS.LEAVE_ROOM, () => {
+    disconnectHandler(socket, worker, io);
+    console.log("Client leaved the room", socket.id);
+  });
   socket.on(SOCKET_EVENTS.DISCONNECT, () => {
     disconnectHandler(socket, worker, io);
     console.log("disconnected client with socket id", socket.id);

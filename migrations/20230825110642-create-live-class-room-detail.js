@@ -2,15 +2,40 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("Subjects", {
+    await queryInterface.createTable("LiveClassRoomDetails", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      subjectName: {
+      chapterId: {
         type: Sequelize.STRING,
+        allowNull: false,
+      },
+      chapterName: {
+        type: Sequelize.STRING(512),
+      },
+      topicId: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      topicName: {
+        type: Sequelize.STRING(512),
+      },
+      agenda: {
+        type: Sequelize.STRING(1024),
+      },
+      description: {
+        type: Sequelize.STRING(2048),
+      },
+      classRoomId: {
+        type: Sequelize.INTEGER,
+        references: {
+          model: "liveclassrooms",
+          key: "id",
+        },
+        onDelete: "CASCADE",
       },
       createdAt: {
         allowNull: false,
@@ -27,6 +52,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("Subjects");
+    await queryInterface.dropTable("LiveClassRoomDetails");
   },
 };

@@ -1,7 +1,7 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-  class Subject extends Model {
+  class LiveClassRoomFile extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -9,17 +9,20 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      Subject.hasMany(models.LiveClassRoom, { foreignKey: "subjectId" });
+      LiveClassRoomFile.belongsTo(models.LiveClassRoom, {
+        foreignKey: "classRoomId",
+      });
     }
   }
-  Subject.init(
+  LiveClassRoomFile.init(
     {
-      subjectName: DataTypes.STRING,
+      url: DataTypes.STRING,
+      classRoomId: DataTypes.INTEGER,
     },
     {
       sequelize,
-      modelName: "Subject",
+      modelName: "LiveClassRoomFile",
     }
   );
-  return Subject;
+  return LiveClassRoomFile;
 };

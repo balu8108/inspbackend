@@ -2,24 +2,23 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("LiveClassRooms", {
+    await queryInterface.createTable("LiveClassRoomFiles", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      roomId: {
+      url: {
         type: Sequelize.STRING,
       },
-      scheduledDate: {
-        type: Sequelize.DATE,
-      },
-      scheduledStartTime: {
-        type: Sequelize.TIME,
-      },
-      scheduledEndTime: {
-        type: Sequelize.TIME,
+      classRoomId: {
+        type: Sequelize.INTEGER,
+        references: {
+          model: "liveclassrooms",
+          key: "id",
+        },
+        onDelete: "CASCADE",
       },
       createdAt: {
         allowNull: false,
@@ -36,6 +35,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("LiveClassRooms");
+    await queryInterface.dropTable("LiveClassRoomFiles");
   },
 };

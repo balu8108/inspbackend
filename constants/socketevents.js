@@ -17,6 +17,8 @@ const SOCKET_EVENTS = Object.freeze({
   CLOSE: "close",
   TRANSPORT_CLOSE: "transportclose",
   PRODUCERCLOSE: "producerclose",
+  PRODUCERPAUSE: "producerpause",
+  PRODUCERRESUME: "producerresume",
   PRODUCER_CLOSED: "producer-closed",
   CHAT_MSG_TO_SERVER: "chat_msg_to_server",
   CHAT_MSG_FROM_SERVER: "chat_msg_from_server",
@@ -31,6 +33,13 @@ const SOCKET_EVENTS = Object.freeze({
   UPLOAD_FILE_FROM_SERVER: "upload_file_from_server",
   QUESTION_SENT_TO_SERVER: "question_sent_to_server",
   QUESTION_SENT_FROM_SERVER: "question_sent_from_server",
+  START_RECORDING: "start_recording",
+  STOP_RECORDING: "stop_recording",
+  PRODUCER_PAUSE: "producer_pause", // for pausing producer if from frontend it is paused
+  PRODUCER_RESUME: "producer_resume",
+  PRODUCER_PAUSED: "producer_paused", // for emitting producer_paused event to pause all the associated consumers in frontend
+  PRODUCER_RESUMED: "producer_resumed",
+  LEAVE_ROOM: "leave_room",
 });
 
 module.exports = SOCKET_EVENTS;

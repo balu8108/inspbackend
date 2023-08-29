@@ -9,6 +9,10 @@ let {
 const uuidv4 = require("uuid").v4;
 
 const { SOCKET_EVENTS, mediaCodecs } = require("../constants");
+const config = require("./config");
+const { getPort, releasePort } = require("./port");
+const FFmpeg = require("./ffmpeg");
+const RECORD_PROCESS_NAME = "FFmpeg";
 
 const createOrJoinRoomFunction = async (data, socketId, worker) => {
   // check if create room have this id or not
@@ -182,6 +186,7 @@ const addProducer = (producer, roomId, socket) => {
     ...peers[socket.id],
     producers: [...peers[socket.id].producers, producer.id],
   };
+  console.log("add producer", producers);
 };
 
 const transportProduceHandler = async (data, callback, socket, worker) => {
@@ -255,7 +260,12 @@ const addConsumer = (consumer, roomId, socket) => {
 };
 
 const consumeHandler = async (data, callback, socket, worker) => {
-  const { rtpCapabilities, remoteProducerId, serverConsumerTransportId } = data;
+  const {
+    rtpCapabilities,
+    remoteProducerId,
+    serverConsumerTransportId,
+    appData,
+  } = data;
 
   try {
     const { roomId } = peers[socket.id];
@@ -271,6 +281,20 @@ const consumeHandler = async (data, callback, socket, worker) => {
         producerId: remoteProducerId,
         rtpCapabilities,
         paused: true,
+      });
+
+      consumer.on(SOCKET_EVENTS.PRODUCERPAUSE, () => {
+        socket.emit(SOCKET_EVENTS.PRODUCER_PAUSED, {
+          appData,
+          remoteProducerId,
+        });
+      });
+      consumer.on(SOCKET_EVENTS.PRODUCERRESUME, () => {
+        console.log("producer resmue");
+        socket.emit(SOCKET_EVENTS.PRODUCER_RESUMED, {
+          appData,
+          remoteProducerId,
+        });
       });
 
       // on transport close
@@ -356,6 +380,11 @@ const disconnectHandler = (socket, worker, io) => {
       });
     }
   }
+  console.log("rooms", rooms);
+  console.log("peers", peers);
+  console.log("producers", producers);
+  console.log("consumers", consumers);
+  console.log("transports", transports);
 };
 
 const questionsHandler = (data, socket) => {
@@ -397,6 +426,144 @@ const uploadFileHandler = (data, socket) => {
   socket.broadcast.to(roomId).emit(SOCKET_EVENTS.UPLOAD_FILE_FROM_SERVER, data);
 };
 
+const publishProducerRTPStream = async (peer, producer, router) => {
+  const rtpTransportConfig = config.plainRtpTransport;
+  // create plain transport
+  const rtpTransport = await router.createPlainTransport(rtpTransportConfig);
+  const remoteRtpPort = await getPort();
+  let remoteRtcpPort;
+  // If rtpTransport rtcpMux is false also set the receiver RTCP ports, require for Gstreamer but not for ffmpeg
+  if (!rtpTransportConfig.rtcpMux) {
+    remoteRtcpPort = await getPort();
+  }
+  await rtpTransport.connect({
+    ip: "127.0.0.1",
+    port: remoteRtpPort,
+    rtcpPort: remoteRtcpPort,
+  });
+
+  const codecs = [];
+  // Codec passed to the RTP Consumer must match the codec in the Mediasoup router rtpCapabilities
+  const routerCodec = router.rtpCapabilities.codecs.find(
+    (codec) => codec.kind === producer.kind
+  );
+  codecs.push(routerCodec);
+
+  const rtpCapabilities = {
+    codecs,
+    rtcpFeedback: [],
+  };
+  const rtpConsumer = await rtpTransport.consume({
+    producerId: producer.id,
+    rtpCapabilities,
+    paused: true,
+  });
+
+  addConsumer(rtpConsumer, peer.roomId, peer.socket);
+  // consumers
+
+  return {
+    remoteRtpPort,
+    remoteRtcpPort,
+    localRtpPort: rtpTransport.tuple.localPort,
+    localRtcpPort: rtpTransport.rtcpTuple
+      ? rtpTransport.rtcpTuple.localPort
+      : undefined,
+    rtpCapabilities,
+    rtpParameters: rtpConsumer.rtpParameters,
+  };
+};
+
+const getProcess = (recordInfo) => {
+  switch (RECORD_PROCESS_NAME) {
+    case "FFmpeg":
+    default:
+      return new FFmpeg(recordInfo);
+  }
+};
+
+const startRecord = async (peer, peerProducersList, router) => {
+  let recordInfo = {};
+
+  for (const obj of peerProducersList) {
+    recordInfo["producerId"] = obj.producer.id;
+    recordInfo[obj.producer.kind] = await publishProducerRTPStream(
+      peer,
+      obj.producer,
+      router
+    );
+  }
+
+  recordInfo.fileName = `${peer.roomId}-${Date.now().toString()} `;
+
+  if (peer.recordProcess) {
+    peer.recordProcess.kill();
+    return;
+  }
+  ffmpegProcess = getProcess(recordInfo);
+  peers[peer.socket.id] = { ...peer, recordProcess: ffmpegProcess };
+
+  setTimeout(async () => {
+    for (const consumer of consumers) {
+      if (
+        consumer.socketId === peer.socket.id &&
+        consumer.roomId === peer.roomId
+      ) {
+        await consumer.consumer.resume();
+        await consumer.consumer.requestKeyFrame();
+      }
+    }
+  }, 1000);
+};
+
+const startRecordingHandler = (data, socket) => {
+  const peer = peers[socket.id];
+  const router = rooms[peer.roomId].router;
+  // expecting some producers like screenshare and audio share of mentor to record using FFmpeg
+  const { producerScreenShare, producerAudioShare } = data;
+  const peerProducersList = producers.filter(
+    (obj) =>
+      obj.roomId === peer.roomId &&
+      obj.socketId === socket.id &&
+      (obj.producer.id === producerScreenShare?._id ||
+        obj.producer.id === producerAudioShare?._id)
+  );
+
+  if (peerProducersList.length > 0) {
+    startRecord(peer, peerProducersList, router);
+    console.log("peer recording..", peer);
+  }
+};
+
+const producerPauseHandler = (data, socket) => {
+  const { appData, producerId } = data;
+  const { roomId } = peers[socket.id];
+  const producer = producers.find(
+    (obj) =>
+      obj.roomId === roomId &&
+      obj.producer.id === producerId &&
+      obj.socketId === socket.id
+  );
+  if (producer) {
+    producer.producer.pause(); // pause the producer
+  }
+};
+
+const producerResumeHandler = (data, socket) => {
+  console.log("producer resume handler");
+  const { appData, producerId } = data;
+  const { roomId } = peers[socket.id];
+  const producer = producers.find(
+    (obj) =>
+      obj.roomId === roomId &&
+      obj.producer.id === producerId &&
+      obj.socketId === socket.id
+  );
+  if (producer) {
+    producer.producer.resume(); // pause the producer
+  }
+};
+
 module.exports = {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -413,4 +580,7 @@ module.exports = {
   stopProducingHandler,
   raiseHandHandler,
   uploadFileHandler,
+  startRecordingHandler,
+  producerPauseHandler,
+  producerResumeHandler,
 };
