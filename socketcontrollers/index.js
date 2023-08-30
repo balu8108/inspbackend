@@ -4,6 +4,8 @@ let {
   transports,
   producers,
   consumers,
+  testQuestions,
+  testResponses,
 } = require("./socketglobalvariables");
 
 const uuidv4 = require("uuid").v4;
@@ -389,6 +391,13 @@ const disconnectHandler = (socket, worker, io) => {
 
 const questionsHandler = (data, socket) => {
   const { roomId } = peers[socket.id];
+  const qId = uuidv4();
+  data = { ...data, questionId: qId };
+  if (roomId in testQuestions) {
+    testQuestions[roomId].push(data);
+  } else {
+    testQuestions[roomId] = [data];
+  }
   // there can be polls mcq and qna
   socket.broadcast
     .to(roomId)

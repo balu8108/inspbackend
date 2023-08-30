@@ -24,12 +24,12 @@ const getAllLiveClasses = async (req, res) => {
 
 const createLiveClass = async (req, res) => {
   const { body, files } = req;
-  if(files){
-    const addFilesInArray = Array.isArray(files?.files)
-    ? files.files
-    : [files.files];
+  let addFilesInArray = [];
+  if (files) {
+    addFilesInArray = Array.isArray(files?.files)
+      ? files?.files
+      : [files?.files];
   }
-  
 
   const randomCharacters = generateRandomCharacters(10); // generate a unique class room id
   // For creation of new class we need to first check if the body contains all required parameters or not
