@@ -5,6 +5,7 @@ let producers = []; // [ { socketId1, roomName1, producer, }, ... ] // contains 
 let consumers = []; // [ { socketId1, roomName1, consumer, }, ... ] // contains all consumers across rooms
 let testQuestions = {}; // this will contain all the test poll/tf/mcq questions during a live class under a room id
 let testResponses = {}; // this will contains all the test/poll/tf/mcq answers by students
+let leaderBoard = {}; // will contain the leaderboard of a particular room
 module.exports = {
   rooms,
   peers,
@@ -13,4 +14,5 @@ module.exports = {
   consumers,
   testQuestions,
   testResponses,
+  leaderBoard,
 };

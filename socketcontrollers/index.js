@@ -13,6 +13,9 @@ const uuidv4 = require("uuid").v4;
 const { SOCKET_EVENTS, mediaCodecs } = require("../constants");
 const config = require("./config");
 const { getPort, releasePort } = require("./port");
+const { LiveClassRoomFile, LiveClassRoom } = require("../models");
+const { uploadFilesToS3, updateLeaderboard } = require("../utils");
+
 const FFmpeg = require("./ffmpeg");
 const RECORD_PROCESS_NAME = "FFmpeg";
 
@@ -91,9 +94,17 @@ const joinRoomHandler = async (data, callback, socket, io, worker) => {
   if (roomId === false && router1 === false) {
     callback({ success: false }); // No room id supplied
   } else {
+    const liveClass = await LiveClassRoom.findOne({
+      where: { roomId: roomId },
+    });
+    if (!liveClass) {
+      callback({ success: false }); // No corresponding room in db
+      return;
+    }
     peers[socket.id] = {
       socket,
       roomId,
+      classPk: liveClass.id,
       transports: [],
       producers: [],
       consumers: [],
@@ -428,11 +439,49 @@ const raiseHandHandler = (data, socket) => {
     .emit(SOCKET_EVENTS.RAISE_HAND_FROM_SERVER, { isHandRaised, peerDetails });
 };
 
-const uploadFileHandler = (data, socket) => {
-  console.log("data file", data);
-  // will receive array of files and then broadcast to all
-  const { roomId } = peers[socket.id];
-  socket.broadcast.to(roomId).emit(SOCKET_EVENTS.UPLOAD_FILE_FROM_SERVER, data);
+const uploadFileHandler = async (data, callback, socket) => {
+  // will receive array of files data buffer  and then broadcast to all
+
+  // upload to AWS S3 First
+  try {
+    const getRoom = await LiveClassRoom.findOne({
+      where: { roomId: data?.roomId },
+    });
+    if (!getRoom) {
+      throw new Error("Something went wrong");
+    }
+    const fileUploads = await uploadFilesToS3(
+      data?.files,
+      `files/roomId_${data?.roomId}`
+    );
+    let filesResArray = [];
+    if (fileUploads) {
+      for (const file of fileUploads) {
+        const newFileToDB = await LiveClassRoomFile.create({
+          url: file,
+          classRoomId: getRoom.id,
+        });
+        filesResArray.push(newFileToDB);
+      }
+    } else {
+      throw new Error("Unable to upload files");
+    }
+    callback({
+      success: true,
+      data: {
+        roomType: data?.roomType,
+        roomId: data?.roomId,
+        files: filesResArray,
+      },
+    });
+    socket.broadcast.to(roomId).emit(SOCKET_EVENTS.UPLOAD_FILE_FROM_SERVER, {
+      roomType: data?.roomType,
+      roomId: data?.roomId,
+      files: filesResArray,
+    });
+  } catch (err) {
+    callback({ success: false, data: err.message });
+  }
 };
 
 const publishProducerRTPStream = async (peer, producer, router) => {
@@ -540,7 +589,6 @@ const startRecordingHandler = (data, socket) => {
 
   if (peerProducersList.length > 0) {
     startRecord(peer, peerProducersList, router);
-    console.log("peer recording..", peer);
   }
 };
 
@@ -559,7 +607,6 @@ const producerPauseHandler = (data, socket) => {
 };
 
 const producerResumeHandler = (data, socket) => {
-  console.log("producer resume handler");
   const { appData, producerId } = data;
   const { roomId } = peers[socket.id];
   const producer = producers.find(
@@ -571,6 +618,12 @@ const producerResumeHandler = (data, socket) => {
   if (producer) {
     producer.producer.resume(); // pause the producer
   }
+};
+
+const studentTestAnswerResponseHandler = (data, socket) => {
+  const { roomId, peerDetails } = peers[socket.id];
+  const updatedLeaderboard = updateLeaderboard(roomId, peerDetails, data);
+  console.log("updatedLeaderboard", updatedLeaderboard);
 };
 
 module.exports = {
@@ -592,4 +645,5 @@ module.exports = {
   startRecordingHandler,
   producerPauseHandler,
   producerResumeHandler,
+  studentTestAnswerResponseHandler,
 };

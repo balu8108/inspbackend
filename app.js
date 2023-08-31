@@ -30,6 +30,7 @@ const {
   startRecordingHandler,
   producerPauseHandler,
   producerResumeHandler,
+  studentTestAnswerResponseHandler,
 } = require("./socketcontrollers");
 app.use(express.json());
 app.use(bodyParser.json());
@@ -53,8 +54,6 @@ let worker;
 
   console.log("worker created", worker.pid);
 })();
-
-
 
 app.use(routesConstants.SCHEDULE_LIVE_CLASS, scheduleLiveClass);
 app.use(routesConstants.GENERIC_API, genericRoutes);
@@ -103,14 +102,17 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   socket.on(SOCKET_EVENTS.QUESTION_SENT_TO_SERVER, (data) => {
     questionsHandler(data, socket);
   });
+  socket.on(SOCKET_EVENTS.ANSWER_SENT_TO_SERVER, (data) => {
+    studentTestAnswerResponseHandler(data, socket);
+  });
   socket.on(SOCKET_EVENTS.STOP_PRODUCING, (data) => {
     stopProducingHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.RAISE_HAND_TO_SERVER, (data) => {
     raiseHandHandler(data, socket);
   });
-  socket.on(SOCKET_EVENTS.UPLOAD_FILE_TO_SERVER, (data) => {
-    uploadFileHandler(data, socket);
+  socket.on(SOCKET_EVENTS.UPLOAD_FILE_TO_SERVER, (data, callback) => {
+    uploadFileHandler(data, callback, socket);
   });
   socket.on(SOCKET_EVENTS.PRODUCER_PAUSE, (data) => {
     producerPauseHandler(data, socket);
