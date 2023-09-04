@@ -1,12 +1,11 @@
 const { LiveClassRoomFile } = require("../../models");
 const { generatePresignedUrls } = require("../../utils");
+
+const fs = require("fs");
+const path = require("path");
+const { uploadFilesToS3 } = require("../../utils");
+const { degrees, PDFDocument, rgb, StandardFonts } = require("pdf-lib");
 const getAllSubjects = async (req, res) => {
-  //   try {
-  //     const subjects = await Subject.findAll();
-  //     return res.status(200).json({ data: subjects });
-  //   } catch (err) {
-  //     return res.status(500).json({ error: err.message });
-  //   }
   return res.status(200).json({ data: "No Subjects" });
 };
 
@@ -29,4 +28,39 @@ const openFile = async (req, res) => {
   }
 };
 
-module.exports = { getAllSubjects, openFile };
+const imageToDoc = async (req, res) => {
+  fs.readFile("output.pdf", async (err, data) => {
+    if (err) {
+      return;
+    }
+    console.log("data", data);
+    const pdfDoc = await PDFDocument.load(data);
+    const imageFile = await pdfDoc.embedJpg(req.files.imageFile.data);
+    const jpgDims = imageFile.scale(0.35);
+    console.log("jgpDims", jpgDims);
+    const page = pdfDoc.addPage();
+    const marginFromTop = 50;
+    page.drawImage(imageFile, {
+      x: page.getWidth() / 2 - jpgDims.width / 2,
+      y: page.getHeight() - jpgDims.height - marginFromTop,
+      width: jpgDims.width,
+      height: jpgDims.height,
+    });
+
+    // Serialize the PDFDocument to bytes (a Uint8Array)
+    const modifiedPdfBytes = await pdfDoc.save();
+    fs.writeFile("output.pdf", modifiedPdfBytes, (writeErr) => {
+      if (writeErr) {
+        console.error(writeErr);
+      } else {
+        console.log(
+          "Text added to the existing PDF and saved to the same file"
+        );
+      }
+    });
+  });
+
+  return res.status(200).json({ data: "base 64 image" });
+};
+
+module.exports = { getAllSubjects, openFile, imageToDoc };

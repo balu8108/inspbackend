@@ -11,6 +11,56 @@ const {
   uploadFilesToS3,
 } = require("../../utils");
 
+// DB FUNCTIONS START
+
+const createLiveClassRoom = async (randomCharacters, body) => {
+  try {
+    const newLiveClass = await LiveClassRoom.create({
+      roomId: randomCharacters,
+      scheduledDate: body.scheduledDate,
+      scheduledStartTime: body.scheduledStartTime,
+      scheduledEndTime: body.scheduledEndTime,
+      muteAllStudents: body.muteAllStudents || false,
+      blockStudentsCamera: body.blockStudentsCamera || false,
+      mentorId: body.mentorId || 1,
+      mentorName: body.mentorName || "Mentor",
+    });
+    return { success: true, result: newLiveClass };
+  } catch (err) {
+    return { success: false, result: err.message };
+  }
+};
+
+const uploadFilesAndCreateEntries = async (
+  files,
+  addFilesInArray,
+  newLiveClass
+) => {
+  const { id } = newLiveClass;
+  let LiveClassRoomFiles = [];
+  if (files) {
+    const fileUploads = await uploadFilesToS3(
+      addFilesInArray,
+      `files/roomId_${newLiveClass.roomId}`
+    );
+    if (fileUploads) {
+      fileUploads.forEach(async (file) => {
+        const newFileToDB = await LiveClassRoomFile.create({
+          url: file,
+          classRoomId: id,
+        });
+        LiveClassRoomFiles.push(newFileToDB);
+      });
+    } else {
+      return "unable to upload files";
+    }
+  }
+  return LiveClassRoomFiles;
+};
+// DB FUNCTIONS END
+
+// BELOW IS REST APIS HANDLER
+
 const getAllLiveClasses = async (req, res) => {
   try {
     const liveClassesData = await LiveClassRoom.findAll({
@@ -35,38 +85,21 @@ const createLiveClass = async (req, res) => {
   // For creation of new class we need to first check if the body contains all required parameters or not
   if (validateCreationOfLiveClass(body)) {
     try {
-      //  At The moment we are providing default mentor details
-      const newLiveClass = await LiveClassRoom.create({
-        roomId: randomCharacters,
-        scheduledDate: body.scheduledDate,
-        scheduledStartTime: body.scheduledStartTime,
-        scheduledEndTime: body.scheduledEndTime,
-        muteAllStudents: body.muteAllStudents || false,
-        blockStudentsCamera: body.blockStudentsCamera || false,
-        mentorId: body.mentorId || 1,
-        mentorName: body.mentorName || "Mentor",
-      });
-      if (newLiveClass) {
-        const { id } = newLiveClass;
-        let LiveClassRoomFiles = [];
+      const { success, result } = await createLiveClassRoom(
+        randomCharacters,
+        body
+      );
 
-        if (files) {
-          const fileUploads = await uploadFilesToS3(
-            addFilesInArray,
-            `files/roomId_${newLiveClass.roomId}`
-          );
-          if (fileUploads) {
-            fileUploads.forEach(async (file) => {
-              const newFileToDB = await LiveClassRoomFile.create({
-                url: file,
-                classRoomId: id,
-              });
-              LiveClassRoomFiles.push(newFileToDB);
-            });
-          } else {
-            throw new Error("Unable to upload files");
-          }
-        }
+      if (!success) {
+        throw new Error("Unable to create new class");
+      }
+      if (result) {
+        const { id } = result;
+        const LiveClassRoomFiles = await uploadFilesAndCreateEntries(
+          files,
+          addFilesInArray,
+          result
+        );
         const liveClassRoomDetail = await LiveClassRoomDetail.create({
           chapterId: JSON.parse(body.chapter).value,
           chapterName: JSON.parse(body.chapter).label,
@@ -77,10 +110,10 @@ const createLiveClass = async (req, res) => {
           classRoomId: id,
         });
 
-        newLiveClass.liveClassRoomDetail = liveClassRoomDetail; // create parent child relationship however not necessary
+        result.liveClassRoomDetail = liveClassRoomDetail; // create parent child relationship however not necessary
 
         const combinedData = {
-          ...newLiveClass.toJSON(),
+          ...result.toJSON(),
           LiveClassRoomDetail: liveClassRoomDetail.toJSON(),
           LiveClassRoomFiles: LiveClassRoomFiles,
         };

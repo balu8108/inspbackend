@@ -621,8 +621,13 @@ const producerResumeHandler = (data, socket) => {
 };
 
 const studentTestAnswerResponseHandler = (data, socket) => {
-  const { roomId, peerDetails } = peers[socket.id];
-  const updatedLeaderboard = updateLeaderboard(roomId, peerDetails, data);
+  const { classPk, roomId, peerDetails } = peers[socket.id];
+  const updatedLeaderboard = updateLeaderboard(
+    classPk,
+    roomId,
+    peerDetails,
+    data
+  );
   console.log("updatedLeaderboard", updatedLeaderboard);
 };
 

@@ -1,5 +1,34 @@
 const { leaderBoard } = require("../socketcontrollers/socketglobalvariables");
 const { testQuestions } = require("../socketcontrollers/socketglobalvariables");
+const { LeaderBoard } = require("../models");
+
+// DB FUNCTION START
+const createOrUpdateLeaderBoard = async (classPk, roomId, leaderBoardData) => {
+  try {
+    const findStudentInLeaderBoard = await LeaderBoard.findOne({
+      where: { classRoomId: classPk, peerId: leaderBoardData.peerDetails.id },
+    });
+    if (findStudentInLeaderBoard) {
+      // update there scorecard for this class or test
+      await findStudentInLeaderBoard.update({
+        correctAnswers: leaderBoardData.correctAnswers,
+        combinedResponseTime: leaderBoardData.combinedResponseTime,
+      });
+    } else {
+      await LeaderBoard.create({
+        peerId: leaderBoardData.peerDetails.id,
+        peerName: leaderBoardData.peerDetails.name,
+        peerEmail: leaderBoardData.peerDetails?.email || "test@gmail.com",
+        correctAnswers: leaderBoardData.correctAnswers,
+        combinedResponseTime: leaderBoardData.combinedResponseTime,
+        classRoomId: classPk,
+      });
+    }
+  } catch (err) {
+    console.log("err in creating leaderboard", err.message);
+  }
+};
+// DB FUNCTION ENDS
 
 const compareFrequencyCounts = (freqCount1, freqCount2) => {
   if (freqCount1.size !== freqCount2.size) {
@@ -59,7 +88,7 @@ const checkIsAnswersCorrect = (roomId, response) => {
   }
 };
 
-const updateLeaderboard = (roomId, peerDetails, response) => {
+const updateLeaderboard = (classPk, roomId, peerDetails, response) => {
   if (!leaderBoard[roomId]) {
     leaderBoard[roomId] = {};
   }
@@ -70,12 +99,26 @@ const updateLeaderboard = (roomId, peerDetails, response) => {
       correctAnswers: isAnswersCorrect ? 1 : 0,
       combinedResponseTime: response.responseTimeInSeconds,
     };
+
+    // seed data to db
+    createOrUpdateLeaderBoard(
+      classPk,
+      roomId,
+      leaderBoard[roomId][peerDetails.id]
+    );
   } else {
     leaderBoard[roomId][peerDetails.id].correctAnswers += isAnswersCorrect
       ? 1
       : 0;
     leaderBoard[roomId][peerDetails.id].combinedResponseTime +=
       response.responseTimeInSeconds;
+
+    // seed data to db
+    createOrUpdateLeaderBoard(
+      classPk,
+      roomId,
+      leaderBoard[roomId][peerDetails.id]
+    );
   }
 
   const roomLeaderBoard = leaderBoard[roomId];
