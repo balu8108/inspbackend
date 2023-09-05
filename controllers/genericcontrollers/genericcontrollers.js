@@ -1,10 +1,11 @@
-const { LiveClassRoomFile } = require("../../models");
-const { generatePresignedUrls } = require("../../utils");
+const { LiveClassRoomFile, LiveClassRoom } = require("../../models");
+const {
+  generatePresignedUrls,
+  createOrUpdateQnANotes,
+} = require("../../utils");
 
-const fs = require("fs");
 const path = require("path");
-const { uploadFilesToS3 } = require("../../utils");
-const { degrees, PDFDocument, rgb, StandardFonts } = require("pdf-lib");
+
 const getAllSubjects = async (req, res) => {
   return res.status(200).json({ data: "No Subjects" });
 };
@@ -29,38 +30,37 @@ const openFile = async (req, res) => {
 };
 
 const imageToDoc = async (req, res) => {
-  fs.readFile("output.pdf", async (err, data) => {
-    if (err) {
-      return;
+  try {
+    const { body, files } = req;
+
+    if (!body.roomId) {
+      return res.status(400).json({ error: "Room Id is required" });
     }
-    console.log("data", data);
-    const pdfDoc = await PDFDocument.load(data);
-    const imageFile = await pdfDoc.embedJpg(req.files.imageFile.data);
-    const jpgDims = imageFile.scale(0.35);
-    console.log("jgpDims", jpgDims);
-    const page = pdfDoc.addPage();
-    const marginFromTop = 50;
-    page.drawImage(imageFile, {
-      x: page.getWidth() / 2 - jpgDims.width / 2,
-      y: page.getHeight() - jpgDims.height - marginFromTop,
-      width: jpgDims.width,
-      height: jpgDims.height,
-    });
 
-    // Serialize the PDFDocument to bytes (a Uint8Array)
-    const modifiedPdfBytes = await pdfDoc.save();
-    fs.writeFile("output.pdf", modifiedPdfBytes, (writeErr) => {
-      if (writeErr) {
-        console.error(writeErr);
-      } else {
-        console.log(
-          "Text added to the existing PDF and saved to the same file"
-        );
-      }
+    const isRoomExist = await LiveClassRoom.findOne({
+      where: { roomId: body.roomId },
     });
-  });
+    if (!isRoomExist) {
+      return res.status(400).json({ error: "No room found with this id" });
+    }
 
-  return res.status(200).json({ data: "base 64 image" });
+    const fileLoc = `qnaNotes/qnaNotes_roomId_${body.roomId}.pdf`; // in AWS S3
+    const { success, result } = await createOrUpdateQnANotes(
+      fileLoc,
+      body,
+      files
+    );
+
+    if (success) {
+      return res.status(200).json({ data: result });
+    } else {
+      return res
+        .status(400)
+        .json({ error: "Some error occured while adding qna notes" });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
 };
 
 module.exports = { getAllSubjects, openFile, imageToDoc };

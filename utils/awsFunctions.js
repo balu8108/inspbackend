@@ -56,4 +56,66 @@ const generatePresignedUrls = async (fileUrl) => {
   });
 };
 
-module.exports = { uploadFilesToS3, generatePresignedUrls };
+const isObjectExistInS3 = async (filePath) => {
+  return new Promise((resolve, reject) => {
+    const params = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: filePath,
+    };
+
+    s3.headObject(params, (err, data) => {
+      if (err) {
+        if (err.code === "NotFound") {
+          resolve(false);
+        } else {
+          reject(err);
+        }
+      } else {
+        resolve(true);
+      }
+    });
+  });
+};
+
+const getObjectFromS3 = async (filePath) => {
+  return new Promise((resolve, reject) => {
+    const params = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: filePath,
+    };
+
+    s3.getObject(params, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+};
+
+const uploadToS3 = async (filePath, body) => {
+  console.log("uploading to s3", filePath);
+  return new Promise((resolve, reject) => {
+    const params = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: filePath, // Include folderPath in the key
+      Body: body,
+    };
+    s3.upload(params, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+};
+
+module.exports = {
+  uploadFilesToS3,
+  generatePresignedUrls,
+  isObjectExistInS3,
+  getObjectFromS3,
+  uploadToS3,
+};

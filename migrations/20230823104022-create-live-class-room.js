@@ -10,15 +10,19 @@ module.exports = {
         type: Sequelize.INTEGER,
       },
       roomId: {
+        allowNull: false,
         type: Sequelize.STRING,
       },
       scheduledDate: {
+        allowNull: false,
         type: Sequelize.DATE,
       },
       scheduledStartTime: {
+        allowNull: false,
         type: Sequelize.TIME,
       },
       scheduledEndTime: {
+        allowNull: false,
         type: Sequelize.TIME,
       },
       createdAt: {

@@ -1,4 +1,10 @@
 const SOCKET_EVENTS = require("./socketevents");
 const mediaCodecs = require("./mediasoupconstants");
 const routesConstants = require("./routesconstants");
-module.exports = { SOCKET_EVENTS, mediaCodecs, routesConstants };
+const utilityConstants = require("./utilityConstants");
+module.exports = {
+  SOCKET_EVENTS,
+  mediaCodecs,
+  routesConstants,
+  utilityConstants,
+};

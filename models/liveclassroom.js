@@ -31,6 +31,8 @@ module.exports = (sequelize, DataTypes) => {
       mentorName: DataTypes.STRING,
       muteAllStudents: DataTypes.BOOLEAN,
       blockStudentsCamera: DataTypes.BOOLEAN,
+      subjectId: DataTypes.STRING,
+      subjectName: DataTypes.STRING,
     },
     {
       sequelize,

@@ -24,6 +24,8 @@ const createLiveClassRoom = async (randomCharacters, body) => {
       blockStudentsCamera: body.blockStudentsCamera || false,
       mentorId: body.mentorId || 1,
       mentorName: body.mentorName || "Mentor",
+      subjectId: JSON.parse(body.subject).value,
+      subjectName: JSON.parse(body.subject).label,
     });
     return { success: true, result: newLiveClass };
   } catch (err) {
