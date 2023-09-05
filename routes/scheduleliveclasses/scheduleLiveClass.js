@@ -6,7 +6,7 @@ const {
   getAllLiveClasses,
   getLiveClassDetails,
   getUpcomingClass,
-} = require("../../controllers/scheduleliveclasses/scheduleLiveClass");
+} = require("../../controllers");
 
 router.post(routesConstants.CREATE_LIVE_CLASS, createLiveClass); // This route will create a new Live Class/room in db
 router.get(routesConstants.GET_ALL_LIVE_CLASSES, getAllLiveClasses);

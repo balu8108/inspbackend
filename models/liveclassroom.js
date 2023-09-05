@@ -19,6 +19,9 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "classRoomId",
       });
       LiveClassRoom.hasMany(models.LeaderBoard, { foreignKey: "classRoomId" });
+      LiveClassRoom.hasMany(models.LiveClassRoomQNANotes, {
+        foreignKey: "classRoomId",
+      });
     }
   }
   LiveClassRoom.init(

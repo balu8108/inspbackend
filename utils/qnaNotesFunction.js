@@ -49,7 +49,11 @@ const createOrUpdatePdfFile = async (pdfFile, fileLoc, data, files) => {
     try {
       const uploadingToS3 = await uploadToS3(fileLoc, modifiedPdfBytes);
       if (uploadingToS3) {
-        return { success: true, result: "QnA notes added successfully" };
+        return {
+          success: true,
+          result: "QnA notes added successfully",
+          url: uploadingToS3.Location,
+        };
       }
     } catch (err) {
       throw new Error("Some error occured while creating pdf file");
@@ -75,24 +79,25 @@ const createOrUpdateQnANotes = async (fileLoc, textData, files) => {
     if (isQnANotesExists) {
       const qnaNotesData = await getObjectFromS3(fileLoc);
       const qnaNotes = await PDFDocument.load(qnaNotesData.Body);
-      const { success, result } = await createOrUpdatePdfFile(
+      const { success, result, url } = await createOrUpdatePdfFile(
         qnaNotes,
         fileLoc,
         textDataObj,
         files
       );
-      return { success, result };
+
+      return { success, result, url };
     } else {
       const qnaNotes = await PDFDocument.create();
 
-      const { success, result } = await createOrUpdatePdfFile(
+      const { success, result, url } = await createOrUpdatePdfFile(
         qnaNotes,
         fileLoc,
         textDataObj,
         files
       );
 
-      return { success, result };
+      return { success, result, url };
     }
   } catch (err) {
     // Something wrong happens

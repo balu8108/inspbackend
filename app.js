@@ -7,10 +7,10 @@ const socketIo = require("socket.io");
 const mediasoup = require("mediasoup");
 const bodyParser = require("body-parser");
 const upload = require("express-fileupload");
-const { SOCKET_EVENTS } = require("./constants");
-const { routesConstants } = require("./constants");
+const { SOCKET_EVENTS, routesConstants } = require("./constants");
 const scheduleLiveClass = require("./routes/scheduleliveclasses/scheduleLiveClass");
 const genericRoutes = require("./routes/genericroutes/genericroutes");
+const authenticationRoutes = require("./routes/authentication/authenticationRoutes");
 const {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -59,6 +59,7 @@ let worker;
 
 app.use(routesConstants.SCHEDULE_LIVE_CLASS, scheduleLiveClass);
 app.use(routesConstants.GENERIC_API, genericRoutes);
+app.use(routesConstants.AUTH, authenticationRoutes);
 
 const httpServer = http.createServer(app);
 const io = socketIo(httpServer, {

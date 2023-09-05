@@ -7,6 +7,9 @@ const routesConstants = Object.freeze({
   GENERIC_API: "/generic",
   GET_ALL_SUBJECTS: "/get-all-subjects",
   OPEN_FILE: "/open-file",
+  IMAGE_TO_DOC: "/image-to-doc",
+  AUTH: "/auth",
+  LOGIN: "/login",
 });
 
 module.exports = routesConstants;

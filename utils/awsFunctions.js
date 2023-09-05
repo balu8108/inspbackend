@@ -95,7 +95,6 @@ const getObjectFromS3 = async (filePath) => {
 };
 
 const uploadToS3 = async (filePath, body) => {
-  console.log("uploading to s3", filePath);
   return new Promise((resolve, reject) => {
     const params = {
       Bucket: process.env.AWS_BUCKET_NAME,

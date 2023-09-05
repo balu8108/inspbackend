@@ -386,6 +386,9 @@ const disconnectHandler = (socket, worker, io) => {
     if (rooms[roomId].peers.length === 0) {
       delete rooms[roomId];
       socket.leave(roomId);
+      io.to(roomId).emit(SOCKET_EVENTS.PEER_LEAVED, {
+        peerLeaved: leavingPeer.peerDetails,
+      });
     } else {
       socket.leave(roomId);
       io.to(roomId).emit(SOCKET_EVENTS.PEER_LEAVED, {

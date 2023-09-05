@@ -1,4 +1,8 @@
-const { LiveClassRoomFile, LiveClassRoom } = require("../../models");
+const {
+  LiveClassRoomFile,
+  LiveClassRoom,
+  LiveClassRoomQNANotes,
+} = require("../../models");
 const {
   generatePresignedUrls,
   createOrUpdateQnANotes,
@@ -45,13 +49,17 @@ const imageToDoc = async (req, res) => {
     }
 
     const fileLoc = `qnaNotes/qnaNotes_roomId_${body.roomId}.pdf`; // in AWS S3
-    const { success, result } = await createOrUpdateQnANotes(
+    const { success, result, url } = await createOrUpdateQnANotes(
       fileLoc,
       body,
       files
     );
 
-    if (success) {
+    if (success && url) {
+      await LiveClassRoomQNANotes.create({
+        url: url,
+      });
+
       return res.status(200).json({ data: result });
     } else {
       return res
