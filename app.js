@@ -31,6 +31,7 @@ const {
   producerPauseHandler,
   producerResumeHandler,
   studentTestAnswerResponseHandler,
+  miroBoardDataHandler,
 } = require("./socketcontrollers");
 app.use(express.json({ limit: "50mb" }));
 app.use(bodyParser.json());
@@ -125,6 +126,9 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   });
   socket.on(SOCKET_EVENTS.START_RECORDING, (data) => {
     startRecordingHandler(data, socket);
+  });
+  socket.on(SOCKET_EVENTS.MIRO_BOARD_DATA_TO_SERVER, (data) => {
+    miroBoardDataHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.LEAVE_ROOM, () => {
     disconnectHandler(socket, worker, io);

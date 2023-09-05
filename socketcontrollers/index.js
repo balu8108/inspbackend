@@ -634,6 +634,17 @@ const studentTestAnswerResponseHandler = (data, socket) => {
   console.log("updatedLeaderboard", updatedLeaderboard);
 };
 
+const miroBoardDataHandler = (data, socket) => {
+  try {
+    const { roomId } = peers[socket.id];
+    socket.broadcast
+      .to(roomId)
+      .emit(SOCKET_EVENTS.MIRO_BOARD_DATA_FROM_SERVER, data);
+  } catch (err) {
+    console.log("Err in Miro board data handler", err);
+  }
+};
+
 module.exports = {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -654,4 +665,5 @@ module.exports = {
   producerPauseHandler,
   producerResumeHandler,
   studentTestAnswerResponseHandler,
+  miroBoardDataHandler,
 };
