@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const http = require("http");
@@ -33,6 +34,11 @@ const {
   studentTestAnswerResponseHandler,
   miroBoardDataHandler,
 } = require("./socketcontrollers");
+
+dotenv.config({ path: "config/.env" });
+
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS.split(",");
+
 app.use(express.json({ limit: "50mb" }));
 app.use(bodyParser.json());
 app.use(
@@ -43,7 +49,7 @@ app.use(
 );
 app.use(express.urlencoded({ extended: true }));
 app.use(upload()); // this is required for uploading multipart/formData
-app.use(cors());
+app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
 app.use(cookieParser());
 
 let worker;

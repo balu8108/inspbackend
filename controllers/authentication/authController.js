@@ -9,11 +9,14 @@ const loginHandler = async (req, res) => {
         .status(400)
         .json({ status: false, data: "Invalid or No User" });
     }
+    res.cookie("secret_token", secret_token, { httpOnly: false }); // send http cookie to frontend for further communication
     return res
       .status(200)
       .json({ status: true, data: { authData, secret_token } });
   } catch (err) {
-    return res.status(400).json({ status: false, data: "Login Handler" });
+    return res
+      .status(400)
+      .json({ status: false, data: "Something went wrong" });
   }
 };
 module.exports = { loginHandler };

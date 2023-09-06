@@ -4,7 +4,16 @@ dotenv.config({ path: "../../config/.env" });
 
 const isAuthenticated = async (req, res, next) => {
   try {
-    const { secret_token } = req.params;
+    // we need secret_token during login from params
+    // for making other rest apis protected we need secret_token from cookies for any subsequent request after login
+
+    let secret_token = null;
+    if (req.params && req.params.secret_token) {
+      secret_token = req.params.secret_token;
+    } else if (req.cookies && req.cookies.secret_token) {
+      secret_token = req.cookies.secret_token;
+    }
+
     if (!secret_token) {
       return res.status(400).json({ status: false, data: "Token is required" });
     }

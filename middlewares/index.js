@@ -1,3 +1,3 @@
 const isAuthenticated = require("./authentication/isAuthenticated");
-
-module.exports = { isAuthenticated };
+const checkPaidStatusOrTeacher = require("./authentication/checkPaidStatusOrTeacher");
+module.exports = { isAuthenticated, checkPaidStatusOrTeacher };
