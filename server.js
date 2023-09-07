@@ -1,8 +1,6 @@
 const httpServer = require("./app");
-const dotenv = require("dotenv");
+const { PORT } = require("./envvar");
 const sequelize = require("./config/database");
-
-dotenv.config({ path: "config/.env" });
 
 (async () => {
   try {
@@ -15,7 +13,7 @@ dotenv.config({ path: "config/.env" });
   }
 })();
 
-const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, () =>
-  console.log(`Server is running on http://localhost:${PORT}`)
+const SERVER_PORT = PORT || 5000;
+httpServer.listen(SERVER_PORT, () =>
+  console.log(`Server is running on http://localhost:${SERVER_PORT}`)
 );

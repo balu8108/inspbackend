@@ -1,6 +1,5 @@
 const express = require("express");
 const app = express();
-const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const http = require("http");
@@ -8,6 +7,7 @@ const socketIo = require("socket.io");
 const mediasoup = require("mediasoup");
 const bodyParser = require("body-parser");
 const upload = require("express-fileupload");
+const scheduleJob = require("./jobs/scheduleJobs");
 const { SOCKET_EVENTS, routesConstants } = require("./constants");
 const scheduleLiveClass = require("./routes/scheduleliveclasses/scheduleLiveClass");
 const genericRoutes = require("./routes/genericroutes/genericroutes");
@@ -35,10 +35,6 @@ const {
   miroBoardDataHandler,
 } = require("./socketcontrollers");
 
-dotenv.config({ path: "config/.env" });
-
-const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS.split(",");
-
 app.use(express.json({ limit: "50mb" }));
 app.use(bodyParser.json());
 app.use(
@@ -49,8 +45,16 @@ app.use(
 );
 app.use(express.urlencoded({ extended: true }));
 app.use(upload()); // this is required for uploading multipart/formData
-app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
+app.use(cors());
 app.use(cookieParser());
+
+app.use(routesConstants.SCHEDULE_LIVE_CLASS, scheduleLiveClass);
+app.use(routesConstants.GENERIC_API, genericRoutes);
+app.use(routesConstants.AUTH, authenticationRoutes);
+
+// Cron jobs function
+// scheduleJob();
+// Cron jobs function
 
 let worker;
 
@@ -63,10 +67,6 @@ let worker;
 
   console.log("worker created", worker.pid);
 })();
-
-app.use(routesConstants.SCHEDULE_LIVE_CLASS, scheduleLiveClass);
-app.use(routesConstants.GENERIC_API, genericRoutes);
-app.use(routesConstants.AUTH, authenticationRoutes);
 
 const httpServer = http.createServer(app);
 const io = socketIo(httpServer, {

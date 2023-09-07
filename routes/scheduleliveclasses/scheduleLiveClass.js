@@ -7,12 +7,16 @@ const {
   getLiveClassDetails,
   getUpcomingClass,
 } = require("../../controllers");
-const { isAuthenticated } = require("../../middlewares");
+const {
+  isAuthenticated,
+  checkPaidStatusOrTeacher,
+} = require("../../middlewares");
 
 router.post(routesConstants.CREATE_LIVE_CLASS, createLiveClass); // This route will create a new Live Class/room in db
 router.get(
   routesConstants.GET_ALL_LIVE_CLASSES,
   isAuthenticated,
+  checkPaidStatusOrTeacher,
   getAllLiveClasses
 );
 router.get(

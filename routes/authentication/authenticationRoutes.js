@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const { routesConstants } = require("../../constants");
-
 const { loginHandler } = require("../../controllers");
 const {
   isAuthenticated,

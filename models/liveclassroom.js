@@ -22,6 +22,9 @@ module.exports = (sequelize, DataTypes) => {
       LiveClassRoom.hasMany(models.LiveClassRoomQNANotes, {
         foreignKey: "classRoomId",
       });
+      LiveClassRoom.hasOne(models.LiveClassNotificationStatus, {
+        foreignKey: "classRoomId",
+      });
     }
   }
   LiveClassRoom.init(
