@@ -11,6 +11,7 @@ const checkArraysHaveSameElements = require("./checkArrayHaveSameElement");
 const updateLeaderboard = require("./updateLeaderboard");
 const createOrUpdateQnANotes = require("./qnaNotesFunction");
 const isObjectValid = require("./objectValidation");
+const dbObjectConverter = require("./dbObjectConverter");
 module.exports = {
   generateRandomCharacters,
   validateCreationOfLiveClass,
@@ -23,4 +24,5 @@ module.exports = {
   isObjectExistInS3,
   getObjectFromS3,
   uploadToS3,
+  dbObjectConverter,
 };

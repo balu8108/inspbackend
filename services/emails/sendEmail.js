@@ -18,7 +18,7 @@ const getAuthCredentials = (token) => {
   };
 };
 
-const sendEmail = async (rec_email) => {
+const sendEmail = async (notificationDBObject) => {
   try {
     const { token } = await oauthClient.getAccessToken();
 
@@ -30,20 +30,26 @@ const sendEmail = async (rec_email) => {
 
     const mailOptions = {
       from: `Support Insp Test <${process.env.GOOGLE_GMAIL_USER}>`,
-      to: rec_email,
-      subject: "Meeting Reminder",
-      text: "Your meeting is about to start in 15 minutes !!. Please join on time",
+      to: notificationDBObject.notificationReceiverEmail,
+      subject: notificationDBObject.notificationSubject,
+      text: notificationDBObject.notificationEmailText,
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.log(error);
+        notificationDBObject.notificationStatus = "FAILED";
+        notificationDBObject.save();
       } else {
         console.log("Email sent: " + info.response);
+        notificationDBObject.notificationStatus = "SENT"; //This ensures atleast one of the notification is sent
+        notificationDBObject.save();
       }
     });
   } catch (err) {
     console.log("Error in sending email", err);
+    notificationDBObject.notificationStatus = "FAILED"; // Failed to send email so notification din't send from email
+    notificationDBObject.save();
   }
 };
 

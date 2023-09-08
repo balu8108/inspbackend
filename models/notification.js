@@ -15,13 +15,12 @@ module.exports = (sequelize, DataTypes) => {
     {
       notificationType: DataTypes.ENUM("EMAIL", "SMS", "EMAIL+SMS"),
       notificationStatus: DataTypes.ENUM("PENDING", "SENT", "FAILED"),
-      notificationSMSStatus: DataTypes.ENUM("PENDING", "SENT", "FAILED"),
-      notificationEmailStatus: DataTypes.ENUM("PENDING", "SENT", "FAILED"),
       notificationSMSText: DataTypes.STRING,
       notificationEmailText: DataTypes.STRING,
       notificationReceiverName: DataTypes.STRING,
       notificationReceiverEmail: DataTypes.STRING,
       notificationReceiverMobile: DataTypes.STRING,
+      notificationSubject: DataTypes.STRING,
       notificationMetaInfo: DataTypes.STRING,
     },
     {

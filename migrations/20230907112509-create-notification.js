@@ -14,25 +14,17 @@ module.exports = {
       },
       notificationType: {
         type: Sequelize.ENUM("EMAIL", "SMS", "EMAIL+SMS"),
-        defaultValue: "EMAIL",
+        defaultValue: "EMAIL+SMS",
       },
       notificationStatus: {
         type: Sequelize.ENUM("PENDING", "SENT", "FAILED"),
         defaultValue: "PENDING",
       },
-      notificationSMSStatus: {
-        type: Sequelize.ENUM("PENDING", "SENT", "FAILED"),
-        defaultValue: "PENDING",
-      },
-      notificationEmailStatus: {
-        type: Sequelize.ENUM("PENDING", "SENT", "FAILED"),
-        defaultValue: "PENDING",
-      },
       notificationSMSText: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(1000),
       },
       notificationEmailText: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(2000),
       },
       notificationReceiverName: {
         type: Sequelize.STRING,
@@ -43,8 +35,11 @@ module.exports = {
       notificationReceiverMobile: {
         type: Sequelize.STRING,
       },
+      notificationSubject: {
+        type: Sequelize.STRING(500),
+      },
       notificationMetaInfo: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(5000),
       },
       createdAt: {
         allowNull: false,

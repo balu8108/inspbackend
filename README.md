@@ -32,13 +32,21 @@ npx sequelize-cli migration:generate --name modify-users-table
 
 ```
 
+- Undo a specific migration file by specifing name of the migrationfile.js
+
+```bash
+npx sequelize-cli db:migrate:undo --name 20180704124934-create-branch.js
+```
+
 ### Migration files info :-
-- To add automatice dateTime field in createdAt field add a defaultValue 
+
+- To add automatice dateTime field in createdAt field add a defaultValue
 
 ```bash
   defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
 ```
-- To add automatice dateTime field in updatedAt field add a defaultValue 
+
+- To add automatice dateTime field in updatedAt field add a defaultValue
 
 ```bash
   defaultValue: Sequelize.literal(

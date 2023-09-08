@@ -3,10 +3,12 @@ const mediaCodecs = require("./mediasoupconstants");
 const routesConstants = require("./routesconstants");
 const utilityConstants = require("./utilityConstants");
 const externalApiEndpoints = require("./externalApiEndpoints");
+const { notificationType } = require("./dbConstants");
 module.exports = {
   SOCKET_EVENTS,
   mediaCodecs,
   routesConstants,
   utilityConstants,
   externalApiEndpoints,
+  notificationType,
 };
