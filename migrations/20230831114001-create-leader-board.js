@@ -30,7 +30,7 @@ module.exports = {
       classRoomId: {
         type: Sequelize.INTEGER,
         references: {
-          model: "liveclassrooms",
+          model: "LiveClassRooms",
           key: "id",
         },
         onDelete: "CASCADE",
