@@ -12,6 +12,7 @@ const updateLeaderboard = require("./updateLeaderboard");
 const createOrUpdateQnANotes = require("./qnaNotesFunction");
 const isObjectValid = require("./objectValidation");
 const dbObjectConverter = require("./dbObjectConverter");
+const { encryptData } = require("./crypticFunctions");
 module.exports = {
   generateRandomCharacters,
   validateCreationOfLiveClass,
@@ -25,4 +26,5 @@ module.exports = {
   getObjectFromS3,
   uploadToS3,
   dbObjectConverter,
+  encryptData,
 };

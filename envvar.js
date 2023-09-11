@@ -19,6 +19,8 @@ const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 
+const ENC_KEY = process.env.ENC_KEY;
+
 module.exports = {
   PORT,
   NODE_ENV,
@@ -36,4 +38,5 @@ module.exports = {
   TWILIO_PHONE_NUMBER,
   TWILIO_ACCOUNT_SID,
   TWILIO_AUTH_TOKEN,
+  ENC_KEY,
 };
