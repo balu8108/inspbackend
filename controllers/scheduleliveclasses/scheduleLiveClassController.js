@@ -91,7 +91,6 @@ const createLiveClass = async (req, res) => {
         randomCharacters,
         body
       );
-
       if (!success) {
         throw new Error("Unable to create new class");
       }

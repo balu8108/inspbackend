@@ -555,14 +555,16 @@ const startRecord = async (peer, peerProducersList, router) => {
     );
   }
 
-  recordInfo.fileName = `${peer.roomId}-${Date.now().toString()} `;
+  recordInfo.fileName = `${peer.roomId}-${Date.now().toString()}`;
 
-  if (peer.recordProcess) {
-    peer.recordProcess.kill();
-    return;
-  }
-  ffmpegProcess = getProcess(recordInfo);
+  // if (peer.recordProcess) {
+  //   peer.recordProcess.kill();
+  //   return;
+  // }
+  let ffmpegProcess = getProcess(recordInfo);
   peers[peer.socket.id] = { ...peer, recordProcess: ffmpegProcess };
+
+  console.log("consumer", consumers);
 
   setTimeout(async () => {
     for (const consumer of consumers) {
@@ -582,6 +584,8 @@ const startRecordingHandler = (data, socket) => {
   const router = rooms[peer.roomId].router;
   // expecting some producers like screenshare and audio share of mentor to record using FFmpeg
   const { producerScreenShare, producerAudioShare } = data;
+  console.log("producerScreenShare", producerScreenShare);
+  console.log("producerAudioShare", producerAudioShare);
   const peerProducersList = producers.filter(
     (obj) =>
       obj.roomId === peer.roomId &&
