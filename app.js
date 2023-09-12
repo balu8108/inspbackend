@@ -53,7 +53,7 @@ app.use(routesConstants.GENERIC_API, genericRoutes);
 app.use(routesConstants.AUTH, authenticationRoutes);
 
 // Cron jobs function
-// scheduleJob();
+scheduleJob();
 // Cron jobs function
 
 let worker;

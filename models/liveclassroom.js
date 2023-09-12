@@ -25,6 +25,9 @@ module.exports = (sequelize, DataTypes) => {
       LiveClassRoom.hasOne(models.LiveClassNotificationStatus, {
         foreignKey: "classRoomId",
       });
+      LiveClassRoom.hasMany(models.LiveClassLog, {
+        foreignKey: "classRoomId",
+      });
     }
   }
   LiveClassRoom.init(
@@ -39,6 +42,13 @@ module.exports = (sequelize, DataTypes) => {
       blockStudentsCamera: DataTypes.BOOLEAN,
       subjectId: DataTypes.STRING,
       subjectName: DataTypes.STRING,
+      classStatus: DataTypes.ENUM(
+        "SCHEDULED",
+        "ONGOING",
+        "NOT_STARTED",
+        "FINISHED",
+        "NOT_CONDUCTED"
+      ),
     },
     {
       sequelize,

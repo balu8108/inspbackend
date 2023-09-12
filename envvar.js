@@ -2,6 +2,7 @@ const dotenv = require("dotenv");
 dotenv.config({ path: "config/.env" });
 const PORT = process.env.PORT;
 const NODE_ENV = process.env.NODE_ENV;
+const ENVIRON = process.env.ENVIRON;
 const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
 const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
 const AWS_REGION = process.env.AWS_REGION;
@@ -39,4 +40,5 @@ module.exports = {
   TWILIO_ACCOUNT_SID,
   TWILIO_AUTH_TOKEN,
   ENC_KEY,
+  ENVIRON,
 };

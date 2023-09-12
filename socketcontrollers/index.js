@@ -10,113 +10,147 @@ let {
 
 const uuidv4 = require("uuid").v4;
 
-const { SOCKET_EVENTS, mediaCodecs } = require("../constants");
+const {
+  SOCKET_EVENTS,
+  mediaCodecs,
+  liveClassLogInfo,
+  classStatus,
+} = require("../constants");
 const config = require("./config");
 const { getPort, releasePort } = require("./port");
-const { LiveClassRoomFile, LiveClassRoom } = require("../models");
+const { LiveClassRoomFile, LiveClassRoom, LiveClassLog } = require("../models");
 const { uploadFilesToS3, updateLeaderboard } = require("../utils");
 
 const FFmpeg = require("./ffmpeg");
 const RECORD_PROCESS_NAME = "FFmpeg";
 
 const createOrJoinRoomFunction = async (data, socketId, worker) => {
-  // check if create room have this id or not
-  let router1;
-  let peers = [];
-  if ("roomId" in data) {
-    // means room exist then add this peer to given room
-    let roomId = data.roomId;
-    let newPeerDetails = {
-      id: Math.floor(Math.random() * (100000 - 1 + 1)) + 1,
-      name: "Test" + Math.floor(Math.random() * (10000 - 1 + 1)) + 1,
-      isAdmin: false, // Is this Peer the Admin?
-    };
+  try {
+    // check if create room have this id or not
+    let router1;
+    let peers = [];
+    if ("roomId" in data) {
+      // means room exist then add this peer to given room
+      let roomId = data.roomId;
+      let peerDetails = data.peerDetails;
 
-    // search within rooms object whether this roomId exists or not?
-    // if exists then send roomId and router back
-    // if not exists then check in db whether that room exists or not?
-    // if exists then create the new room
-    // if not exists then send false,false
-    if (roomId in rooms) {
-      router1 = rooms[roomId].router;
-      peers = rooms[roomId].peers || [];
-      rooms[roomId] = {
-        router: router1,
-        peers: [...peers, newPeerDetails],
+      const liveClass = await LiveClassRoom.findOne({
+        where: { roomId: roomId },
+      });
+
+      if (!liveClass) {
+        return {
+          roomId: false,
+          router1: false,
+          newPeerDetails: null,
+          liveClass: null,
+        }; // No corresponding room in db
+      }
+      // update logs if peer is a teacher and change status of class to Ongoing
+      if (peerDetails) {
+        if (peerDetails.user_type === 1) {
+          liveClass.classStatus = classStatus.ONGOING;
+          await liveClass.save();
+          LiveClassLog.create({
+            classRoomId: liveClass.id,
+            logInfo: liveClassLogInfo.TEACHER_JOINED,
+          });
+        }
+      }
+
+      let newPeerDetails = {
+        id: peerDetails.id,
+        name:
+          peerDetails.name + Math.floor(Math.random() * (10000 - 1 + 1)) + 1,
+        isTeacher: peerDetails?.user_type === 1 ? true : false, // Is this Peer the teacher?
       };
 
-      return { roomId, router1, newPeerDetails };
+      // search within rooms object whether this roomId exists or not?
+      // if exists then send roomId and router back
+      // if not exists then check in db whether that room exists or not?
+      // if exists then create the new room
+      // if not exists then send false,false
+      if (roomId in rooms) {
+        router1 = rooms[roomId].router;
+        peers = rooms[roomId].peers || [];
+        rooms[roomId] = {
+          router: router1,
+          peers: [...peers, newPeerDetails],
+        };
+
+        return { roomId, router1, newPeerDetails, liveClass: liveClass };
+      } else {
+        // TODO Check in db and then create room if it exists otherwise don't create and send false,false
+        // Right now we will create using uuid
+        // let generateRoomId = uuidv4();
+        router1 = await worker.createRouter({ mediaCodecs });
+
+        rooms[roomId] = {
+          router: router1,
+          peers: [...peers, newPeerDetails],
+        };
+        return { roomId, router1, newPeerDetails, liveClass: liveClass };
+      }
     } else {
-      // TODO Check in db and then create room if it exists otherwise don't create and send false,false
-      // Right now we will create using uuid
-      // let generateRoomId = uuidv4();
-      router1 = await worker.createRouter({ mediaCodecs });
-
-      rooms[roomId] = {
-        router: router1,
-        peers: [...peers, newPeerDetails],
-      };
-      return { roomId, router1, newPeerDetails };
+      // no room Id supplied then send false,false
+      return { roomId: false, router1: false };
     }
-  } else {
-    // no room Id supplied then send false,false
-    return { roomId: false, router1: false };
+  } catch (err) {
+    console.log("Error in create or join room Function");
   }
 };
 
 // rooms contains temporarily the rooms that are currently active means there is at least one peer in the room
 
 const joinRoomPreviewHandler = (data, callback, socket, io) => {
-  const { roomId } = data;
-  if (roomId) {
-    // check from existing rooms if it exist if not exis then go to below step
-    // TODO check from database if roomId exist if it exist then send them empty array and also success as true
-    // once any one peer joins we will create the room
-    // when everybody leaves we will destroy the temporary room
-    if (roomId in rooms) {
-      socket.join(roomId);
-      callback({ success: true, peers: rooms[roomId].peers });
-    } else {
-      // most likely no body joins
-      socket.join(roomId);
-      callback({ success: true, peers: [] });
+  try {
+    const { roomId } = data;
+    if (roomId) {
+      // check from existing rooms if it exist if not exist then go to below step
+      // TODO check from database if roomId exist if it exist then send them empty array and also success as true
+      // once any one peer joins we will create the room
+      // when everybody leaves we will destroy the temporary room
+      if (roomId in rooms) {
+        socket.join(roomId);
+        callback({ success: true, peers: rooms[roomId].peers });
+      } else {
+        // most likely no body joins
+        socket.join(roomId);
+        callback({ success: true, peers: [] });
+      }
     }
+    callback({ success: false }); // No room id supplied
+  } catch (err) {
+    console.log("Error in join room Preview Handler", err);
   }
-  callback({ success: false }); // No room id supplied
 };
 
 const joinRoomHandler = async (data, callback, socket, io, worker) => {
-  const { roomId, router1, newPeerDetails } = await createOrJoinRoomFunction(
-    data,
-    socket.id,
-    worker
-  );
-  if (roomId === false && router1 === false) {
-    callback({ success: false }); // No room id supplied
-  } else {
-    const liveClass = await LiveClassRoom.findOne({
-      where: { roomId: roomId },
-    });
-    if (!liveClass) {
-      callback({ success: false }); // No corresponding room in db
-      return;
-    }
-    peers[socket.id] = {
-      socket,
-      roomId,
-      classPk: liveClass.id,
-      transports: [],
-      producers: [],
-      consumers: [],
-      peerDetails: newPeerDetails,
-    };
+  try {
+    const { roomId, router1, newPeerDetails, liveClass } =
+      await createOrJoinRoomFunction(data, socket.id, worker);
+    if (roomId === false && router1 === false) {
+      callback({ success: false }); // No room id/something not supplied
+    } else {
+      peers[socket.id] = {
+        socket,
+        roomId,
+        classPk: liveClass?.id,
+        transports: [],
+        producers: [],
+        consumers: [],
+        peerDetails: newPeerDetails,
+      };
 
-    const rtpCapabilities = router1.rtpCapabilities;
-    callback({ success: true, roomId, rtpCapabilities });
-    socket.broadcast.to(roomId).emit(SOCKET_EVENTS.NEW_PEER_JOINED, {
-      peer: newPeerDetails,
-    }); // later on we will send the peer details send all joined user that new user joined
-    socket.emit(SOCKET_EVENTS.ROOM_UPDATE, { peers: rooms[roomId].peers }); // send all peers to new joinee
+      const rtpCapabilities = router1.rtpCapabilities;
+      callback({ success: true, roomId, rtpCapabilities });
+      socket.broadcast.to(roomId).emit(SOCKET_EVENTS.NEW_PEER_JOINED, {
+        peer: newPeerDetails,
+      }); // later on we will send the peer details send all joined user that new user joined
+      socket.emit(SOCKET_EVENTS.ROOM_UPDATE, { peers: rooms[roomId].peers }); // send all peers to new joinee
+    }
+  } catch (err) {
+    console.log("Error in join room hander", err);
   }
 };
 
