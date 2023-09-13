@@ -12,6 +12,11 @@ const { SOCKET_EVENTS, routesConstants } = require("./constants");
 const scheduleLiveClass = require("./routes/scheduleliveclasses/scheduleLiveClass");
 const genericRoutes = require("./routes/genericroutes/genericroutes");
 const authenticationRoutes = require("./routes/authentication/authenticationRoutes");
+const { ENVIRON } = require("./envvar");
+const {
+  isSocketUserAuthenticated,
+  socketPaidStatusOrTeacher,
+} = require("./middlewares");
 const {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -53,7 +58,10 @@ app.use(routesConstants.GENERIC_API, genericRoutes);
 app.use(routesConstants.AUTH, authenticationRoutes);
 
 // Cron jobs function
-scheduleJob();
+if (ENVIRON !== "local") {
+  scheduleJob();
+}
+
 // Cron jobs function
 
 let worker;
@@ -75,6 +83,9 @@ const io = socketIo(httpServer, {
     methods: ["GET", "POST"],
   },
 });
+
+io.use(isSocketUserAuthenticated);
+io.use(socketPaidStatusOrTeacher);
 
 io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   console.log("connected client with socket id", socket.id);

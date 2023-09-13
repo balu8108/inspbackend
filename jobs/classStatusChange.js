@@ -60,7 +60,7 @@ const changeClassStatus = async (element, currentTime) => {
       "HH:mm:ss"
     );
     const scheduledEndTimeMoment = moment(element.scheduledEndTime, "HH:mm:ss");
-    const scheduledStartTime = scheduledStartTimeMoment.format("HH:mm:ss");
+
     const scheduledEndTime = scheduledEndTimeMoment.format("HH:mm:ss");
     const scheduledStartTimeAfterTenMinutes = scheduledStartTimeMoment
       .add(10, "minutes")
@@ -115,10 +115,6 @@ const classStatusChange = async () => {
     const asof = moment();
 
     const currentTime = asof.format("HH:mm:ss");
-
-    const currentDate = asof.startOf("day").format("YYYY-MM-DD HH:mm:ss");
-    const currentDateEnd = asof.endOf("day").format("YYYY-MM-DD HH:mm:ss");
-
     //  Get scheduled classes but if current date === scheduled Date and current time >=scheduledStartTime+10
     const scheduledClasses = await LiveClassRoom.findAll({
       where: {
