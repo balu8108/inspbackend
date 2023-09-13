@@ -22,7 +22,8 @@ const { LiveClassRoomFile, LiveClassRoom, LiveClassLog } = require("../models");
 const { uploadFilesToS3, updateLeaderboard } = require("../utils");
 
 const FFmpeg = require("./ffmpeg");
-const RECORD_PROCESS_NAME = "FFmpeg";
+const Gstreamer = require("./gstreamer");
+const RECORD_PROCESS_NAME = "GStreamer";
 
 const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
   try {
@@ -156,12 +157,13 @@ const joinRoomHandler = async (data, callback, socket, io, worker) => {
 
 const createWebRtcTransport = async (router) => {
   try {
-    const webRtcOptions = {
-      listenIps: [{ ip: "127.0.0.1", announcedIp: null }],
-      enableUdp: true,
-      enableTcp: true,
-      preferUdp: true,
-    };
+    // const webRtcOptions = {
+    //   listenIps: [{ ip: "127.0.0.1", announcedIp: null }],
+    //   enableUdp: true,
+    //   enableTcp: true,
+    //   preferUdp: true,
+    // };
+    const webRtcOptions = config.webRtcTransport;
 
     let transport = await router.createWebRtcTransport(webRtcOptions);
     transport.on(SOCKET_EVENTS.DTLS_STATE_CHANGE, (dtlsState) => {
@@ -645,6 +647,9 @@ const publishProducerRTPStream = async (peer, producer, router) => {
 const getProcess = (recordInfo) => {
   switch (RECORD_PROCESS_NAME) {
     case "FFmpeg":
+      return new FFmpeg(recordInfo);
+    case "GStreamer":
+      return new Gstreamer(recordInfo);
     default:
       return new FFmpeg(recordInfo);
   }
