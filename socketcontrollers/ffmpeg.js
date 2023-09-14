@@ -46,9 +46,9 @@ module.exports = class FFmpeg {
       console.log("ffmpeg::process::message [message:%o]", message);
     });
 
-    this._process.on("error", (error) =>
-      console.error("ffmpeg::process::error [error:%o]", error)
-    );
+    this._process.on("error", (error) => {
+      console.error("ffmpeg::process::error [error:%o]", error);
+    });
 
     this._process.once("close", () => {
       console.log("ffmpeg::process::close");

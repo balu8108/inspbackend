@@ -3,7 +3,12 @@ const mediaCodecs = require("./mediasoupconstants");
 const routesConstants = require("./routesconstants");
 const utilityConstants = require("./utilityConstants");
 const externalApiEndpoints = require("./externalApiEndpoints");
-const { notificationType } = require("./dbConstants");
+const {
+  notificationType,
+  classStatus,
+  liveClassLogInfo,
+  liveClassTestQuestionLogInfo,
+} = require("./dbConstants");
 module.exports = {
   SOCKET_EVENTS,
   mediaCodecs,
@@ -11,4 +16,7 @@ module.exports = {
   utilityConstants,
   externalApiEndpoints,
   notificationType,
+  classStatus,
+  liveClassLogInfo,
+  liveClassTestQuestionLogInfo,
 };

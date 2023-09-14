@@ -41,6 +41,9 @@ const SOCKET_EVENTS = Object.freeze({
   PRODUCER_PAUSED: "producer_paused", // for emitting producer_paused event to pause all the associated consumers in frontend
   PRODUCER_RESUMED: "producer_resumed",
   LEAVE_ROOM: "leave_room",
+  END_MEET_TO_SERVER: "END_MEET_TO_SERVER",
+  END_MEET_FROM_SERVER: "END_MEET_FROM_SERVER",
+  LEADERBOARD_FROM_SERVER: "leaderboard_from_server",
   MIRO_BOARD_DATA_TO_SERVER: "miro_board_data_to_server",
   MIRO_BOARD_DATA_FROM_SERVER: "miro_board_data_from_server",
 });

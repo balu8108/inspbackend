@@ -2,7 +2,8 @@ const { getCodecInfoFromRtpParameters } = require("./utils");
 
 // File to create SDP text from mediasoup RTP Parameters
 module.exports.createSdpText = (rtpParameters) => {
-  let sdpString = `v=0
+  let sdpString = `
+  v=0
   o=- 0 0 IN IP4 127.0.0.1
   s=FFmpeg
   c=IN IP4 127.0.0.1
@@ -21,10 +22,12 @@ module.exports.createSdpText = (rtpParameters) => {
       video.rtpParameters
     );
 
+    console.log("video codec", videoCodecInfo);
     sdpString += `
     m=video ${video.remoteRtpPort} RTP/AVP ${videoCodecInfo.payloadType} 
     a=rtpmap:${videoCodecInfo.payloadType} ${videoCodecInfo.codecName}/${videoCodecInfo.clockRate}
-    a=sendonly`;
+    a=sendonly
+    `;
     metaInfo.isVideoAvailable = true;
   }
 

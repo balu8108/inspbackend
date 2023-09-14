@@ -13,6 +13,11 @@ const scheduleLiveClass = require("./routes/scheduleliveclasses/scheduleLiveClas
 const genericRoutes = require("./routes/genericroutes/genericroutes");
 const authenticationRoutes = require("./routes/authentication/authenticationRoutes");
 const studentRoutes=require("./routes/Student/courses")
+const { ENVIRON } = require("./envvar");
+const {
+  isSocketUserAuthenticated,
+  socketPaidStatusOrTeacher,
+} = require("./middlewares");
 const {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -34,6 +39,7 @@ const {
   producerResumeHandler,
   studentTestAnswerResponseHandler,
   miroBoardDataHandler,
+  endMeetHandler,
 } = require("./socketcontrollers");
 
 app.use(express.json({ limit: "50mb" }));
@@ -54,7 +60,10 @@ app.use(routesConstants.GENERIC_API, genericRoutes);
 app.use(routesConstants.AUTH, authenticationRoutes);
 app.use("/api",studentRoutes);
 // Cron jobs function
-// scheduleJob();
+if (ENVIRON !== "local") {
+  scheduleJob();
+}
+
 // Cron jobs function
 
 let worker;
@@ -76,6 +85,9 @@ const io = socketIo(httpServer, {
     methods: ["GET", "POST"],
   },
 });
+
+io.use(isSocketUserAuthenticated);
+io.use(socketPaidStatusOrTeacher);
 
 io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   console.log("connected client with socket id", socket.id);
@@ -114,7 +126,7 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
     questionsHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.ANSWER_SENT_TO_SERVER, (data) => {
-    studentTestAnswerResponseHandler(data, socket);
+    studentTestAnswerResponseHandler(data, socket, io);
   });
   socket.on(SOCKET_EVENTS.STOP_PRODUCING, (data) => {
     stopProducingHandler(data, socket);
@@ -140,6 +152,10 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   socket.on(SOCKET_EVENTS.LEAVE_ROOM, () => {
     disconnectHandler(socket, worker, io);
     console.log("Client leaved the room", socket.id);
+  });
+  socket.on(SOCKET_EVENTS.END_MEET_TO_SERVER, () => {
+    endMeetHandler(socket, worker, io);
+    console.log("Client ended the meet", socket.id);
   });
   socket.on(SOCKET_EVENTS.DISCONNECT, () => {
     disconnectHandler(socket, worker, io);

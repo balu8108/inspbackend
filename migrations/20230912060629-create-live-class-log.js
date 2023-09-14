@@ -2,32 +2,20 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("LiveClassRoomDetails", {
+    await queryInterface.createTable("LiveClassLogs", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      chapterId: {
-        type: Sequelize.STRING,
+      logInfo: {
+        type: Sequelize.ENUM(
+          "TEACHER_JOINED",
+          "TEACHER_DISCONNECTED",
+          "TEACHER_END_MEET"
+        ),
         allowNull: false,
-      },
-      chapterName: {
-        type: Sequelize.STRING(512),
-      },
-      topicId: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      topicName: {
-        type: Sequelize.STRING(512),
-      },
-      agenda: {
-        type: Sequelize.STRING(1024),
-      },
-      description: {
-        type: Sequelize.STRING(2048),
       },
       classRoomId: {
         type: Sequelize.INTEGER,
@@ -52,6 +40,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("LiveClassRoomDetails");
+    await queryInterface.dropTable("LiveClassLogs");
   },
 };

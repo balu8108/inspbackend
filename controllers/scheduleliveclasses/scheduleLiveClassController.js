@@ -10,6 +10,7 @@ const {
   validateCreationOfLiveClass,
   uploadFilesToS3,
 } = require("../../utils");
+const { classStatus } = require("../../constants");
 
 // DB FUNCTIONS START
 
@@ -26,6 +27,7 @@ const createLiveClassRoom = async (randomCharacters, body) => {
       mentorName: body.mentorName || "Mentor",
       subjectId: JSON.parse(body.subject).value,
       subjectName: JSON.parse(body.subject).label,
+      classStatus: classStatus.SCHEDULED,
     });
     return { success: true, result: newLiveClass };
   } catch (err) {
@@ -91,7 +93,6 @@ const createLiveClass = async (req, res) => {
         randomCharacters,
         body
       );
-
       if (!success) {
         throw new Error("Unable to create new class");
       }
