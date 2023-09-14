@@ -12,6 +12,7 @@ const { SOCKET_EVENTS, routesConstants } = require("./constants");
 const scheduleLiveClass = require("./routes/scheduleliveclasses/scheduleLiveClass");
 const genericRoutes = require("./routes/genericroutes/genericroutes");
 const authenticationRoutes = require("./routes/authentication/authenticationRoutes");
+const studentRoutes=require("./routes/Student/courses")
 const {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -51,7 +52,7 @@ app.use(cookieParser());
 app.use(routesConstants.SCHEDULE_LIVE_CLASS, scheduleLiveClass);
 app.use(routesConstants.GENERIC_API, genericRoutes);
 app.use(routesConstants.AUTH, authenticationRoutes);
-
+app.use("/api",studentRoutes);
 // Cron jobs function
 // scheduleJob();
 // Cron jobs function
