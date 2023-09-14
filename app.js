@@ -38,6 +38,7 @@ const {
   producerResumeHandler,
   studentTestAnswerResponseHandler,
   miroBoardDataHandler,
+  endMeetHandler,
 } = require("./socketcontrollers");
 
 app.use(express.json({ limit: "50mb" }));
@@ -124,7 +125,7 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
     questionsHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.ANSWER_SENT_TO_SERVER, (data) => {
-    studentTestAnswerResponseHandler(data, socket);
+    studentTestAnswerResponseHandler(data, socket, io);
   });
   socket.on(SOCKET_EVENTS.STOP_PRODUCING, (data) => {
     stopProducingHandler(data, socket);
@@ -150,6 +151,10 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   socket.on(SOCKET_EVENTS.LEAVE_ROOM, () => {
     disconnectHandler(socket, worker, io);
     console.log("Client leaved the room", socket.id);
+  });
+  socket.on(SOCKET_EVENTS.END_MEET_TO_SERVER, () => {
+    endMeetHandler(socket, worker, io);
+    console.log("Client ended the meet", socket.id);
   });
   socket.on(SOCKET_EVENTS.DISCONNECT, () => {
     disconnectHandler(socket, worker, io);

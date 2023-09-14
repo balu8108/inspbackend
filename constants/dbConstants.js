@@ -15,4 +15,13 @@ const liveClassLogInfo = {
   TEACHER_DISCONNECTED: "TEACHER_DISCONNECTED",
   TEACHER_END_MEET: "TEACHER_END_MEET",
 };
-module.exports = { notificationType, classStatus, liveClassLogInfo };
+
+const liveClassTestQuestionLogInfo = {
+  NEW_QUESTION_ADDED: "NEW_QUESTION_ADDED",
+};
+module.exports = {
+  notificationType,
+  classStatus,
+  liveClassLogInfo,
+  liveClassTestQuestionLogInfo,
+};

@@ -7,6 +7,7 @@ const {
   notificationType,
   classStatus,
   liveClassLogInfo,
+  liveClassTestQuestionLogInfo,
 } = require("./dbConstants");
 module.exports = {
   SOCKET_EVENTS,
@@ -17,4 +18,5 @@ module.exports = {
   notificationType,
   classStatus,
   liveClassLogInfo,
+  liveClassTestQuestionLogInfo,
 };

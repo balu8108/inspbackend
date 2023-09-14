@@ -15,10 +15,16 @@ const {
   mediaCodecs,
   liveClassLogInfo,
   classStatus,
+  liveClassTestQuestionLogInfo,
 } = require("../constants");
 const config = require("./config");
 const { getPort, releasePort } = require("./port");
-const { LiveClassRoomFile, LiveClassRoom, LiveClassLog } = require("../models");
+const {
+  LiveClassRoomFile,
+  LiveClassRoom,
+  LiveClassLog,
+  LiveClassTestQuestionLog,
+} = require("../models");
 const { uploadFilesToS3, updateLeaderboard } = require("../utils");
 
 const FFmpeg = require("./ffmpeg");
@@ -30,6 +36,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
     // check if create room have this id or not
     let router1;
     let peers = [];
+    let mentors = [];
     if ("roomId" in data) {
       // means room exist then add this peer to given room
       let roomId = data.roomId;
@@ -60,7 +67,8 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
       }
 
       let newPeerDetails = {
-        id: authData.id,
+        socketId: socketId,
+        id: authData.id + Math.floor(Math.random() * (10000 - 1 + 1)) + 1,
         name: authData.name + Math.floor(Math.random() * (10000 - 1 + 1)) + 1,
         isTeacher: authData?.user_type === 1, // Is this Peer the teacher?
       };
@@ -70,11 +78,17 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
       // if not exists then check in db whether that room exists or not?
       // if exists then create the new room
       // if not exists then send false,false
+      // In below mentors key we are taking an array as we can have multiple mentors in a class
       if (roomId in rooms) {
         router1 = rooms[roomId].router;
         peers = rooms[roomId].peers || [];
+        mentors = rooms[roomId].mentors || [];
+
         rooms[roomId] = {
           router: router1,
+          mentors: newPeerDetails.isTeacher
+            ? [...mentors, newPeerDetails]
+            : [...mentors],
           peers: [...peers, newPeerDetails],
         };
 
@@ -87,6 +101,9 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
 
         rooms[roomId] = {
           router: router1,
+          mentors: newPeerDetails.isTeacher
+            ? [...mentors, newPeerDetails]
+            : [...mentors],
           peers: [...peers, newPeerDetails],
         };
         return { roomId, router1, newPeerDetails, liveClass: liveClass };
@@ -468,6 +485,9 @@ const disconnectHandler = (socket, worker, io) => {
 
       rooms[roomId] = {
         router: rooms[roomId].router,
+        mentors: rooms[roomId].mentors.filter(
+          (mentor) => mentor.id !== leavingPeer.peerDetails.id
+        ),
         peers: rooms[roomId].peers.filter(
           (peer) => peer.id !== leavingPeer.peerDetails.id
         ),
@@ -494,10 +514,32 @@ const disconnectHandler = (socket, worker, io) => {
     console.log("Error in disconnectHandler", err);
   }
 };
-
-const questionsHandler = (data, socket) => {
+const endMeetHandler = (socket, worker, io) => {
+  // End meet by mentor
   try {
     const { roomId } = peers[socket.id];
+    if (roomId in rooms) {
+      // send all the room-mates as meeting ended to navigate user
+      io.in(roomId).emit(SOCKET_EVENTS.END_MEET_FROM_SERVER);
+      // cleanups
+      rooms[roomId].peers.forEach(async (peer) => {
+        consumers = removeItems(consumers, peer.socketId, "consumer");
+        producers = removeItems(producers, peer.socketId, "producer");
+        transports = removeItems(transports, peer.socketId, "transport");
+        delete peers[peer.socketId];
+      });
+      delete rooms[roomId];
+
+      console.log("rooms after end meet", rooms);
+      console.log("peers after end meet", peers);
+    }
+  } catch (err) {
+    console.log("Error in ending meet", err);
+  }
+};
+const questionsHandler = async (data, socket) => {
+  try {
+    const { roomId, classPk } = peers[socket.id];
     const qId = uuidv4();
     data = { ...data, questionId: qId };
     if (roomId in testQuestions) {
@@ -505,6 +547,14 @@ const questionsHandler = (data, socket) => {
     } else {
       testQuestions[roomId] = [data];
     }
+    // Seed question log to db
+    await LiveClassTestQuestionLog.create({
+      logInfo: liveClassTestQuestionLogInfo.NEW_QUESTION_ADDED,
+      questionNo: data.questionNo,
+      questionId: data.questionId,
+      questionType: data.type,
+      classRoomId: classPk,
+    });
     // there can be polls mcq and qna
     socket.broadcast
       .to(roomId)
@@ -754,7 +804,7 @@ const producerResumeHandler = (data, socket) => {
   }
 };
 
-const studentTestAnswerResponseHandler = (data, socket) => {
+const studentTestAnswerResponseHandler = (data, socket, io) => {
   try {
     const { classPk, roomId, peerDetails } = peers[socket.id];
     const updatedLeaderboard = updateLeaderboard(
@@ -763,6 +813,14 @@ const studentTestAnswerResponseHandler = (data, socket) => {
       peerDetails,
       data
     );
+    const getAllTeachers = rooms[roomId].mentors;
+
+    getAllTeachers.forEach(async (peer) => {
+      // send leader board to specific teacher
+      io.to(peer.socketId).emit(SOCKET_EVENTS.LEADERBOARD_FROM_SERVER, {
+        leaderBoard: updatedLeaderboard,
+      });
+    });
     console.log("updatedLeaderboard", updatedLeaderboard);
   } catch (err) {
     console.log("Error in studentTestAnswerResponseHandler", err);
@@ -801,4 +859,5 @@ module.exports = {
   producerResumeHandler,
   studentTestAnswerResponseHandler,
   miroBoardDataHandler,
+  endMeetHandler,
 };
