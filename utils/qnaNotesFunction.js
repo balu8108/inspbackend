@@ -7,7 +7,13 @@ const {
   uploadToS3,
 } = require("./awsFunctions");
 
-const createOrUpdatePdfFile = async (pdfFile, fileLoc, data, files) => {
+const createOrUpdatePdfFile = async (
+  pdfFile,
+  folderPath,
+  fileName,
+  data,
+  files
+) => {
   try {
     const fontFamily = await pdfFile.embedFont(StandardFonts.TimesRoman);
     const imageFile = await pdfFile.embedJpg(files.screenshot.data);
@@ -47,11 +53,15 @@ const createOrUpdatePdfFile = async (pdfFile, fileLoc, data, files) => {
     const modifiedPdfBytes = await pdfFile.save();
 
     try {
-      const uploadingToS3 = await uploadToS3(fileLoc, modifiedPdfBytes);
+      const uploadingToS3 = await uploadToS3(folderPath, fileName, {
+        mimetype: "application/pdf",
+        modifiedPdfBytes: modifiedPdfBytes,
+      });
       if (uploadingToS3) {
         return {
           success: true,
           result: "QnA notes added successfully",
+          key: uploadingToS3.Key,
           url: uploadingToS3.Location,
         };
       }
@@ -63,9 +73,14 @@ const createOrUpdatePdfFile = async (pdfFile, fileLoc, data, files) => {
   }
 };
 
-const createOrUpdateQnANotes = async (fileLoc, textData, files) => {
+const createOrUpdateQnANotes = async (
+  folderPath,
+  fileName,
+  textData,
+  files
+) => {
   // This function will create a pdf file of qna notes
-  // We need to check first if fileLoc already exist
+  // We need to check first if file already exist
   // If exist then read the content first and then again write the content including the new content
   // If not exist then create a new file and write the content
   // In data we will receive the data buffer of imageFile (Which is screenshot coming from frontend)
@@ -74,30 +89,32 @@ const createOrUpdateQnANotes = async (fileLoc, textData, files) => {
   const textDataObj = JSON.parse(textData.data);
 
   try {
-    const isQnANotesExists = await isObjectExistInS3(fileLoc);
+    const isQnANotesExists = await isObjectExistInS3(folderPath, fileName);
 
     if (isQnANotesExists) {
-      const qnaNotesData = await getObjectFromS3(fileLoc);
+      const qnaNotesData = await getObjectFromS3(folderPath, fileName);
       const qnaNotes = await PDFDocument.load(qnaNotesData.Body);
-      const { success, result, url } = await createOrUpdatePdfFile(
+      const { success, result, key, url } = await createOrUpdatePdfFile(
         qnaNotes,
-        fileLoc,
+        folderPath,
+        fileName,
         textDataObj,
         files
       );
 
-      return { success, result, url };
+      return { success, result, key, url };
     } else {
       const qnaNotes = await PDFDocument.create();
 
-      const { success, result, url } = await createOrUpdatePdfFile(
+      const { success, result, key, url } = await createOrUpdatePdfFile(
         qnaNotes,
-        fileLoc,
+        folderPath,
+        fileName,
         textDataObj,
         files
       );
 
-      return { success, result, url };
+      return { success, result, key, url };
     }
   } catch (err) {
     // Something wrong happens

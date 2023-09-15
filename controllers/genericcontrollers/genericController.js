@@ -1,3 +1,4 @@
+const { file } = require("googleapis/build/src/apis/file");
 const {
   LiveClassRoomFile,
   LiveClassRoom,
@@ -14,6 +15,21 @@ const getAllSubjects = async (req, res) => {
   return res.status(200).json({ data: "No Subjects" });
 };
 
+const generateGetPresignedUrl = async (req, res) => {
+  try {
+    const { s3_key } = req.body;
+    if (!s3_key) {
+      throw new Error("s3 url is required");
+    }
+    const presignedUrls = await generatePresignedUrls(s3_key);
+    return res
+      .status(200)
+      .json({ status: true, data: { getUrl: presignedUrls } });
+  } catch (err) {
+    return res.status(400).json({ status: false, data: err.message });
+  }
+};
+
 const openFile = async (req, res) => {
   const { id } = req.params;
   if (!id) {
@@ -25,7 +41,7 @@ const openFile = async (req, res) => {
     if (!file) {
       throw new Error("No file found with this id");
     } else {
-      const presignedUrls = await generatePresignedUrls(file.url);
+      const presignedUrls = await generatePresignedUrls(file.key);
       return res.status(200).json({ data: { getUrl: presignedUrls } });
     }
   } catch (err) {
@@ -48,17 +64,27 @@ const imageToDoc = async (req, res) => {
       return res.status(400).json({ error: "No room found with this id" });
     }
 
-    const fileLoc = `qnaNotes/qnaNotes_roomId_${body.roomId}.pdf`; // in AWS S3
-    const { success, result, url } = await createOrUpdateQnANotes(
-      fileLoc,
+    const folderPath = `qnaNotes`; // in AWS S3
+    const fileName = `qnaNotes_roomId_${body.roomId}.pdf`;
+
+    const { success, result, key, url } = await createOrUpdateQnANotes(
+      folderPath,
+      fileName,
       body,
       files
     );
 
-    if (success && url) {
-      await LiveClassRoomQNANotes.create({
-        url: url,
+    if (success && key && url) {
+      const isQnaNotesExistForThisRoom = await LiveClassRoomQNANotes.findOne({
+        where: { classRoomId: isRoomExist.id },
       });
+      if (!isQnaNotesExistForThisRoom) {
+        await LiveClassRoomQNANotes.create({
+          key: key,
+          url: url,
+          classRoomId: isRoomExist.id,
+        });
+      }
 
       return res.status(200).json({ data: result });
     } else {
@@ -71,4 +97,9 @@ const imageToDoc = async (req, res) => {
   }
 };
 
-module.exports = { getAllSubjects, openFile, imageToDoc };
+module.exports = {
+  getAllSubjects,
+  openFile,
+  imageToDoc,
+  generateGetPresignedUrl,
+};

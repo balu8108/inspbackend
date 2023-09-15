@@ -1,16 +1,25 @@
 const { URL } = require("url");
 const aws = require("aws-sdk");
-const dotenv = require("dotenv");
-dotenv.config({ path: "config/.env" });
+
 // These static files include to be added within files
+const {
+  AWS_ACCESS_KEY_ID,
+  AWS_SECRET_ACCESS_KEY,
+  AWS_REGION,
+  AWS_BUCKET_NAME,
+} = require("../envvar.js");
 
 aws.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
+  accessKeyId: AWS_ACCESS_KEY_ID,
+  secretAccessKey: AWS_SECRET_ACCESS_KEY,
+  region: AWS_REGION,
 });
 
 const s3 = new aws.S3();
+
+const generateAWSS3LocationUrl = (fileKey) => {
+  return `https://${AWS_BUCKET_NAME}.s3.${AWS_REGION}.amazonaws.com/${fileKey}`;
+};
 
 const uploadFilesToS3 = async (files, folderPath) => {
   // folder path can be like
@@ -19,9 +28,10 @@ const uploadFilesToS3 = async (files, folderPath) => {
   return Promise.all(
     files.map((file) => {
       const params = {
-        Bucket: process.env.AWS_BUCKET_NAME,
+        Bucket: AWS_BUCKET_NAME,
         Key: `${folderPath}/${file.name}`, // Include folderPath in the key
         Body: file.data,
+        ContentType: file.mimetype,
       };
 
       return new Promise((resolve, reject) => {
@@ -29,8 +39,18 @@ const uploadFilesToS3 = async (files, folderPath) => {
           if (err) {
             reject(err);
           } else {
-            console.log("data", data);
-            resolve(data.Location);
+            // As putObject doesn't return Location so we need to create it manually
+            // If we use upload then we can't provide the contentType to it
+
+            const fileName = encodeURIComponent(file.name).replace(/%20/g, "+");
+            const fileKey = `${folderPath}/${file.name}`;
+            const modifiedData = {
+              ...data,
+              Key: fileKey,
+              Location: generateAWSS3LocationUrl(`${folderPath}/${fileName}`),
+            };
+
+            resolve({ key: modifiedData.Key, url: modifiedData.Location });
           }
         });
       });
@@ -38,12 +58,11 @@ const uploadFilesToS3 = async (files, folderPath) => {
   );
 };
 
-const generatePresignedUrls = async (fileUrl) => {
-  const url = new URL(fileUrl);
+const generatePresignedUrls = async (fileKey) => {
   return new Promise((resolve, reject) => {
     const params = {
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: url.pathname.slice(1),
+      Bucket: AWS_BUCKET_NAME,
+      Key: fileKey,
       Expires: 3600,
     };
     s3.getSignedUrl("getObject", params, (err, url) => {
@@ -56,11 +75,11 @@ const generatePresignedUrls = async (fileUrl) => {
   });
 };
 
-const isObjectExistInS3 = async (filePath) => {
+const isObjectExistInS3 = async (folderPath, fileName) => {
   return new Promise((resolve, reject) => {
     const params = {
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: filePath,
+      Bucket: AWS_BUCKET_NAME,
+      Key: `${folderPath}/${fileName}`,
     };
 
     s3.headObject(params, (err, data) => {
@@ -77,11 +96,11 @@ const isObjectExistInS3 = async (filePath) => {
   });
 };
 
-const getObjectFromS3 = async (filePath) => {
+const getObjectFromS3 = async (folderPath, fileName) => {
   return new Promise((resolve, reject) => {
     const params = {
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: filePath,
+      Bucket: AWS_BUCKET_NAME,
+      Key: `${folderPath}/${fileName}`,
     };
 
     s3.getObject(params, (err, data) => {
@@ -94,18 +113,26 @@ const getObjectFromS3 = async (filePath) => {
   });
 };
 
-const uploadToS3 = async (filePath, body) => {
+const uploadToS3 = async (folderPath, fileName, body) => {
   return new Promise((resolve, reject) => {
     const params = {
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: filePath, // Include folderPath in the key
-      Body: body,
+      Bucket: AWS_BUCKET_NAME,
+      Key: `${folderPath}/${fileName}`, // Include folderPath in the key
+      Body: body.modifiedPdfBytes,
+      ContentType: body.mimetype,
     };
-    s3.upload(params, (err, data) => {
+    s3.putObject(params, (err, data) => {
       if (err) {
         reject(err);
       } else {
-        resolve(data);
+        const fileUrl = encodeURIComponent(fileName).replace(/%20/g, "+");
+        const fileKey = `${folderPath}/${fileName}`;
+        const modifiedData = {
+          ...data,
+          Key: fileKey,
+          Location: generateAWSS3LocationUrl(`${folderPath}/${fileUrl}`),
+        };
+        resolve(modifiedData);
       }
     });
   });
