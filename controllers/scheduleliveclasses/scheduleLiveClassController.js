@@ -50,7 +50,8 @@ const uploadFilesAndCreateEntries = async (
     if (fileUploads) {
       fileUploads.forEach(async (file) => {
         const newFileToDB = await LiveClassRoomFile.create({
-          url: file,
+          key: file.key,
+          url: file.url,
           classRoomId: id,
         });
         LiveClassRoomFiles.push(newFileToDB);

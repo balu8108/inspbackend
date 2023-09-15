@@ -3,6 +3,7 @@ const {
   getAllSubjects,
   openFile,
   imageToDoc,
+  generateGetPresignedUrl,
 } = require("./genericcontrollers/genericController");
 const {
   createLiveClass,
@@ -20,4 +21,5 @@ module.exports = {
   getAllLiveClasses,
   getLiveClassDetails,
   getUpcomingClass,
+  generateGetPresignedUrl,
 };
