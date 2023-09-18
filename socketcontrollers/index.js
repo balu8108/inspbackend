@@ -18,7 +18,7 @@ const {
   liveClassTestQuestionLogInfo,
 } = require("../constants");
 const config = require("./config");
-const { getPort, releasePort } = require("./port");
+const { getPort } = require("./port");
 const {
   LiveClassRoomFile,
   LiveClassRoom,
@@ -174,12 +174,6 @@ const joinRoomHandler = async (data, callback, socket, io, worker) => {
 
 const createWebRtcTransport = async (router) => {
   try {
-    // const webRtcOptions = {
-    //   listenIps: [{ ip: "127.0.0.1", announcedIp: null }],
-    //   enableUdp: true,
-    //   enableTcp: true,
-    //   preferUdp: true,
-    // };
     const webRtcOptions = config.webRtcTransport;
 
     let transport = await router.createWebRtcTransport(webRtcOptions);
@@ -608,15 +602,19 @@ const uploadFileHandler = async (data, callback, socket) => {
     if (!getRoom) {
       throw new Error("Something went wrong");
     }
+
+    console.log("data", data);
     const fileUploads = await uploadFilesToS3(
       data?.files,
       `files/roomId_${data?.roomId}`
     );
     let filesResArray = [];
     if (fileUploads) {
+      console.log("fileUploads", fileUploads);
       for (const file of fileUploads) {
         const newFileToDB = await LiveClassRoomFile.create({
-          url: file,
+          key: file.key,
+          url: file.url,
           classRoomId: getRoom.id,
         });
         filesResArray.push(newFileToDB);

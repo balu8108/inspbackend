@@ -42,10 +42,12 @@ const openFile = async (req, res) => {
       throw new Error("No file found with this id");
     } else {
       const presignedUrls = await generatePresignedUrls(file.key);
-      return res.status(200).json({ data: { getUrl: presignedUrls } });
+      return res
+        .status(200)
+        .json({ status: true, data: { getUrl: presignedUrls } });
     }
   } catch (err) {
-    return res.status(400).json({ error: err.message });
+    return res.status(400).json({ status: false, data: err.message });
   }
 };
 
