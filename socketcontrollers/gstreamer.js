@@ -3,7 +3,7 @@ const { EventEmitter } = require("events");
 const { getCodecInfoFromRtpParameters } = require("./utils");
 const { PLATFORM } = require("../envvar");
 const RECORD_FILE_LOCATION_PATH = "./recordfiles";
-
+const kill = require("tree-kill");
 const GSTREAMER_DEBUG_LEVEL = 3;
 const GSTREAMER_COMMAND = "gst-launch-1.0";
 const GSTREAMER_OPTIONS = "-v -e";
@@ -67,6 +67,7 @@ module.exports = class GStreamer {
 
   kill() {
     console.log("kill() [pid:%d]", this._process.pid);
+    // kill(this._process.pid);
     this._process.kill("SIGINT");
   }
 
