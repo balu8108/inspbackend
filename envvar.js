@@ -23,6 +23,7 @@ const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const ENC_KEY = process.env.ENC_KEY;
 const MEDIA_SOUP_LISTEN_IP = process.env.MEDIA_SOUP_LISTEN_IP;
 const MEDIA_SOUP_ANNOUNCED_IP = process.env.MEDIA_SOUP_ANNOUNCED_IP;
+const PLATFORM = process.env.PLATFORM;
 
 module.exports = {
   PORT,
@@ -45,4 +46,5 @@ module.exports = {
   ENVIRON,
   MEDIA_SOUP_LISTEN_IP,
   MEDIA_SOUP_ANNOUNCED_IP,
+  PLATFORM,
 };
