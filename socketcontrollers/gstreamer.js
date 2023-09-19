@@ -92,7 +92,7 @@ module.exports = class GStreamer {
       video.rtpParameters
     );
 
-    const VIDEO_CAPS = `application/x-rtp,width=1280,height=720,media=(string)video,clock-rate=(int)${
+    const VIDEO_CAPS = `application/x-rtp,media=(string)video,clock-rate=(int)${
       videoCodecInfo.clockRate
     },payload=(int)${
       videoCodecInfo.payloadType
