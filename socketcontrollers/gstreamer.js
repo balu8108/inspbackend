@@ -67,8 +67,8 @@ module.exports = class GStreamer {
 
   kill() {
     console.log("kill() [pid:%d]", this._process.pid);
-    // kill(this._process.pid);
-    this._process.kill("SIGINT");
+    kill(this._process.pid);
+    // this._process.kill("SIGINT");
   }
 
   get _commandArgs() {
