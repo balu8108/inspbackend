@@ -749,6 +749,10 @@ const startRecordingHandler = (data, socket) => {
     const router = rooms[peer.roomId].router;
     // expecting some producers like screenshare and audio share of mentor to record using FFmpeg
     const { producerScreenShare, producerAudioShare } = data;
+    if (peer.recordProcess) {
+      peer.recordProcess.kill();
+      return;
+    }
 
     const peerProducersList = producers.filter(
       (obj) =>
