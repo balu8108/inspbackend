@@ -52,17 +52,17 @@ module.exports = class GStreamer {
       )
     );
     this._process.once("close", () => {
-      console.log("gstreamer::process::close [pid:%d]", this._process.pid);
+      // console.log("gstreamer::process::close [pid:%d]", this._process.pid);
       this._observer.emit("process-close");
     });
 
-    this._process.stderr.on("data", (data) =>
-      console.log("gstreamer::process::stderr::data [data:%o]", data)
-    );
+    this._process.stderr.on("data", (data) => {
+      // console.log("gstreamer::process::stderr::data [data:%o]", data);
+    });
 
-    this._process.stdout.on("data", (data) =>
-      console.log("gstreamer::process::stdout::data [data:%o]", data)
-    );
+    this._process.stdout.on("data", (data) => {
+      // console.log("gstreamer::process::stdout::data [data:%o]", data);
+    });
   }
 
   kill() {

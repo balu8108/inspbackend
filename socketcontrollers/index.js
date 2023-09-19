@@ -674,6 +674,13 @@ const publishProducerRTPStream = async (peer, producer, router) => {
       paused: true,
     });
 
+    rtpConsumer.on(SOCKET_EVENTS.PRODUCERPAUSE, () => {
+      console.log("recording process screen share paused", producer?.id);
+    });
+    rtpConsumer.on(SOCKET_EVENTS.PRODUCERRESUME, () => {
+      console.log("recording process screen share resumed", producer?.id);
+    });
+
     addConsumer(rtpConsumer, peer.roomId, peer.socket);
     // consumers
 
@@ -718,12 +725,8 @@ const startRecord = async (peer, peerProducersList, router) => {
 
     recordInfo.fileName = `${peer.roomId}-${Date.now().toString()}`;
 
-    // if (peer.recordProcess) {
-    //   peer.recordProcess.kill();
-    //   return;
-    // }
-    let ffmpegProcess = getProcess(recordInfo);
-    peers[peer.socket.id] = { ...peer, recordProcess: ffmpegProcess };
+    let recordProcess = getProcess(recordInfo);
+    peers[peer.socket.id] = { ...peer, recordProcess: recordProcess };
 
     console.log("consumer", consumers);
 
@@ -747,7 +750,7 @@ const startRecordingHandler = (data, socket) => {
   try {
     const peer = peers[socket.id];
     const router = rooms[peer.roomId].router;
-    // expecting some producers like screenshare and audio share of mentor to record using FFmpeg
+    // expecting some producers like screenshare and audio share of mentor to record using FFmpeg or gstreamer
     const { producerScreenShare, producerAudioShare } = data;
     if (peer.recordProcess) {
       peer.recordProcess.kill();
