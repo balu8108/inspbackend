@@ -1,6 +1,7 @@
 const child_process = require("child_process");
 const { EventEmitter } = require("events");
 const { getCodecInfoFromRtpParameters } = require("./utils");
+const { PLATFORM } = require("../envvar");
 const RECORD_FILE_LOCATION_PATH = "./recordfiles";
 
 const GSTREAMER_DEBUG_LEVEL = 3;
@@ -18,7 +19,12 @@ module.exports = class GStreamer {
   }
   _createProcess() {
     console.log("gstreaemr rtpparameters", this._rtpParameters);
-    const exe = `SET GST_DEBUG=${GSTREAMER_DEBUG_LEVEL} && ${GSTREAMER_COMMAND} ${GSTREAMER_OPTIONS}`;
+    let exe = null;
+    if (PLATFORM === "windows") {
+      exe = `SET GST_DEBUG=${GSTREAMER_DEBUG_LEVEL} && ${GSTREAMER_COMMAND} ${GSTREAMER_OPTIONS}`;
+    } else {
+      exe = `GST_DEBUG=${GSTREAMER_DEBUG_LEVEL} && ${GSTREAMER_COMMAND} ${GSTREAMER_OPTIONS}`;
+    }
     this._process = child_process.spawn(exe, this._commandArgs, {
       detached: false,
       shell: true,
