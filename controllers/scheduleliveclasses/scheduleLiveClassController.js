@@ -14,7 +14,7 @@ const { classStatus } = require("../../constants");
 
 // DB FUNCTIONS START
 
-const createLiveClassRoom = async (randomCharacters, body) => {
+const createLiveClassRoom = async (randomCharacters, body, plainAuthData) => {
   try {
     const newLiveClass = await LiveClassRoom.create({
       roomId: randomCharacters,
@@ -23,8 +23,10 @@ const createLiveClassRoom = async (randomCharacters, body) => {
       scheduledEndTime: body.scheduledEndTime,
       muteAllStudents: body.muteAllStudents || false,
       blockStudentsCamera: body.blockStudentsCamera || false,
-      mentorId: body.mentorId || 1,
-      mentorName: body.mentorName || "Mentor",
+      mentorId: plainAuthData.id || 1,
+      mentorName: plainAuthData.name || "Mentor",
+      mentorEmail: plainAuthData.email || "test@gmail.com",
+      mentorMobile: plainAuthData.mobile || "1234567890",
       subjectId: JSON.parse(body.subject).value,
       subjectName: JSON.parse(body.subject).label,
       classStatus: classStatus.SCHEDULED,
@@ -40,27 +42,31 @@ const uploadFilesAndCreateEntries = async (
   addFilesInArray,
   newLiveClass
 ) => {
-  const { id } = newLiveClass;
-  let LiveClassRoomFiles = [];
-  if (files) {
-    const fileUploads = await uploadFilesToS3(
-      addFilesInArray,
-      `files/roomId_${newLiveClass.roomId}`
-    );
-    if (fileUploads) {
-      fileUploads.forEach(async (file) => {
-        const newFileToDB = await LiveClassRoomFile.create({
-          key: file.key,
-          url: file.url,
-          classRoomId: id,
+  try {
+    const { id } = newLiveClass;
+    let LiveClassRoomFiles = [];
+    if (files) {
+      const fileUploads = await uploadFilesToS3(
+        addFilesInArray,
+        `files/roomId_${newLiveClass.roomId}`
+      );
+      if (fileUploads) {
+        fileUploads.forEach(async (file) => {
+          const newFileToDB = await LiveClassRoomFile.create({
+            key: file.key,
+            url: file.url,
+            classRoomId: id,
+          });
+          LiveClassRoomFiles.push(newFileToDB);
         });
-        LiveClassRoomFiles.push(newFileToDB);
-      });
-    } else {
-      return "unable to upload files";
+      } else {
+        return "unable to upload files";
+      }
     }
+    return LiveClassRoomFiles;
+  } catch (err) {
+    console.log("Error in uploading files and creating entries", err);
   }
-  return LiveClassRoomFiles;
 };
 // DB FUNCTIONS END
 
@@ -78,21 +84,23 @@ const getAllLiveClasses = async (req, res) => {
 };
 
 const createLiveClass = async (req, res) => {
-  const { body, files } = req;
-  let addFilesInArray = [];
-  if (files) {
-    addFilesInArray = Array.isArray(files?.files)
-      ? files?.files
-      : [files?.files];
-  }
+  try {
+    const { body, files, plainAuthData } = req;
 
-  const randomCharacters = generateRandomCharacters(10); // generate a unique class room id
-  // For creation of new class we need to first check if the body contains all required parameters or not
-  if (validateCreationOfLiveClass(body)) {
-    try {
+    let addFilesInArray = [];
+    if (files) {
+      addFilesInArray = Array.isArray(files?.files)
+        ? files?.files
+        : [files?.files];
+    }
+
+    const randomCharacters = generateRandomCharacters(10); // generate a unique class room id
+    // For creation of new class we need to first check if the body contains all required parameters or not
+    if (validateCreationOfLiveClass(body)) {
       const { success, result } = await createLiveClassRoom(
         randomCharacters,
-        body
+        body,
+        plainAuthData
       );
       if (!success) {
         throw new Error("Unable to create new class");
@@ -125,11 +133,11 @@ const createLiveClass = async (req, res) => {
       } else {
         return res.status(400).json({ error: "Unable to create new class" });
       }
-    } catch (err) {
-      return res.status(500).json({ error: err.message });
+    } else {
+      return res.status(400).json({ error: "Some fields are missing!!" });
     }
-  } else {
-    return res.status(400).json({ error: "Some fields are missing!!" });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 };
 

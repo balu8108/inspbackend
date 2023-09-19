@@ -41,6 +41,8 @@ module.exports = (sequelize, DataTypes) => {
       scheduledEndTime: DataTypes.TIME,
       mentorId: DataTypes.STRING,
       mentorName: DataTypes.STRING,
+      mentorEmail: DataTypes.STRING,
+      mentorMobile: DataTypes.STRING,
       muteAllStudents: DataTypes.BOOLEAN,
       blockStudentsCamera: DataTypes.BOOLEAN,
       subjectId: DataTypes.STRING,

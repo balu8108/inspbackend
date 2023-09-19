@@ -10,9 +10,15 @@ const {
 const {
   isAuthenticated,
   checkPaidStatusOrTeacher,
+  isTeacher,
 } = require("../../middlewares");
 
-router.post(routesConstants.CREATE_LIVE_CLASS, createLiveClass); // This route will create a new Live Class/room in db
+router.post(
+  routesConstants.CREATE_LIVE_CLASS,
+  isAuthenticated,
+  isTeacher,
+  createLiveClass
+); // This route will create a new Live Class/room in db
 router.get(
   routesConstants.GET_ALL_LIVE_CLASSES,
   isAuthenticated,
@@ -21,7 +27,14 @@ router.get(
 );
 router.get(
   `${routesConstants.GET_LIVE_CLASS_DETAILS}/:roomId`,
+  isAuthenticated,
+  checkPaidStatusOrTeacher,
   getLiveClassDetails
 );
-router.get(`${routesConstants.GET_UPCOMING_CLASS}/:roomId`, getUpcomingClass);
+router.get(
+  `${routesConstants.GET_UPCOMING_CLASS}/:roomId`,
+  isAuthenticated,
+  checkPaidStatusOrTeacher,
+  getUpcomingClass
+);
 module.exports = router;

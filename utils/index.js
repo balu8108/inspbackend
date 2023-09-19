@@ -13,6 +13,7 @@ const createOrUpdateQnANotes = require("./qnaNotesFunction");
 const isObjectValid = require("./objectValidation");
 const dbObjectConverter = require("./dbObjectConverter");
 const { encryptData } = require("./crypticFunctions");
+const { fetchAllStudentsFromInspApi } = require("./inspexternalapis");
 module.exports = {
   generateRandomCharacters,
   validateCreationOfLiveClass,
@@ -27,4 +28,5 @@ module.exports = {
   uploadToS3,
   dbObjectConverter,
   encryptData,
+  fetchAllStudentsFromInspApi,
 };

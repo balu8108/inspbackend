@@ -6,12 +6,13 @@ const {
   LiveClassNotificationStatus,
 } = require("../models");
 const tempUsers = require("../tempUsers/tempUsers");
-const { dbObjectConverter } = require("../utils");
+const { dbObjectConverter, fetchAllStudentsFromInspApi } = require("../utils");
 const { notificationType } = require("../constants");
 const {
   generateNotificationText,
   NOTF_TEMPLATE_NAME,
 } = require("../notificationstext");
+const { ENVIRON } = require("../envvar");
 
 const createNotificationObjects = async (item, notificationReceivers) => {
   try {
@@ -62,31 +63,42 @@ const upcomingLiveClass = async () => {
       include: { model: LiveClassRoomDetail },
     });
 
-    const convertedDbObjects = dbObjectConverter(getTodaysUpcomingClass);
+    if (getTodaysUpcomingClass.length !== 0) {
+      const convertedDbObjects = dbObjectConverter(getTodaysUpcomingClass);
 
-    console.log(convertedDbObjects);
+      const fetchNotfRecUsers = await fetchAllStudentsFromInspApi();
 
-    convertedDbObjects.forEach((item) => {
-      // Todo later on Optimize this code as it is like O(n^2)
-      const notificationReceivers = tempUsers.map((user) => {
-        const { emailText, smsText } = generateNotificationText(
-          notificationType.EMAIL_AND_SMS,
-          NOTF_TEMPLATE_NAME.UPCOMING_LIVE_CLASS,
-          [user.name, item.LiveClassRoomDetail.topicName]
-        );
+      convertedDbObjects.forEach((item) => {
+        // Todo later on Optimize this code as it is like O(n^2)
+        fetchNotfRecUsers.unshift({
+          name: item.mentorName,
+          email: item.mentorEmail,
+          mobile: item.mentorMobile,
+        });
 
-        return {
-          notificationReceiverName: user.name,
-          notificationReceiverEmail: user.email,
-          notificationReceiverMobile: user.mobile,
-          notificationEmailText: emailText,
-          notificationSMSText: smsText,
-          notificationSubject: "Meeting Reminder",
-          notificationMetaInfo: JSON.stringify({ RoomId: item.roomId }),
-        };
+        const notfUsers =
+          ENVIRON === "production" ? fetchNotfRecUsers : tempUsers;
+
+        const notificationReceivers = notfUsers.map((user) => {
+          const { emailText, smsText } = generateNotificationText(
+            notificationType.EMAIL_AND_SMS,
+            NOTF_TEMPLATE_NAME.UPCOMING_LIVE_CLASS,
+            [user.name, item.LiveClassRoomDetail.topicName]
+          );
+
+          return {
+            notificationReceiverName: user.name,
+            notificationReceiverEmail: user.email,
+            notificationReceiverMobile: user.mobile,
+            notificationEmailText: emailText,
+            notificationSMSText: smsText,
+            notificationSubject: "Meeting Reminder",
+            notificationMetaInfo: JSON.stringify({ RoomId: item.roomId }),
+          };
+        });
+        createNotificationObjects(item, notificationReceivers);
       });
-      createNotificationObjects(item, notificationReceivers);
-    });
+    }
   } catch (err) {
     console.log("Error in upcoming class scheduler");
   }

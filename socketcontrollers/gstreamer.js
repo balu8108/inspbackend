@@ -167,7 +167,7 @@ module.exports = class GStreamer {
     return [
       "webmmux name=mux",
       "!",
-      `filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.mp4`,
+      `filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm`,
     ];
   }
 };

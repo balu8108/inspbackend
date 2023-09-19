@@ -1,6 +1,5 @@
 const { externalApiEndpoints } = require("../../constants");
-const dotenv = require("dotenv");
-dotenv.config({ path: "../../config/.env" });
+const { INSP_EXTERNAL_WEBSITE_SECRET_KEY } = require("../../envvar");
 
 const isAuthenticated = async (req, res, next) => {
   try {
@@ -19,7 +18,7 @@ const isAuthenticated = async (req, res, next) => {
     }
 
     const body = {
-      secret_key: process.env.INSP_EXTERNAL_WEBSITE_SECRET_KEY,
+      secret_key: INSP_EXTERNAL_WEBSITE_SECRET_KEY,
       token: secret_token,
     };
     const requestOptions = {
@@ -31,6 +30,7 @@ const isAuthenticated = async (req, res, next) => {
     const data = await response.json();
 
     if (data.status) {
+      req.plainAuthData = data.result; // this will be used for internal purpose like getting email and mobile of user
       req.authData = data.result;
     }
 
