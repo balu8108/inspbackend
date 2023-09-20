@@ -843,6 +843,18 @@ const miroBoardDataHandler = (data, socket) => {
   }
 };
 
+const stopRecordingHandler = (socket) => {
+  try {
+    const peer = peers[socket.id];
+    if (peer?.recordProcess) {
+      peer.recordProcess.kill();
+      peers[socket.id] = { ...peer, recordProcess: null };
+    }
+  } catch (err) {
+    console.log("No recording proces to stop");
+  }
+};
+
 module.exports = {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -865,4 +877,5 @@ module.exports = {
   studentTestAnswerResponseHandler,
   miroBoardDataHandler,
   endMeetHandler,
+  stopRecordingHandler,
 };

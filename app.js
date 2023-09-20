@@ -35,6 +35,7 @@ const {
   raiseHandHandler,
   uploadFileHandler,
   startRecordingHandler,
+  stopRecordingHandler,
   producerPauseHandler,
   producerResumeHandler,
   studentTestAnswerResponseHandler,
@@ -145,6 +146,9 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   });
   socket.on(SOCKET_EVENTS.START_RECORDING, (data) => {
     startRecordingHandler(data, socket);
+  });
+  socket.on(SOCKET_EVENTS.STOP_RECORDING, () => {
+    stopRecordingHandler(socket);
   });
   socket.on(SOCKET_EVENTS.MIRO_BOARD_DATA_TO_SERVER, (data) => {
     miroBoardDataHandler(data, socket);
