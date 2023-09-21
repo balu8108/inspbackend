@@ -7,6 +7,6 @@ deploy_dev_job:
     - echo "Starting Deploying to ..."
     - echo "${INSP_PEM_FILE}" > ssh_key.pem
     - chmod 400 ssh_key.pem
-    - ssh -o StrictHostKeyChecking=no -i ssh_key.pem -A "${INSP_DEV_USER}"@"${INSP_DEV_SERVER_IP}" "node --version && cd /home/ubuntu/insp_dev_backend/inspbackend && git pull origin dev && npm run migrate && pm2 restart all"
+    - ssh -o StrictHostKeyChecking=no -i ssh_key.pem -A "${INSP_DEV_USER}"@"${INSP_DEV_SERVER_IP}" "./script.sh"
   only:
     - dev
