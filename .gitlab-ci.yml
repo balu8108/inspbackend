@@ -1,33 +1,12 @@
 stages:
-  - build
-  - test
-  - deploy
+  - deploy_dev
 
-# Define individual jobs within each stage.
-# In this example, we'll create a simple build and test job, and a deploy job.
-
-# Build stage
-build:
-  stage: build
-  script:
-    - echo "Building the application..."
-  only:
-    - dev
-
-# Test stage
-test:
-  stage: test
-  script:
-    - echo "Running tests..."
-    # You would typically run your actual test commands here.
-    # For example: "npm test" for Node.js projects, "pytest" for Python, etc.
-  only:
-    - dev
-
-# Deploy stage
-deploy:
+deploy_dev_job:
   stage: deploy
   script:
-    - echo "Deploying to production..."
+    - echo "Starting Deploying to ..."
+    - echo "${INSP_PEM_FILE}" > ssh_key.pem
+    - chmod 400 ssh_key.pem
+    - ssh -o StrictHostKeyChecking=no -i ssh_key.pem -A "${INSP_DEV_USER}"@"${INSP_DEV_SERVER_IP}" "ls"
   only:
     - dev
