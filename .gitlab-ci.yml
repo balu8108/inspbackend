@@ -11,6 +11,8 @@ build:
   stage: build
   script:
     - echo "Building the application..."
+  only:
+    - dev
 
 # Test stage
 test:
@@ -19,9 +21,13 @@ test:
     - echo "Running tests..."
     # You would typically run your actual test commands here.
     # For example: "npm test" for Node.js projects, "pytest" for Python, etc.
+  only:
+    - dev
 
 # Deploy stage
 deploy:
   stage: deploy
   script:
     - echo "Deploying to production..."
+  only:
+    - dev
