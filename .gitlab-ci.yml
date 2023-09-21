@@ -1,8 +1,8 @@
 stages:
-  - deploy_dev_job
+  - deploy_dev
 
 deploy_dev_job:
-  stage: deploy
+  stage: deploy_dev
   script:
     - echo "Starting Deploying to ..."
     - echo "${INSP_PEM_FILE}" > ssh_key.pem
