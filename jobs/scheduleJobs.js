@@ -3,9 +3,8 @@ const upcomingLiveClass = require("./upcomingLiveClass");
 const notificationSender = require("./notificationSender");
 const classStatusChange = require("./classStatusChange");
 const { ENVIRON } = require("../envvar");
-// let jobRule = "*/2 * * * *";
+let jobRule = "*/1 * * * *";
 
-let jobRule = "*/10 * * * * *";
 if (ENVIRON === "local") {
   jobRule = "*/10 * * * * *"; // job run in 10 seconds in local environ
 }
