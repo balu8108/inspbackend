@@ -64,7 +64,7 @@ app.use("/api", studentRoutes);
 if (ENVIRON !== "local") {
   scheduleJob();
 }
-scheduleJob();
+// scheduleJob();
 // Cron jobs function
 
 let worker;

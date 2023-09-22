@@ -13,6 +13,8 @@ const {
   NOTF_TEMPLATE_NAME,
 } = require("../notificationstext");
 const { ENVIRON } = require("../envvar");
+const moment = require("moment-timezone");
+moment.tz.setDefault("Asia/Kolkata");
 
 const createNotificationObjects = async (item, notificationReceivers) => {
   try {
@@ -41,35 +43,18 @@ const createNotificationObjects = async (item, notificationReceivers) => {
 const upcomingLiveClass = async () => {
   try {
     // Get all upcoming live classes that has 15 minutes left to start
-    const today = new Date();
-    console.log("today date in upcoming class", today);
+
     const currentDate = Sequelize.literal("CURRENT_DATE");
-    console.log("current date of sequelize in upcoming class", currentDate);
-    const fifteenMinutesFromNow = new Date(today);
-    fifteenMinutesFromNow.setMinutes(fifteenMinutesFromNow.getMinutes() + 15);
+
+    const today = moment();
+    const currentTime = today.format("HH:mm:ss");
+    const fifteenMinutesFromNow = today.clone().add(15, "minutes");
+    const fifteenMinutesFromNowTime = fifteenMinutesFromNow.format("HH:mm:ss");
+    console.log("current time in mom upcoming", currentTime);
     console.log(
-      "fifteen minutes from now in upcoming class",
-      fifteenMinutesFromNow
-    );
-    const currentTime = today.toTimeString().slice(0, 8);
-    console.log("current time in upcoming class", currentTime);
-    const fifteenMinutesFromNowTime = fifteenMinutesFromNow
-      .toTimeString()
-      .slice(0, 8);
-    console.log(
-      "fifteen minutes from now time in upcoming class",
+      "fifteen minutes from now in mom upcoming",
       fifteenMinutesFromNowTime
     );
-
-    const getOnlyScheduled = await LiveClassRoom.findAll({
-      where: {
-        scheduledDate: {
-          [Op.eq]: currentDate,
-        },
-      },
-    });
-
-    console.log("getOnlyScheduled", getOnlyScheduled);
 
     const getTodaysUpcomingClass = await LiveClassRoom.findAll({
       where: {
