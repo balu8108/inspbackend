@@ -508,7 +508,7 @@ const disconnectHandler = (socket, worker, io) => {
     console.log("Error in disconnectHandler", err);
   }
 };
-const endMeetHandler = (socket, worker, io) => {
+const endMeetHandler = async (socket, worker, io) => {
   // End meet by mentor
   try {
     const { roomId } = peers[socket.id];
@@ -523,9 +523,14 @@ const endMeetHandler = (socket, worker, io) => {
         delete peers[peer.socketId];
       });
       delete rooms[roomId];
-
-      console.log("rooms after end meet", rooms);
-      console.log("peers after end meet", peers);
+      // Change class status to Finished
+      const liveClassRoom = await LiveClassRoom.findOne({
+        where: { roomId: roomId },
+      });
+      if (liveClassRoom) {
+        liveClassRoom.classStatus = classStatus.FINISHED;
+        liveClassRoom.save();
+      }
     }
   } catch (err) {
     console.log("Error in ending meet", err);

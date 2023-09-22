@@ -118,11 +118,16 @@ const classStatusChange = async () => {
     //  Get scheduled classes but if current date === scheduled Date and current time >=scheduledStartTime+10
     const scheduledClasses = await LiveClassRoom.findAll({
       where: {
-        classStatus: classStatus.SCHEDULED,
+        classStatus: {
+          [Op.or]: [
+            classStatus.SCHEDULED,
+            classStatus.ONGOING,
+            classStatus.NOT_STARTED,
+          ],
+        },
       },
     });
     console.log("scheduledClasses", scheduledClasses);
-
     scheduledClasses.forEach((element) =>
       changeClassStatus(element, currentTime)
     );
