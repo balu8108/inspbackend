@@ -42,13 +42,34 @@ const upcomingLiveClass = async () => {
   try {
     // Get all upcoming live classes that has 15 minutes left to start
     const today = new Date();
+    console.log("today date in upcoming class", today);
     const currentDate = Sequelize.literal("CURRENT_DATE");
+    console.log("current date of sequelize in upcoming class", currentDate);
     const fifteenMinutesFromNow = new Date(today);
     fifteenMinutesFromNow.setMinutes(fifteenMinutesFromNow.getMinutes() + 15);
+    console.log(
+      "fifteen minutes from now in upcoming class",
+      fifteenMinutesFromNow
+    );
     const currentTime = today.toTimeString().slice(0, 8);
+    console.log("current time in upcoming class", currentTime);
     const fifteenMinutesFromNowTime = fifteenMinutesFromNow
       .toTimeString()
       .slice(0, 8);
+    console.log(
+      "fifteen minutes from now time in upcoming class",
+      fifteenMinutesFromNowTime
+    );
+
+    const getOnlyScheduled = await LiveClassRoom.findAll({
+      where: {
+        scheduledDate: {
+          [Op.eq]: currentDate,
+        },
+      },
+    });
+
+    console.log("getOnlyScheduled", getOnlyScheduled);
 
     const getTodaysUpcomingClass = await LiveClassRoom.findAll({
       where: {
