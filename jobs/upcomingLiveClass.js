@@ -50,11 +50,6 @@ const upcomingLiveClass = async () => {
     const currentTime = today.format("HH:mm:ss");
     const fifteenMinutesFromNow = today.clone().add(15, "minutes");
     const fifteenMinutesFromNowTime = fifteenMinutesFromNow.format("HH:mm:ss");
-    console.log("current time in mom upcoming", currentTime);
-    console.log(
-      "fifteen minutes from now in mom upcoming",
-      fifteenMinutesFromNowTime
-    );
 
     const getTodaysUpcomingClass = await LiveClassRoom.findAll({
       where: {
