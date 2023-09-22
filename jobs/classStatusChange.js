@@ -113,8 +113,10 @@ const changeClassStatus = async (element, currentTime) => {
 const classStatusChange = async () => {
   try {
     const asof = moment();
+    console.log("asof", asof);
 
     const currentTime = asof.format("HH:mm:ss");
+    console.log("currentTime", currentTime);
     //  Get scheduled classes but if current date === scheduled Date and current time >=scheduledStartTime+10
     const scheduledClasses = await LiveClassRoom.findAll({
       where: {
