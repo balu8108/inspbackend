@@ -5,6 +5,7 @@ const { classStatus, liveClassLogInfo } = require("../constants");
 const { rooms } = require("../socketcontrollers/socketglobalvariables");
 const { isObjectValid } = require("../utils");
 const moment = require("moment-timezone");
+moment.tz.setDefault("Asia/Kolkata");
 
 // IN below function we are using this logic
 // -> Get all the scheduled classes of all below categories
