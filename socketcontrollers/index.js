@@ -471,7 +471,45 @@ const chatMsgHandler = (data, socket) => {
   }
 };
 
-const disconnectHandler = async (callback, socket, worker, io) => {
+const disconnectHandler = async (socket, worker, io) => {
+  try {
+    consumers = removeItems(consumers, socket.id, "consumer");
+    producers = removeItems(producers, socket.id, "producer");
+    transports = removeItems(transports, socket.id, "transport");
+    if (socket.id in peers) {
+      const { roomId } = peers[socket.id];
+      const leavingPeer = peers[socket.id];
+      delete peers[socket.id];
+
+      rooms[roomId] = {
+        router: rooms[roomId].router,
+        mentors: rooms[roomId].mentors.filter(
+          (mentor) => mentor.id !== leavingPeer.peerDetails.id
+        ),
+        peers: rooms[roomId].peers.filter(
+          (peer) => peer.id !== leavingPeer.peerDetails.id
+        ),
+      };
+
+      if (rooms[roomId].peers.length === 0) {
+        delete rooms[roomId];
+        socket.leave(roomId);
+        io.to(roomId).emit(SOCKET_EVENTS.PEER_LEAVED, {
+          peerLeaved: leavingPeer.peerDetails,
+        });
+      } else {
+        socket.leave(roomId);
+        io.to(roomId).emit(SOCKET_EVENTS.PEER_LEAVED, {
+          peerLeaved: leavingPeer.peerDetails,
+        });
+      }
+    }
+  } catch (err) {
+    console.log("Error in disconnectHandler", err);
+  }
+};
+
+const leaveRoomHandler = async (callback, socket, worker, io) => {
   try {
     consumers = removeItems(consumers, socket.id, "consumer");
     producers = removeItems(producers, socket.id, "producer");
@@ -513,9 +551,6 @@ const disconnectHandler = async (callback, socket, worker, io) => {
         });
       }
     }
-    console.log("peer disconnected");
-    console.log("rooms after peer disconnected or leaved", rooms);
-    console.log("peers after peer disconnected or leaved", peers);
   } catch (err) {
     console.log("Error in disconnectHandler", err);
   }
@@ -885,6 +920,7 @@ module.exports = {
   consumerResumeHandler,
   chatMsgHandler,
   disconnectHandler,
+  leaveRoomHandler,
   questionsHandler,
   stopProducingHandler,
   raiseHandHandler,
