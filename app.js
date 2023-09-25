@@ -153,8 +153,8 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   socket.on(SOCKET_EVENTS.MIRO_BOARD_DATA_TO_SERVER, (data) => {
     miroBoardDataHandler(data, socket);
   });
-  socket.on(SOCKET_EVENTS.LEAVE_ROOM, () => {
-    disconnectHandler(socket, worker, io);
+  socket.on(SOCKET_EVENTS.LEAVE_ROOM, (callback) => {
+    disconnectHandler(callback, socket, worker, io);
     console.log("Client leaved the room", socket.id);
   });
   socket.on(SOCKET_EVENTS.END_MEET_TO_SERVER, () => {

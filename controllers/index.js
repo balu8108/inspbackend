@@ -4,6 +4,7 @@ const {
   openFile,
   imageToDoc,
   generateGetPresignedUrl,
+  createFeedback,
 } = require("./genericcontrollers/genericController");
 const {
   createLiveClass,
@@ -22,4 +23,5 @@ module.exports = {
   getLiveClassDetails,
   getUpcomingClass,
   generateGetPresignedUrl,
+  createFeedback,
 };

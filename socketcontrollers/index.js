@@ -25,7 +25,11 @@ const {
   LiveClassLog,
   LiveClassTestQuestionLog,
 } = require("../models");
-const { uploadFilesToS3, updateLeaderboard } = require("../utils");
+const {
+  uploadFilesToS3,
+  updateLeaderboard,
+  isFeedbackProvided,
+} = require("../utils");
 
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
@@ -467,7 +471,7 @@ const chatMsgHandler = (data, socket) => {
   }
 };
 
-const disconnectHandler = (socket, worker, io) => {
+const disconnectHandler = async (callback, socket, worker, io) => {
   try {
     consumers = removeItems(consumers, socket.id, "consumer");
     producers = removeItems(producers, socket.id, "producer");
@@ -486,6 +490,16 @@ const disconnectHandler = (socket, worker, io) => {
           (peer) => peer.id !== leavingPeer.peerDetails.id
         ),
       };
+
+      const { success, isFeedback, feedBackTopicId } = await isFeedbackProvided(
+        leavingPeer.peerDetails,
+        roomId
+      );
+
+      callback({
+        feedBackStatus: { success, isFeedback, feedBackTopicId },
+      });
+
       if (rooms[roomId].peers.length === 0) {
         delete rooms[roomId];
         socket.leave(roomId);
@@ -499,11 +513,9 @@ const disconnectHandler = (socket, worker, io) => {
         });
       }
     }
-    console.log("rooms", rooms);
-    console.log("peers", peers);
-    console.log("producers", producers);
-    console.log("consumers", consumers);
-    console.log("transports", transports);
+    console.log("peer disconnected");
+    console.log("rooms after peer disconnected or leaved", rooms);
+    console.log("peers after peer disconnected or leaved", peers);
   } catch (err) {
     console.log("Error in disconnectHandler", err);
   }
@@ -515,22 +527,23 @@ const endMeetHandler = async (socket, worker, io) => {
     if (roomId in rooms) {
       // send all the room-mates as meeting ended to navigate user
       io.in(roomId).emit(SOCKET_EVENTS.END_MEET_FROM_SERVER);
+
       // cleanups
-      rooms[roomId].peers.forEach(async (peer) => {
-        consumers = removeItems(consumers, peer.socketId, "consumer");
-        producers = removeItems(producers, peer.socketId, "producer");
-        transports = removeItems(transports, peer.socketId, "transport");
-        delete peers[peer.socketId];
-      });
-      delete rooms[roomId];
-      // Change class status to Finished
-      const liveClassRoom = await LiveClassRoom.findOne({
-        where: { roomId: roomId },
-      });
-      if (liveClassRoom) {
-        liveClassRoom.classStatus = classStatus.FINISHED;
-        liveClassRoom.save();
-      }
+      // rooms[roomId].peers.forEach(async (peer) => {
+      //   consumers = removeItems(consumers, peer.socketId, "consumer");
+      //   producers = removeItems(producers, peer.socketId, "producer");
+      //   transports = removeItems(transports, peer.socketId, "transport");
+      //   delete peers[peer.socketId];
+      // });
+      // delete rooms[roomId];
+      // // Change class status to Finished
+      // const liveClassRoom = await LiveClassRoom.findOne({
+      //   where: { roomId: roomId },
+      // });
+      // if (liveClassRoom) {
+      //   liveClassRoom.classStatus = classStatus.FINISHED;
+      //   liveClassRoom.save();
+      // }
     }
   } catch (err) {
     console.log("Error in ending meet", err);

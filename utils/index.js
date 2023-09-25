@@ -1,5 +1,8 @@
 const generateRandomCharacters = require("./generateRandomCharacters");
-const { validateCreationOfLiveClass } = require("./validators");
+const {
+  validateCreationOfLiveClass,
+  validateCreateFeedBack,
+} = require("./validators");
 const {
   uploadFilesToS3,
   generatePresignedUrls,
@@ -14,6 +17,7 @@ const isObjectValid = require("./objectValidation");
 const dbObjectConverter = require("./dbObjectConverter");
 const { encryptData } = require("./crypticFunctions");
 const { fetchAllStudentsFromInspApi } = require("./inspexternalapis");
+const { isFeedbackProvided } = require("./dbUtilityFunctions");
 module.exports = {
   generateRandomCharacters,
   validateCreationOfLiveClass,
@@ -29,4 +33,6 @@ module.exports = {
   dbObjectConverter,
   encryptData,
   fetchAllStudentsFromInspApi,
+  validateCreateFeedBack,
+  isFeedbackProvided,
 };

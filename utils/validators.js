@@ -9,6 +9,11 @@ const validateCreationOfLiveClass = (data) => {
     data.description
   );
 };
+
+const validateCreateFeedBack = (data) => {
+  return data.topicId && data.rating && data.feedback;
+};
 module.exports = {
   validateCreationOfLiveClass,
+  validateCreateFeedBack,
 };

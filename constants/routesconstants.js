@@ -7,6 +7,7 @@ const routesConstants = Object.freeze({
   GENERIC_API: "/generic",
   GET_ALL_SUBJECTS: "/get-all-subjects",
   GENERATE_GET_PRESIGNED_URL: "/generate-get-presigned-url",
+  CREATE_FEEDBACK: "/create-feedback",
   OPEN_FILE: "/open-file",
   IMAGE_TO_DOC: "/image-to-doc",
   AUTH: "/auth",

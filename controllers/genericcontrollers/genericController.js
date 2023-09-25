@@ -2,13 +2,13 @@ const {
   LiveClassRoomFile,
   LiveClassRoom,
   LiveClassRoomQNANotes,
+  Rating,
 } = require("../../models");
 const {
   generatePresignedUrls,
   createOrUpdateQnANotes,
+  validateCreateFeedBack,
 } = require("../../utils");
-
-const path = require("path");
 
 const getAllSubjects = async (req, res) => {
   return res.status(200).json({ data: "No Subjects" });
@@ -98,9 +98,38 @@ const imageToDoc = async (req, res) => {
   }
 };
 
+const createFeedback = async (req, res) => {
+  try {
+    const { body, plainAuthData } = req;
+
+    if (plainAuthData && validateCreateFeedBack(body)) {
+      const { id, name } = plainAuthData;
+      const { topicId, rating, feedback } = body;
+      const feedbackCreation = await Rating.create({
+        topicId: topicId,
+        raterId: id,
+        raterName: name,
+        rating: rating,
+        feedback: feedback,
+      });
+      if (!feedbackCreation) {
+        throw new Error("Something went wrong while saving feedback");
+      }
+      return res
+        .status(200)
+        .json({ status: true, data: "Feedback created successfully" });
+    } else {
+      throw new Error("Something went wrong");
+    }
+  } catch (err) {
+    return res.status(400).json({ status: false, error: err.message });
+  }
+};
+
 module.exports = {
   getAllSubjects,
   openFile,
   imageToDoc,
   generateGetPresignedUrl,
+  createFeedback,
 };
