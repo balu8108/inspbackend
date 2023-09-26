@@ -30,6 +30,7 @@ const {
   consumerResumeHandler,
   chatMsgHandler,
   disconnectHandler,
+  leaveRoomHandler,
   questionsHandler,
   stopProducingHandler,
   raiseHandHandler,
@@ -154,7 +155,7 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
     miroBoardDataHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.LEAVE_ROOM, (callback) => {
-    disconnectHandler(callback, socket, worker, io);
+    leaveRoomHandler(callback, socket, worker, io);
     console.log("Client leaved the room", socket.id);
   });
   socket.on(SOCKET_EVENTS.END_MEET_TO_SERVER, () => {

@@ -30,6 +30,7 @@ const {
   updateLeaderboard,
   isFeedbackProvided,
 } = require("../utils");
+const { ENVIRON } = require("../envvar");
 
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
@@ -56,10 +57,22 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           router1: false,
           newPeerDetails: null,
           liveClass: null,
+          errMsg: "No Class with this room id",
         }; // No corresponding room in db
       }
       // update logs if peer is a teacher and change status of class to Ongoing
       if (peerDetails) {
+        // check if already this peer exists in peers
+        const isPeerExists = rooms[roomId]?.peers.find(
+          (peer) => peer.id === peerDetails.id
+        );
+        if (isPeerExists) {
+          return {
+            roomId: false,
+            router1: false,
+            errMsg: "You have already joined the class!!",
+          };
+        }
         if (peerDetails.user_type === 1) {
           liveClass.classStatus = classStatus.ONGOING;
           await liveClass.save();
@@ -70,12 +83,22 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
         }
       }
 
-      let newPeerDetails = {
-        socketId: socketId,
-        id: authData.id + Math.floor(Math.random() * (10000 - 1 + 1)) + 1,
-        name: authData.name + Math.floor(Math.random() * (10000 - 1 + 1)) + 1,
-        isTeacher: authData?.user_type === 1, // Is this Peer the teacher?
-      };
+      let newPeerDetails = {};
+      if (ENVIRON !== "local") {
+        newPeerDetails = {
+          socketId: socketId,
+          id: authData.id,
+          name: authData.name,
+          isTeacher: authData?.user_type === 1, // Is this Peer the teacher?
+        };
+      } else {
+        newPeerDetails = {
+          socketId: socketId,
+          id: authData.id + Math.floor(Math.random() * (10000 - 1 + 1)) + 1,
+          name: authData.name + Math.floor(Math.random() * (10000 - 1 + 1)) + 1,
+          isTeacher: authData?.user_type === 1, // Is this Peer the teacher?
+        };
+      }
 
       // search within rooms object whether this roomId exists or not?
       // if exists then send roomId and router back
@@ -114,7 +137,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
       }
     } else {
       // no room Id supplied then send false,false
-      return { roomId: false, router1: false };
+      return { roomId: false, router1: false, errMsg: "No room id given" };
     }
   } catch (err) {
     console.log("Error in create or join room Function");
@@ -149,10 +172,11 @@ const joinRoomPreviewHandler = (data, callback, socket, io) => {
 const joinRoomHandler = async (data, callback, socket, io, worker) => {
   try {
     const { authData } = socket;
-    const { roomId, router1, newPeerDetails, liveClass } =
+    const { roomId, router1, newPeerDetails, liveClass, errMsg } =
       await createOrJoinRoomFunction(data, authData, socket.id, worker);
     if (roomId === false && router1 === false) {
-      callback({ success: false }); // No room id/something not supplied
+      console.log("error in join room handler", errMsg);
+      callback({ success: false, errMsg }); // No room id/something not supplied
     } else {
       peers[socket.id] = {
         socket,
@@ -471,7 +495,45 @@ const chatMsgHandler = (data, socket) => {
   }
 };
 
-const disconnectHandler = async (callback, socket, worker, io) => {
+const disconnectHandler = async (socket, worker, io) => {
+  try {
+    consumers = removeItems(consumers, socket.id, "consumer");
+    producers = removeItems(producers, socket.id, "producer");
+    transports = removeItems(transports, socket.id, "transport");
+    if (socket.id in peers) {
+      const { roomId } = peers[socket.id];
+      const leavingPeer = peers[socket.id];
+      delete peers[socket.id];
+
+      rooms[roomId] = {
+        router: rooms[roomId].router,
+        mentors: rooms[roomId].mentors.filter(
+          (mentor) => mentor.id !== leavingPeer.peerDetails.id
+        ),
+        peers: rooms[roomId].peers.filter(
+          (peer) => peer.id !== leavingPeer.peerDetails.id
+        ),
+      };
+
+      if (rooms[roomId].peers.length === 0) {
+        delete rooms[roomId];
+        socket.leave(roomId);
+        io.to(roomId).emit(SOCKET_EVENTS.PEER_LEAVED, {
+          peerLeaved: leavingPeer.peerDetails,
+        });
+      } else {
+        socket.leave(roomId);
+        io.to(roomId).emit(SOCKET_EVENTS.PEER_LEAVED, {
+          peerLeaved: leavingPeer.peerDetails,
+        });
+      }
+    }
+  } catch (err) {
+    console.log("Error in disconnectHandler", err);
+  }
+};
+
+const leaveRoomHandler = async (callback, socket, worker, io) => {
   try {
     consumers = removeItems(consumers, socket.id, "consumer");
     producers = removeItems(producers, socket.id, "producer");
@@ -513,9 +575,6 @@ const disconnectHandler = async (callback, socket, worker, io) => {
         });
       }
     }
-    console.log("peer disconnected");
-    console.log("rooms after peer disconnected or leaved", rooms);
-    console.log("peers after peer disconnected or leaved", peers);
   } catch (err) {
     console.log("Error in disconnectHandler", err);
   }
@@ -527,6 +586,14 @@ const endMeetHandler = async (socket, worker, io) => {
     if (roomId in rooms) {
       // send all the room-mates as meeting ended to navigate user
       io.in(roomId).emit(SOCKET_EVENTS.END_MEET_FROM_SERVER);
+
+      const liveClassRoom = await LiveClassRoom.findOne({
+        where: { roomId: roomId },
+      });
+      if (liveClassRoom) {
+        liveClassRoom.classStatus = classStatus.FINISHED;
+        liveClassRoom.save();
+      }
 
       // cleanups
       // rooms[roomId].peers.forEach(async (peer) => {
@@ -885,6 +952,7 @@ module.exports = {
   consumerResumeHandler,
   chatMsgHandler,
   disconnectHandler,
+  leaveRoomHandler,
   questionsHandler,
   stopProducingHandler,
   raiseHandHandler,
