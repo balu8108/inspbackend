@@ -125,6 +125,23 @@ const createFeedback = async (req, res) => {
     return res.status(400).json({ status: false, error: err.message });
   }
 };
+// for latest two rating for mentors homepage-
+const latestfeedback=async(req,res)=>{
+  try {
+    // Query the database to retrieve the latest two ratings and feedback
+    const latestRatings = await Rating.findAll({
+      order: [["createdAt", "DESC"]], // Order by createdAt in descending order
+      limit: 2, // Limit the result to two records
+    });
+
+    // Send the retrieved data as a JSON response
+    res.status(200).json(latestRatings);
+  } catch (error) {
+    // Handle any errors and send an error response if necessary
+    console.error("Error fetching latest ratings:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
 
 module.exports = {
   getAllSubjects,
@@ -132,4 +149,5 @@ module.exports = {
   imageToDoc,
   generateGetPresignedUrl,
   createFeedback,
+  latestfeedback
 };
