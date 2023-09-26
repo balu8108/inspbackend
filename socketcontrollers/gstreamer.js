@@ -1,8 +1,15 @@
 const child_process = require("child_process");
 const { EventEmitter } = require("events");
 const { getCodecInfoFromRtpParameters } = require("./utils");
-const { PLATFORM } = require("../envvar");
+const {
+  PLATFORM,
+  AWS_ACCESS_KEY_ID,
+  AWS_SECRET_ACCESS_KEY,
+  AWS_REGION,
+  AWS_BUCKET_NAME,
+} = require("../envvar");
 const RECORD_FILE_LOCATION_PATH = "./recordfiles";
+const AWS_S3_RECORD_FILES = "recordfiles";
 const kill = require("tree-kill");
 const GSTREAMER_DEBUG_LEVEL = 3;
 const GSTREAMER_COMMAND = "gst-launch-1.0";
@@ -170,4 +177,11 @@ module.exports = class GStreamer {
       `filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm`,
     ];
   }
+  // get _sinkArgs() {
+  //   return [
+  //     "webmmux name=mux",
+  //     "!",
+  //     `awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} bucket=${AWS_BUCKET_NAME} region=${AWS_REGION} key=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`,
+  //   ];
+  // }
 };
