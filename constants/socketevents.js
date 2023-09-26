@@ -34,6 +34,8 @@ const SOCKET_EVENTS = Object.freeze({
   QUESTION_SENT_TO_SERVER: "question_sent_to_server",
   QUESTION_SENT_FROM_SERVER: "question_sent_from_server",
   ANSWER_SENT_TO_SERVER: "answer_sent_to_server",
+  IS_AUDIO_STREAM_ENABLED_TO_SERVER: "is_audio_stream_enabled_to_server",
+  IS_AUDIO_STREAM_ENABLED_FROM_SERVER: "is_audio_stream_enabled_from_server",
   START_RECORDING: "start_recording",
   STOP_RECORDING: "stop_recording",
   PRODUCER_PAUSE: "producer_pause", // for pausing producer if from frontend it is paused

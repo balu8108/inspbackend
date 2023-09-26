@@ -42,6 +42,7 @@ const {
   studentTestAnswerResponseHandler,
   miroBoardDataHandler,
   endMeetHandler,
+  setIsAudioStreamEnabled,
 } = require("./socketcontrollers");
 
 app.use(express.json({ limit: "50mb" }));
@@ -153,6 +154,9 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   });
   socket.on(SOCKET_EVENTS.MIRO_BOARD_DATA_TO_SERVER, (data) => {
     miroBoardDataHandler(data, socket);
+  });
+  socket.on(SOCKET_EVENTS.IS_AUDIO_STREAM_ENABLED_TO_SERVER, (data) => {
+    setIsAudioStreamEnabled(data, socket, io);
   });
   socket.on(SOCKET_EVENTS.LEAVE_ROOM, (callback) => {
     leaveRoomHandler(callback, socket, worker, io);

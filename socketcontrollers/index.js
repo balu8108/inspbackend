@@ -83,22 +83,21 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
         }
       }
 
-      let newPeerDetails = {};
-      if (ENVIRON !== "local") {
-        newPeerDetails = {
-          socketId: socketId,
-          id: authData.id,
-          name: authData.name,
-          isTeacher: authData?.user_type === 1, // Is this Peer the teacher?
-        };
-      } else {
-        newPeerDetails = {
-          socketId: socketId,
-          id: authData.id + Math.floor(Math.random() * (10000 - 1 + 1)) + 1,
-          name: authData.name + Math.floor(Math.random() * (10000 - 1 + 1)) + 1,
-          isTeacher: authData?.user_type === 1, // Is this Peer the teacher?
-        };
-      }
+      let newPeerDetails = {
+        socketId: socketId,
+        id:
+          ENVIRON !== "local"
+            ? authData.id
+            : authData.id + Math.floor(Math.random() * (10000 - 1 + 1)) + 1,
+        name:
+          ENVIRON !== "local"
+            ? authData.name
+            : authData.name + Math.floor(Math.random() * (10000 - 1 + 1)) + 1,
+        isTeacher: authData?.user_type === 1,
+        isAudioEnabled: false,
+        isVideoEnabled: false,
+        isScreenSharingEnabled: false,
+      };
 
       // search within rooms object whether this roomId exists or not?
       // if exists then send roomId and router back
@@ -175,7 +174,6 @@ const joinRoomHandler = async (data, callback, socket, io, worker) => {
     const { roomId, router1, newPeerDetails, liveClass, errMsg } =
       await createOrJoinRoomFunction(data, authData, socket.id, worker);
     if (roomId === false && router1 === false) {
-      console.log("error in join room handler", errMsg);
       callback({ success: false, errMsg }); // No room id/something not supplied
     } else {
       peers[socket.id] = {
@@ -939,7 +937,18 @@ const stopRecordingHandler = (socket) => {
     console.log("No recording proces to stop");
   }
 };
+const setIsAudioStreamEnabled = (data, socket, io) => {
+  try {
+    const { roomId, peerDetails } = peers[socket.id];
 
+    io.in(roomId).emit(SOCKET_EVENTS.IS_AUDIO_STREAM_ENABLED_FROM_SERVER, {
+      ...data,
+      peerId: peerDetails?.id,
+    });
+  } catch (err) {
+    console.log("Error in set is audio stream enabled", err);
+  }
+};
 module.exports = {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -964,4 +973,5 @@ module.exports = {
   miroBoardDataHandler,
   endMeetHandler,
   stopRecordingHandler,
+  setIsAudioStreamEnabled,
 };
