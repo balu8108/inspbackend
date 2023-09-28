@@ -12,13 +12,15 @@ const {
   createFeedback,
 } = require("../../controllers");
 const { isAuthenticated } = require("../../middlewares");
-const { latestfeedback } = require("../../controllers/genericcontrollers/genericController");
+const {
+  latestfeedback,
+} = require("../../controllers/genericcontrollers/genericController");
 
 router.get(routesConstants.GET_ALL_SUBJECTS, getAllSubjects);
 router.get(`${routesConstants.OPEN_FILE}/:id`, openFile);
 router.get(routesConstants.GENERATE_GET_PRESIGNED_URL, generateGetPresignedUrl);
 router.post(routesConstants.IMAGE_TO_DOC, imageToDoc);
 router.post(routesConstants.CREATE_FEEDBACK, isAuthenticated, createFeedback);
-router.get(routesConstants.LATEST_FEEDBACK,isAuthenticated,latestfeedback)
+router.get(routesConstants.LATEST_FEEDBACK, isAuthenticated, latestfeedback);
 
 module.exports = router;

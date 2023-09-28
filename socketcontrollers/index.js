@@ -24,6 +24,7 @@ const {
   LiveClassRoom,
   LiveClassLog,
   LiveClassTestQuestionLog,
+  LiveClassBlockedPeer,
 } = require("../models");
 const {
   uploadFilesToS3,
@@ -62,6 +63,25 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
       }
       // update logs if peer is a teacher and change status of class to Ongoing
       if (peerDetails) {
+        // check if the peer is blocked from this class
+        // check if this peer is not blocked
+        const isPeerBlocked = await LiveClassBlockedPeer.findOne({
+          where: {
+            classRoomId: liveClass?.id,
+            blockedPersonId: peerDetails.id,
+            isBlocked: true,
+          },
+        });
+        if (isPeerBlocked) {
+          return {
+            roomId: false,
+            router1: false,
+            newPeerDetails: null,
+            liveClass: null,
+            errMsg: "You are blocked from this class",
+          }; // No corresponding room in db
+        }
+
         // check if already this peer exists in peers
         const isPeerExists = rooms[roomId]?.peers.find(
           (peer) => peer.id === peerDetails.id
@@ -949,6 +969,20 @@ const setIsAudioStreamEnabled = (data, socket, io) => {
     console.log("Error in set is audio stream enabled", err);
   }
 };
+
+const kickOutFromClassHandler = async (data, socket, io) => {
+  const { classPk } = peers[socket.id];
+  const { peerSocketId, peerId } = data;
+  if (peerSocketId && peerId) {
+    // TODO write in db that this user is kicked out from class
+    await LiveClassBlockedPeer.create({
+      blockedPersonId: peerId,
+      classRoomId: classPk,
+      isBlocked: true,
+    });
+    io.to(peerSocketId).emit(SOCKET_EVENTS.KICK_OUT_FROM_CLASS_FROM_SERVER);
+  }
+};
 module.exports = {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -974,4 +1008,5 @@ module.exports = {
   endMeetHandler,
   stopRecordingHandler,
   setIsAudioStreamEnabled,
+  kickOutFromClassHandler,
 };
