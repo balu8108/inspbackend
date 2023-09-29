@@ -65,7 +65,7 @@ app.use(routesConstants.AUTH, authenticationRoutes);
 app.use("/api", studentRoutes);
 // Cron jobs function
 if (ENVIRON !== "local") {
-  scheduleJob();
+  // scheduleJob();
 }
 // scheduleJob();
 // Cron jobs function

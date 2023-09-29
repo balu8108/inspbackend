@@ -101,6 +101,8 @@ const imageToDoc = async (req, res) => {
 const createFeedback = async (req, res) => {
   try {
     const { body, plainAuthData } = req;
+    console.log("body", body);
+    console.log("plain auth data", plainAuthData);
 
     if (plainAuthData && validateCreateFeedBack(body)) {
       const { id, name } = plainAuthData;

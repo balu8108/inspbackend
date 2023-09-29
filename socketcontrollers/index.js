@@ -575,6 +575,7 @@ const leaveRoomHandler = async (callback, socket, worker, io) => {
         leavingPeer.peerDetails,
         roomId
       );
+      console.log("feedbacks", success, isFeedback, feedBackTopicId);
 
       callback({
         feedBackStatus: { success, isFeedback, feedBackTopicId },
