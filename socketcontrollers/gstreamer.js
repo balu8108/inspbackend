@@ -3,13 +3,14 @@ const { EventEmitter } = require("events");
 const { getCodecInfoFromRtpParameters } = require("./utils");
 const {
   PLATFORM,
+  ENVIRON,
   AWS_ACCESS_KEY_ID,
   AWS_SECRET_ACCESS_KEY,
   AWS_REGION,
   AWS_BUCKET_NAME,
 } = require("../envvar");
 const RECORD_FILE_LOCATION_PATH = "./recordfiles";
-const AWS_S3_RECORD_FILES = "recordfiles";
+const AWS_S3_RECORD_FILES = "./insp_dev_s3_bucket/liveclassrecordings"; // we have mounted the s3 bucket directly to ec2 instance
 const kill = require("tree-kill");
 const GSTREAMER_DEBUG_LEVEL = 3;
 const GSTREAMER_COMMAND = "gst-launch-1.0";
@@ -75,7 +76,6 @@ module.exports = class GStreamer {
   kill() {
     console.log("kill() [pid:%d]", this._process.pid);
     kill(this._process.pid, "SIGTERM");
-    // this._process.kill("SIGINT");
   }
 
   get _commandArgs() {
@@ -171,11 +171,19 @@ module.exports = class GStreamer {
   }
 
   get _sinkArgs() {
-    return [
-      "webmmux name=mux",
-      "!",
-      `filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm`,
-    ];
+    if (ENVIRON === "local") {
+      return [
+        "webmmux name=mux",
+        "!",
+        `filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm`,
+      ];
+    } else {
+      return [
+        "webmmux name=mux",
+        "!",
+        `filesink location=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`,
+      ];
+    }
   }
   // get _sinkArgs() {
   //   return [
