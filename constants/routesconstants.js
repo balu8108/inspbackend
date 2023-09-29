@@ -11,8 +11,12 @@ const routesConstants = Object.freeze({
   LATEST_FEEDBACK:"/latest-feedback",
   OPEN_FILE: "/open-file",
   IMAGE_TO_DOC: "/image-to-doc",
+  SOLO:"/solo-lecture",
+  SOLO_CLASSROOM: "/create-room",
+  LATEST_CLASSROOM: "/latest-room",
   AUTH: "/auth",
   LOGIN: "/login",
+ 
 });
 
 module.exports = routesConstants;
