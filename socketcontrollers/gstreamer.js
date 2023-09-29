@@ -75,9 +75,7 @@ module.exports = class GStreamer {
 
   kill() {
     console.log("kill() [pid:%d]", this._process.pid);
-    setTimeout(() => {
-      kill(this._process.pid, "SIGTERM");
-    }, 2000);
+    kill(this._process.pid, "SIGINT");
   }
 
   get _commandArgs() {
@@ -191,7 +189,7 @@ module.exports = class GStreamer {
   //   return [
   //     "webmmux name=mux",
   //     "!",
-  //     `awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} bucket=${AWS_BUCKET_NAME} region=${AWS_REGION} key=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`,
+  //     `awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${this._rtpParameters.fileName}.webm`,
   //   ];
   // }
 };
