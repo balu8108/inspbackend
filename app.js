@@ -67,7 +67,7 @@ app.use(routesConstants.SOLO, soloClassroomRoutes);
 app.use(routesConstants.TOPIC_ASSIGNMENTS, myUploadRoutes);
 // Cron jobs function
 if (ENVIRON !== "local") {
-  // scheduleJob();
+  scheduleJob();
 }
 // scheduleJob();
 // Cron jobs function
