@@ -46,11 +46,11 @@ const {
   kickOutFromClassHandler,
 } = require("./socketcontrollers");
 
-app.use(express.json({ limit: "50mb" }));
+app.use(express.json({ limit: "100mb" }));
 app.use(bodyParser.json());
 app.use(
   bodyParser.urlencoded({
-    limit: "50mb",
+    limit: "100mb",
     extended: true,
   })
 );
@@ -62,7 +62,7 @@ app.use(cookieParser());
 app.use(routesConstants.SCHEDULE_LIVE_CLASS, scheduleLiveClass);
 app.use(routesConstants.GENERIC_API, genericRoutes);
 app.use(routesConstants.AUTH, authenticationRoutes);
-app.use(routesConstants.SOLO,soloClassroomRoutes)
+app.use(routesConstants.SOLO, soloClassroomRoutes);
 // Cron jobs function
 if (ENVIRON !== "local") {
   // scheduleJob();
@@ -84,6 +84,7 @@ let worker;
 
 const httpServer = http.createServer(app);
 const io = socketIo(httpServer, {
+  maxHttpBufferSize: 1e8, // 100 MB,
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
@@ -139,6 +140,7 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
     raiseHandHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.UPLOAD_FILE_TO_SERVER, (data, callback) => {
+    console.log("file handler triggering", socket);
     uploadFileHandler(data, callback, socket);
   });
   socket.on(SOCKET_EVENTS.PRODUCER_PAUSE, (data) => {

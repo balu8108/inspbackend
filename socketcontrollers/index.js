@@ -697,6 +697,7 @@ const raiseHandHandler = (data, socket) => {
 
 const uploadFileHandler = async (data, callback, socket) => {
   // will receive array of files data buffer  and then broadcast to all
+  console.log("data from files", data);
 
   // upload to AWS S3 First
   try {
@@ -707,7 +708,6 @@ const uploadFileHandler = async (data, callback, socket) => {
       throw new Error("Something went wrong");
     }
 
-    console.log("data", data);
     const fileUploads = await uploadFilesToS3(
       data?.files,
       `files/roomId_${data?.roomId}`

@@ -75,7 +75,9 @@ module.exports = class GStreamer {
 
   kill() {
     console.log("kill() [pid:%d]", this._process.pid);
-    kill(this._process.pid, "SIGINT");
+    // kill(this._process.pid, "SIGINT");
+    this._process.stdin.end();
+    this._process.kill("SIGINT");
   }
 
   get _commandArgs() {
@@ -170,26 +172,26 @@ module.exports = class GStreamer {
     ];
   }
 
-  get _sinkArgs() {
-    if (ENVIRON === "local") {
-      return [
-        "webmmux name=mux",
-        "!",
-        `filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm`,
-      ];
-    } else {
-      return [
-        "webmmux name=mux",
-        "!",
-        `filesink location=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`,
-      ];
-    }
-  }
   // get _sinkArgs() {
-  //   return [
-  //     "webmmux name=mux",
-  //     "!",
-  //     `awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${this._rtpParameters.fileName}.webm`,
-  //   ];
+  //   if (ENVIRON === "local") {
+  //     return [
+  //       "webmmux name=mux",
+  //       "!",
+  //       `filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm`,
+  //     ];
+  //   } else {
+  //     return [
+  //       "webmmux name=mux",
+  //       "!",
+  //       `filesink location=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`,
+  //     ];
+  //   }
   // }
+  get _sinkArgs() {
+    return [
+      "webmmux name=mux",
+      "!",
+      `awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${this._rtpParameters.fileName}.webm`,
+    ];
+  }
 };
