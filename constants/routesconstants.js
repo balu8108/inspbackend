@@ -14,6 +14,12 @@ const routesConstants = Object.freeze({
   SOLO:"/solo-lecture",
   SOLO_CLASSROOM: "/create-room",
   LATEST_CLASSROOM: "/latest-room",
+  TOPIC_ASSIGNMENTS:'/topic',
+  CREATE_ASSIGNMENT:'/create',
+  GET_ASSIGNMENT:'/get-all-assignments',
+  DELETE_ASSIGNMENT:'/delete-assignment',
+  LATEST_ASSIGNMENT:'/latest-assignment',
+  My_UPLOADS:"/upload-assignments",
   AUTH: "/auth",
   LOGIN: "/login",
  

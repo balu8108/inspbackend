@@ -13,6 +13,7 @@ const scheduleLiveClass = require("./routes/scheduleliveclasses/scheduleLiveClas
 const genericRoutes = require("./routes/genericroutes/genericroutes");
 const authenticationRoutes = require("./routes/authentication/authenticationRoutes");
 const soloClassroomRoutes = require("./routes/soloclassroom/soloClassroom");
+const myUploadRoutes = require("./routes/myuploads/assignment")
 const { ENVIRON } = require("./envvar");
 const {
   isSocketUserAuthenticated,
@@ -62,7 +63,8 @@ app.use(cookieParser());
 app.use(routesConstants.SCHEDULE_LIVE_CLASS, scheduleLiveClass);
 app.use(routesConstants.GENERIC_API, genericRoutes);
 app.use(routesConstants.AUTH, authenticationRoutes);
-app.use(routesConstants.SOLO,soloClassroomRoutes)
+app.use(routesConstants.SOLO,soloClassroomRoutes);
+app.use(routesConstants.TOPIC_ASSIGNMENTS,myUploadRoutes);
 // Cron jobs function
 if (ENVIRON !== "local") {
   // scheduleJob();
