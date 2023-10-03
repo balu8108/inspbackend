@@ -53,10 +53,6 @@ module.exports = class GStreamer {
       )
     );
 
-    this._process.on("SIGBREAK", () => {
-      console.log("SIGINT RECEIVE");
-      kill(this._process.pid, "SIGINT");
-    });
     this._process.on("error", (error) =>
       console.error(
         "gstreamer::process::error [pid:%d, error:%o]",
@@ -81,8 +77,8 @@ module.exports = class GStreamer {
   async kill() {
     const gstPid = await getGStreamerPIDs(this._process.pid);
     console.log("gst pid", gstPid);
-    console.log("kill() [pid:%d]", this._process.pid);
-    // kill(this._process.pid, "SIGINT");
+
+    kill(gstPid[0], "SIGINT");
     this._process.stdin.end();
     this._process.kill("SIGINT");
   }
