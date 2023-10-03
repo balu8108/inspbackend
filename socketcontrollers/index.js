@@ -830,10 +830,8 @@ const startRecord = async (peer, peerProducersList, router) => {
     recordInfo.fileName = `${peer.roomId}-${Date.now().toString()}`;
 
     let recordProcess = getProcess(recordInfo);
-    console.log("record process", recordProcess, recordProcess?.pid);
-    peers[peer.socket.id] = { ...peer, recordProcess: recordProcess };
 
-    console.log("consumer", consumers);
+    peers[peer.socket.id] = { ...peer, recordProcess: recordProcess };
 
     setTimeout(async () => {
       for (const consumer of consumers) {
