@@ -189,8 +189,13 @@ module.exports = class GStreamer {
       return [
         "webmmux name=mux",
         "!",
-        `awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${this._rtpParameters.fileName}.webm`,
+        `filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm`,
       ];
+      // return [
+      //   "webmmux name=mux",
+      //   "!",
+      //   `awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${this._rtpParameters.fileName}.webm`,
+      // ];
     }
   }
   // get _sinkArgs() {
