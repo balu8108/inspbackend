@@ -15,7 +15,7 @@ const kill = require("tree-kill");
 const GSTREAMER_DEBUG_LEVEL = 3;
 const GSTREAMER_COMMAND = "gst-launch-1.0";
 const GSTREAMER_OPTIONS = "-v -e";
-
+const getGStreamerPIDs = require("./gstreamerPids");
 module.exports = class GStreamer {
   constructor(rtpParameters) {
     this._rtpParameters = rtpParameters;
@@ -52,6 +52,11 @@ module.exports = class GStreamer {
         message
       )
     );
+
+    this._process.on("SIGBREAK", () => {
+      console.log("SIGINT RECEIVE");
+      kill(this._process.pid, "SIGINT");
+    });
     this._process.on("error", (error) =>
       console.error(
         "gstreamer::process::error [pid:%d, error:%o]",
@@ -65,15 +70,17 @@ module.exports = class GStreamer {
     });
 
     this._process.stderr.on("data", (data) => {
-      console.log("gstreamer::process::stderr::data [data:%o]", data);
+      // console.log("gstreamer::process::stderr::data [data:%o]", data);
     });
 
     this._process.stdout.on("data", (data) => {
-      console.log("gstreamer::process::stdout::data [data:%o]", data);
+      // console.log("gstreamer::process::stdout::data [data:%o]", data);
     });
   }
 
-  kill() {
+  async kill() {
+    const gstPid = await getGStreamerPIDs();
+    console.log("gst pid", gstPid);
     console.log("kill() [pid:%d]", this._process.pid);
     // kill(this._process.pid, "SIGINT");
     this._process.stdin.end();
