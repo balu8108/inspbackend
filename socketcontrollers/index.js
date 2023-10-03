@@ -25,6 +25,7 @@ const {
   LiveClassLog,
   LiveClassTestQuestionLog,
   LiveClassBlockedPeer,
+  LiveClassRoomRecording,
 } = require("../models");
 const {
   uploadFilesToS3,
@@ -830,6 +831,9 @@ const startRecord = async (peer, peerProducersList, router) => {
     recordInfo.fileName = `${peer.roomId}-${Date.now().toString()}`;
 
     let recordProcess = getProcess(recordInfo);
+    // if(recordProcess){
+    //    await LiveClassRoomRecording.create({})
+    // }
 
     peers[peer.socket.id] = { ...peer, recordProcess: recordProcess };
 
