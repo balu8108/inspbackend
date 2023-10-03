@@ -79,7 +79,7 @@ module.exports = class GStreamer {
   }
 
   async kill() {
-    const gstPid = await getGStreamerPIDs();
+    const gstPid = await getGStreamerPIDs(this._process.pid);
     console.log("gst pid", gstPid);
     console.log("kill() [pid:%d]", this._process.pid);
     // kill(this._process.pid, "SIGINT");

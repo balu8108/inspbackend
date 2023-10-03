@@ -1,9 +1,9 @@
 const { exec } = require("child_process");
 
-function getGStreamerPIDs() {
+function getGStreamerPIDs(parentProcessId) {
   try {
     return new Promise((resolve, reject) => {
-      exec("pgrep -P $(pgrep gst-launch-1.0)", (error, stdout, stderr) => {
+      exec(`pgrep -P ${parentProcessId}`, (error, stdout, stderr) => {
         if (error) {
           reject(error);
           return;
