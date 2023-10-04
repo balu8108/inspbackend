@@ -3,16 +3,15 @@ const { uploadFilesToS3 } = require("../../utils/awsFunctions");
 const { isObjectValid } = require("../../utils");
 exports.createAssignment = async (req, res) => {
   try {
-    const { topicName, instructorName, description } = req.body;
-    console.log("topicname",topicName)
+    const { topicName, instructorName, description, key, url } = req.body;
     const assignment = await Assignment.create({
       topicName: topicName,
       instructorName: instructorName,
       description: description,
-      key:"sample.txt",
-      url:"sample.txt"
+      key: key,
+      url: url,
     });
-    console.log("assignment",assignment)
+    console.log("assignment", assignment);
     res.status(201).json({
       message: "Assignment created successfully",
       assignment,
@@ -28,8 +27,6 @@ exports.createAssignment = async (req, res) => {
 exports.allAssignments = async (req, res) => {
   try {
     const assignments = await Assignment.findAll();
-
-    // Respond with the list of assignments
     res.status(200).json(assignments);
   } catch (error) {
     console.error("Error fetching assignments:", error);
@@ -40,9 +37,7 @@ exports.allAssignments = async (req, res) => {
 };
 exports.deleteAssignment = async (req, res) => {
   try {
-    const { assignmentId } = req.params; // Assuming you have a route parameter for the assignment ID
-
-    // Find the assignment by ID
+    const { assignmentId } = req.params; 
     const assignment = await Assignment.findByPk(assignmentId);
 
     if (!assignment) {
@@ -63,10 +58,10 @@ exports.deleteAssignment = async (req, res) => {
 };
 exports.latestAssignments = async (req, res) => {
   try {
-    // Fetch the latest four assignment records
+
     const latestAssignments = await Assignment.findAll({
       order: [["createdAt", "DESC"]],
-      limit: 4,
+      limit: 2,
     });
 
     res.status(200).json({ data: latestAssignments });
@@ -93,20 +88,18 @@ exports.uploadAssignment = async (req, res) => {
         : [files?.files];
     }
 
-    //   for (const key of Object.keys(files)) {
-    //     const file = files[key];
-    //     const folderPath = 'assignments';
-    //     const fileName = file.name;
-
-    //     await uploadFilesToS3(folderPath, fileName, file.data);
-    //   }
     const filesUploading = await uploadFilesToS3(
       addFilesInArray,
       "assignments"
     );
-    console.log("Files",filesUploading);
-    res.status(201).json({ message: "Files uploaded successfully" });
-   
+    console.log("Files", filesUploading);
+    res
+      .status(201)
+      .json({
+        message: "Files uploaded successfully",
+        fileKey: filesUploading.key,
+        fileUrl: filesUploading.url,
+      });
   } catch (error) {
     console.error("Error uploading files:", error);
     res.status(500).json({ error: "An error occurred while uploading files" });

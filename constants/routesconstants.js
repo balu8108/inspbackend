@@ -9,6 +9,7 @@ const routesConstants = Object.freeze({
   GENERATE_GET_PRESIGNED_URL: "/generate-get-presigned-url",
   CREATE_FEEDBACK: "/create-feedback",
   LATEST_FEEDBACK:"/latest-feedback",
+  LATEST_COMPLETEDCLASSROOM:"/latest-completed-live-classroom",
   OPEN_FILE: "/open-file",
   IMAGE_TO_DOC: "/image-to-doc",
   SOLO:"/solo-lecture",
