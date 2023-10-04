@@ -87,7 +87,28 @@ const isObjectExistInS3 = async (folderPath, fileName) => {
         if (err.code === "NotFound") {
           resolve(false);
         } else {
-          reject(err);
+          reject(false);
+        }
+      } else {
+        resolve(true);
+      }
+    });
+  });
+};
+
+const isObjectExistInS3ByKey = async (key) => {
+  return new Promise((resolve, reject) => {
+    const params = {
+      Bucket: AWS_BUCKET_NAME,
+      Key: key,
+    };
+
+    s3.headObject(params, (err, data) => {
+      if (err) {
+        if (err.code === "NotFound") {
+          resolve(false);
+        } else {
+          reject(false);
         }
       } else {
         resolve(true);
@@ -144,4 +165,6 @@ module.exports = {
   isObjectExistInS3,
   getObjectFromS3,
   uploadToS3,
+  generateAWSS3LocationUrl,
+  isObjectExistInS3ByKey,
 };

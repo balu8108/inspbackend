@@ -14,6 +14,7 @@ const genericRoutes = require("./routes/genericroutes/genericroutes");
 const authenticationRoutes = require("./routes/authentication/authenticationRoutes");
 const soloClassroomRoutes = require("./routes/soloclassroom/soloClassroom");
 const myUploadRoutes = require("./routes/myuploads/assignment");
+const recordingRoutes = require("./routes/recordings/recordings");
 const { ENVIRON } = require("./envvar");
 const {
   isSocketUserAuthenticated,
@@ -65,6 +66,7 @@ app.use(routesConstants.GENERIC_API, genericRoutes);
 app.use(routesConstants.AUTH, authenticationRoutes);
 app.use(routesConstants.SOLO, soloClassroomRoutes);
 app.use(routesConstants.TOPIC_ASSIGNMENTS, myUploadRoutes);
+app.use(routesConstants.RECORDING, recordingRoutes);
 // Cron jobs function
 if (ENVIRON !== "local") {
   scheduleJob();

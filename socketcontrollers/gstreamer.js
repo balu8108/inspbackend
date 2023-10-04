@@ -9,6 +9,7 @@ const {
   AWS_REGION,
   AWS_BUCKET_NAME,
 } = require("../envvar");
+
 const RECORD_FILE_LOCATION_PATH = "./recordfiles";
 const AWS_S3_RECORD_FILES = "liveclassrecordings"; // we have mounted the s3 bucket directly to ec2 instance
 const kill = require("tree-kill");
@@ -66,11 +67,11 @@ module.exports = class GStreamer {
     });
 
     this._process.stderr.on("data", (data) => {
-      console.log("gstreamer::process::stderr::data [data:%o]", data);
+      // console.log("gstreamer::process::stderr::data [data:%o]", data);
     });
 
     this._process.stdout.on("data", (data) => {
-      console.log("gstreamer::process::stdout::data [data:%o]", data);
+      // console.log("gstreamer::process::stdout::data [data:%o]", data);
     });
   }
 

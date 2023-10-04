@@ -31,8 +31,9 @@ const {
   uploadFilesToS3,
   updateLeaderboard,
   isFeedbackProvided,
+  generateAWSS3LocationUrl,
 } = require("../utils");
-const { ENVIRON } = require("../envvar");
+const { PLATFORM } = require("../envvar");
 
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
@@ -831,9 +832,23 @@ const startRecord = async (peer, peerProducersList, router) => {
     recordInfo.fileName = `${peer.roomId}-${Date.now().toString()}`;
 
     let recordProcess = getProcess(recordInfo);
-    // if(recordProcess){
-    //    await LiveClassRoomRecording.create({})
-    // }
+    if (recordProcess) {
+      let fileKeyName = "";
+      let url = "";
+      if (PLATFORM === "windows") {
+        fileKeyName = `recordfiles/${recordInfo?.fileName}.webm`;
+        url = "localhost";
+      } else {
+        fileKeyName = `liveclassrecordings/${recordInfo?.fileName}`;
+        url = generateAWSS3LocationUrl(fileKeyName);
+      }
+
+      await LiveClassRoomRecording.create({
+        key: fileKeyName,
+        url: url,
+        classRoomId: peer.classPk,
+      });
+    }
 
     peers[peer.socket.id] = { ...peer, recordProcess: recordProcess };
 
