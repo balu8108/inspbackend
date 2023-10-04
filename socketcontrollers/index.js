@@ -33,7 +33,7 @@ const {
   isFeedbackProvided,
   generateAWSS3LocationUrl,
 } = require("../utils");
-const { PLATFORM } = require("../envvar");
+const { PLATFORM, ENVIRON } = require("../envvar");
 
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
@@ -63,10 +63,12 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           errMsg: "No Class with this room id",
         }; // No corresponding room in db
       }
+
       // update logs if peer is a teacher and change status of class to Ongoing
       if (peerDetails) {
         // check if the peer is blocked from this class
         // check if this peer is not blocked
+
         const isPeerBlocked = await LiveClassBlockedPeer.findOne({
           where: {
             classRoomId: liveClass?.id,
@@ -74,6 +76,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
             isBlocked: true,
           },
         });
+
         if (isPeerBlocked) {
           return {
             roomId: false,
@@ -85,9 +88,11 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
         }
 
         // check if already this peer exists in peers
+
         const isPeerExists = rooms[roomId]?.peers.find(
           (peer) => peer.id === peerDetails.id
         );
+
         if (isPeerExists) {
           return {
             roomId: false,
@@ -95,6 +100,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
             errMsg: "You have already joined the class!!",
           };
         }
+
         if (peerDetails.user_type === 1) {
           liveClass.classStatus = classStatus.ONGOING;
           await liveClass.save();
@@ -139,7 +145,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
             : [...mentors],
           peers: [...peers, newPeerDetails],
         };
-
+        console.log("Test 4");
         return { roomId, router1, newPeerDetails, liveClass: liveClass };
       } else {
         // TODO Check in db and then create room if it exists otherwise don't create and send false,false
@@ -154,6 +160,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
             : [...mentors],
           peers: [...peers, newPeerDetails],
         };
+        console.log("Test 5");
         return { roomId, router1, newPeerDetails, liveClass: liveClass };
       }
     } else {
@@ -195,6 +202,7 @@ const joinRoomHandler = async (data, callback, socket, io, worker) => {
     const { authData } = socket;
     const { roomId, router1, newPeerDetails, liveClass, errMsg } =
       await createOrJoinRoomFunction(data, authData, socket.id, worker);
+
     if (roomId === false && router1 === false) {
       callback({ success: false, errMsg }); // No room id/something not supplied
     } else {
