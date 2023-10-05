@@ -744,11 +744,15 @@ const uploadFileHandler = async (data, callback, socket) => {
         files: filesResArray,
       },
     });
-    socket.broadcast.to(roomId).emit(SOCKET_EVENTS.UPLOAD_FILE_FROM_SERVER, {
-      roomType: data?.roomType,
-      roomId: data?.roomId,
-      files: filesResArray,
-    });
+    console.log("after file uploading");
+    socket.broadcast
+      .to(data?.roomId)
+      .emit(SOCKET_EVENTS.UPLOAD_FILE_FROM_SERVER, {
+        roomType: data?.roomType,
+        roomId: data?.roomId,
+        files: filesResArray,
+      });
+    console.log("broadcasted to all");
   } catch (err) {
     callback({ success: false, data: err.message });
   }
