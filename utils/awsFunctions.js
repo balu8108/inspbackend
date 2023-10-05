@@ -37,6 +37,7 @@ const uploadFilesToS3 = async (files, folderPath) => {
       return new Promise((resolve, reject) => {
         s3.upload(params, (err, data) => {
           if (err) {
+            console.log("error in uploading file", err);
             reject(err);
           } else {
             // As putObject doesn't return Location so we need to create it manually
