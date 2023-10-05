@@ -181,29 +181,6 @@ const latestfeedback = async (req, res) => {
   }
 };
 
-// const getCompletedLiveClasses = async (req, res) => {
-//   try {
-//     const completedLiveClasses = await LiveClassRoom.findAll({
-//       where: {
-//         classStatus: "FINISHED",
-//       },
-//       limit: 3,
-//       order: [["createdAt", "DESC"]],
-//       include: [
-//         {
-//           model: LiveClassRoomDetail,
-//           as: "LiveClassRoomDetail",
-//         },
-//       ],
-//     });
-
-//     res.status(200).json(completedLiveClasses);
-//   } catch (error) {
-//     console.error("Error fetching completed live classes:", error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// };
-
 
 const getCompletedLiveClasses = async (req, res) => {
   try {
@@ -232,6 +209,21 @@ const getCompletedLiveClasses = async (req, res) => {
   }
 };
 
+const getTopicDetails = async (req, res) => {
+  try {
+    const topicId = req.params.topicId;
+    const topicDetails = await Rating.findAll({
+      where: { topicId },
+      attributes: ["raterName", "feedback", "rating"],
+    });
+    res.status(200).json({ topicId, topicDetails });
+  } catch (error) {
+    console.error("Error fetching topic details:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
 
 module.exports = {
   getAllSubjects,
@@ -241,4 +233,5 @@ module.exports = {
   createFeedback,
   latestfeedback,
   getCompletedLiveClasses,
+  getTopicDetails
 };

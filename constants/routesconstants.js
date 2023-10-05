@@ -10,6 +10,7 @@ const routesConstants = Object.freeze({
   CREATE_FEEDBACK: "/create-feedback",
   LATEST_FEEDBACK:"/latest-feedback",
   LATEST_COMPLETEDCLASSROOM:"/latest-completed-live-classroom",
+  TOPIC_FEEDBACK_RATING_DETAILS:"/topic-feedback-rating-details",
   OPEN_FILE: "/open-file",
   IMAGE_TO_DOC: "/image-to-doc",
   SOLO:"/solo-lecture",
