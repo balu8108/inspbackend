@@ -2,6 +2,7 @@ const {
   LiveClassRoomFile,
   LiveClassRoom,
   LiveClassRoomQNANotes,
+  LiveClassRoomDetail,
   Rating,
 } = require("../../models");
 const {
@@ -127,23 +128,102 @@ const createFeedback = async (req, res) => {
     return res.status(400).json({ status: false, error: err.message });
   }
 };
-// for latest two rating for mentors homepage-
+
 const latestfeedback = async (req, res) => {
   try {
-    // Query the database to retrieve the latest two ratings and feedback
-    const latestRatings = await Rating.findAll({
+    // Fetch the latest three live classes
+    const latestLiveClasses = await LiveClassRoom.findAll({
+      where: { classStatus: "FINISHED" }, // Filter by classStatus if needed
+      limit: 3, // Limit the result to the latest three classes
       order: [["createdAt", "DESC"]], // Order by createdAt in descending order
-      limit: 2, // Limit the result to two records
+      include: [
+        {
+          model: LiveClassRoomDetail,
+          as: "LiveClassRoomDetail",
+        },
+      ],
     });
 
-    // Send the retrieved data as a JSON response
-    res.status(200).json(latestRatings);
+    const topicIds = latestLiveClasses.map(
+      (liveClass) => liveClass.LiveClassRoomDetail.topicId
+    );
+
+    const topicDetails = await LiveClassRoomDetail.findAll({
+      where: { topicId: topicIds },
+    });
+    const latestRatings = await Rating.findAll({
+      where: { topicId: topicIds },
+      limit: 3,
+      order: [["createdAt", "DESC"]],
+    });
+
+    const latestData = latestLiveClasses.map((liveClass) => {
+      const { topicId } = liveClass.LiveClassRoomDetail;
+      const topicDetail = topicDetails.find(
+        (detail) => detail.topicId === topicId
+      );
+      const ratings = latestRatings.filter(
+        (rating) => rating.topicId === topicId
+      );
+      return {
+        topicName: topicDetail.topicName,
+        mentorName: liveClass.mentorName,
+        description: topicDetail.description,
+        ratings: ratings,
+      };
+    });
+
+    // Return the latest data in the response
+    res.status(200).json(latestData);
   } catch (error) {
-    // Handle any errors and send an error response if necessary
-    console.error("Error fetching latest ratings:", error);
+    console.error("Error fetching latest data:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+
+const getCompletedLiveClasses = async (req, res) => {
+  try {
+    const completedLiveClasses = await LiveClassRoom.findAll({
+      where: {
+        classStatus: "FINISHED",
+      },
+      limit: 3,
+      order: [["createdAt", "DESC"]],
+      attributes: [
+        "mentorName", // Include mentorName from LiveClassRoom
+      ],
+      include: [
+        {
+          model: LiveClassRoomDetail,
+          as: "LiveClassRoomDetail",
+          attributes: ["topicId", "topicName", "description"], // Include these attributes from LiveClassRoomDetail
+        },
+      ],
+    });
+
+    res.status(200).json(completedLiveClasses);
+  } catch (error) {
+    console.error("Error fetching completed live classes:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const getTopicDetails = async (req, res) => {
+  try {
+    const topicId = req.params.topicId;
+    const topicDetails = await Rating.findAll({
+      where: { topicId },
+      attributes: ["raterName", "feedback", "rating"],
+    });
+    res.status(200).json({ topicId, topicDetails });
+  } catch (error) {
+    console.error("Error fetching topic details:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
 
 module.exports = {
   getAllSubjects,
@@ -152,4 +232,6 @@ module.exports = {
   generateGetPresignedUrl,
   createFeedback,
   latestfeedback,
+  getCompletedLiveClasses,
+  getTopicDetails
 };

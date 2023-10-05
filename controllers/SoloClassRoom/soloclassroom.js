@@ -26,7 +26,7 @@ exports.getLatestSoloclassroom = async (req, res) => {
     // Fetch the latest two solo class room records
     const latestSoloClassRooms = await SoloClassRoom.findAll({
       order: [["createdAt", "DESC"]],
-      limit: 3,
+      limit: 2,
     });
 
     res.status(200).json({ data: latestSoloClassRooms });
