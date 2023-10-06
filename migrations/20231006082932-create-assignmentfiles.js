@@ -1,29 +1,34 @@
-"use strict";
+'use strict';
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("Assignments", {
+    await queryInterface.createTable('AssignmentFiles', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
+        type: Sequelize.INTEGER
+      },
+      key: {
+        type: Sequelize.STRING
+      },
+      url: {
+        type: Sequelize.STRING
+      },
+      isDownloadable: {
+        type: Sequelize.BOOLEAN
+      },
+      isShareable: {
+        type: Sequelize.BOOLEAN
+      },
+      assignmentId: {
         type: Sequelize.INTEGER,
+        references: {
+          model: "Assignments",
+          key: "id",
+        },
+        onDelete: "CASCADE",
       },
-      topicId: {
-        type: Sequelize.STRING,
-        allowNull:false
-      },
-      topicName: {
-        type: Sequelize.STRING,
-      },
-      instructorName: {
-        type: Sequelize.STRING,
-      },
-      description: {
-        type: Sequelize.TEXT,
-      },
-    
-
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -35,10 +40,10 @@ module.exports = {
         defaultValue: Sequelize.literal(
           "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
         ),
-      },
+      }
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("Assignments");
-  },
+    await queryInterface.dropTable('AssignmentFiles');
+  }
 };
