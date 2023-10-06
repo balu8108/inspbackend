@@ -707,7 +707,6 @@ const raiseHandHandler = (data, socket) => {
 
 const uploadFileHandler = async (data, callback, socket) => {
   // will receive array of files data buffer  and then broadcast to all
-  console.log("data from files", data);
 
   // upload to AWS S3 First
   try {
@@ -744,7 +743,7 @@ const uploadFileHandler = async (data, callback, socket) => {
         files: filesResArray,
       },
     });
-    console.log("after file uploading");
+
     socket.broadcast
       .to(data?.roomId)
       .emit(SOCKET_EVENTS.UPLOAD_FILE_FROM_SERVER, {
@@ -752,7 +751,6 @@ const uploadFileHandler = async (data, callback, socket) => {
         roomId: data?.roomId,
         files: filesResArray,
       });
-    console.log("broadcasted to all");
   } catch (err) {
     callback({ success: false, data: err.message });
   }
