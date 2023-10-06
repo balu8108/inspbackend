@@ -21,6 +21,7 @@ const routesConstants = Object.freeze({
   GET_ASSIGNMENT:'/get-all-assignments',
   DELETE_ASSIGNMENT:'/delete-assignment',
   LATEST_ASSIGNMENT:'/latest-assignment',
+  SUBMIT_ASSIGNMENT:'/submit-assignment',
   My_UPLOADS:"/upload-assignments",
   AUTH: "/auth",
   LOGIN: "/login",

@@ -1,6 +1,7 @@
 const { Assignment } = require("../../models");
 const { uploadFilesToS3 } = require("../../utils/awsFunctions");
 const { isObjectValid } = require("../../utils");
+const { AssignmentFiles } = require("../../models");
 exports.createAssignment = async (req, res) => {
   try {
     const { topicName, instructorName, description, key, url } = req.body;
@@ -13,7 +14,7 @@ exports.createAssignment = async (req, res) => {
     });
     console.log("assignment", assignment);
     res.status(201).json({
-      message: "Assignment created successfully",
+      message: "Assignment created successfully and saved ",
       assignment,
     });
   } catch (error) {
@@ -37,7 +38,7 @@ exports.allAssignments = async (req, res) => {
 };
 exports.deleteAssignment = async (req, res) => {
   try {
-    const { assignmentId } = req.params; 
+    const { assignmentId } = req.params;
     const assignment = await Assignment.findByPk(assignmentId);
 
     if (!assignment) {
@@ -58,7 +59,6 @@ exports.deleteAssignment = async (req, res) => {
 };
 exports.latestAssignments = async (req, res) => {
   try {
-
     const latestAssignments = await Assignment.findAll({
       order: [["createdAt", "DESC"]],
       limit: 2,
@@ -93,15 +93,38 @@ exports.uploadAssignment = async (req, res) => {
       "assignments"
     );
     console.log("Files", filesUploading);
-    res
-      .status(201)
-      .json({
-        message: "Files uploaded successfully",
-        fileKey: filesUploading.key,
-        fileUrl: filesUploading.url,
-      });
+    res.status(201).json({
+      message: "Files uploaded successfully",
+      fileKey: filesUploading.key,
+      fileUrl: filesUploading.url,
+    });
   } catch (error) {
     console.error("Error uploading files:", error);
     res.status(500).json({ error: "An error occurred while uploading files" });
   }
 };
+
+
+exports.submitAssignment = async (req, res) => {
+  try {
+    const { plainAuthData } = req;
+    const { topicName, description } = req.body;
+
+    console.log("AuthData", req.plainAuthData);
+    const assignment = await Assignment.create({
+      topicName: topicName,
+      instructorName: plainAuthData.name,
+      description: description,
+    });
+    console.log("assignment", assignment);
+
+    res.status(201).json({ message: "Assignment submitted successfully" });
+  } catch (error) {
+    console.error("Error submitting assignment:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+
+
