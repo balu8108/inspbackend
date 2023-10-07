@@ -17,6 +17,12 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
+      isDownloadable: {
+        type: Sequelize.BOOLEAN
+      },
+      isShareable: {
+        type: Sequelize.BOOLEAN
+      },
 
       soloClassRoomId: {
         type: Sequelize.INTEGER,

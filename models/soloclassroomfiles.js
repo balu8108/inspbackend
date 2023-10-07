@@ -1,7 +1,5 @@
-'use strict';
-const {
-  Model
-} = require('sequelize');
+"use strict";
+const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class soloClassRoomFiles extends Model {
     /**
@@ -15,12 +13,19 @@ module.exports = (sequelize, DataTypes) => {
       });
     }
   }
-  soloClassRoomFiles.init({
-    name: DataTypes.STRING,
-    soloClassRoomId: DataTypes.STRING
-  }, {
-    sequelize,
-    modelName: 'soloClassRoomFiles',
-  });
+  soloClassRoomFiles.init(
+    {
+      name: DataTypes.STRING,
+      key: DataTypes.STRING,
+      url: DataTypes.STRING,
+      soloClassRoomId: DataTypes.STRING,
+      isDownloadable: DataTypes.BOOLEAN,
+      isShareable: DataTypes.BOOLEAN,
+    },
+    {
+      sequelize,
+      modelName: "soloClassRoomFiles",
+    }
+  );
   return soloClassRoomFiles;
 };
