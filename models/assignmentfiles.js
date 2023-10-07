@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       key: DataTypes.STRING,
       url: DataTypes.STRING,
-      idDownloadable: DataTypes.BOOLEAN,
+      isDownloadable: DataTypes.BOOLEAN,
       isShareable: DataTypes.BOOLEAN,
       assignmentId: DataTypes.INTEGER,
     },

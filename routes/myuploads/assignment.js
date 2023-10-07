@@ -8,21 +8,26 @@ const {
   allAssignments,
   deleteAssignment,
   latestAssignments,
-  submitAssignment,
+  allAssignmentsWithFiles,
+  allAssignmentsbytopicid,
 } = require("../../controllers/MyUploads/assignments");
 
-const {
+const { isAuthenticated, isTeacher } = require("../../middlewares");
+
+router.post(
+  routesConstants.CREATE_ASSIGNMENT,
   isAuthenticated,
   isTeacher,
-} = require("../../middlewares");
-
-router.post(routesConstants.CREATE_ASSIGNMENT, isAuthenticated,isTeacher,createAssignment);
-router.get(routesConstants.GET_ASSIGNMENT, allAssignments);
-router.delete(
-  "routesConstants.DELETE_ASSIGNMENT/:assignmentId",
-  deleteAssignment
+  createAssignment
 );
+router.get(routesConstants.GET_ASSIGNMENT_TOPIC_ID, allAssignmentsbytopicid);
+router.delete("routesConstants.DELETE_ASSIGNMENT/:id", deleteAssignment);
 router.get(routesConstants.LATEST_ASSIGNMENT, latestAssignments);
-router.post(routesConstants.My_UPLOADS,uploadAssignment);
-router.post(routesConstants.SUBMIT_ASSIGNMENT, isAuthenticated,isTeacher,submitAssignment)
+router.post(
+  routesConstants.My_UPLOADS,
+  isAuthenticated,
+  isTeacher,
+  uploadAssignment
+);
+router.get(routesConstants.All_ASSIGNMENT_WITH_FILES, allAssignmentsWithFiles);
 module.exports = router;

@@ -25,21 +25,46 @@ exports.createAssignment = async (req, res) => {
   }
 };
 
-exports.allAssignments = async (req, res) => {
+
+
+
+exports.allAssignmentsWithFiles = async (req, res) => {
   try {
-    const assignments = await Assignment.findAll();
+    const assignmentsWithFiles = await Assignment.findAll({
+      include: AssignmentFiles, // Include associated AssignmentFiles
+    });
+
+    res.status(200).json(assignmentsWithFiles);
+  } catch (error) {
+    console.error('Error fetching assignments with files:', error);
+    res.status(500).json({ error: 'An error occurred while fetching assignments with files' });
+  }
+};
+
+
+// all assignments files for particular id 
+exports.allAssignmentsbytopicid = async (req, res) => {
+  try {
+    const { topicId } = req.query; 
+
+    const assignments = await Assignment.findAll({
+      where: { topicId }, 
+      include: [{ model: AssignmentFiles }], 
+    });
+
     res.status(200).json(assignments);
   } catch (error) {
     console.error("Error fetching assignments:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while fetching assignments" });
+    res.status(500).json({ error: "An error occurred while fetching assignments" });
   }
 };
+
+
+
 exports.deleteAssignment = async (req, res) => {
   try {
-    const { assignmentId } = req.params;
-    const assignment = await Assignment.findByPk(assignmentId);
+    const { id} = req.params;
+    const assignment = await Assignment.findByPk(id);
 
     if (!assignment) {
       return res.status(404).json({ error: "Assignment not found" });
@@ -57,6 +82,7 @@ exports.deleteAssignment = async (req, res) => {
       .json({ error: "An error occurred while deleting the assignment" });
   }
 };
+
 exports.latestAssignments = async (req, res) => {
   try {
     const latestAssignments = await Assignment.findAll({
@@ -73,6 +99,7 @@ exports.latestAssignments = async (req, res) => {
   }
 };
 
+
 exports.uploadAssignment = async (req, res) => {
   try {
     const { files } = req;
@@ -80,6 +107,7 @@ exports.uploadAssignment = async (req, res) => {
     if (!files?.files) {
       return res.status(400).json({ message: "No files were uploaded." });
     }
+
     let addFilesInArray = [];
 
     if (files) {
@@ -88,43 +116,49 @@ exports.uploadAssignment = async (req, res) => {
         : [files?.files];
     }
 
-    const filesUploading = await uploadFilesToS3(
-      addFilesInArray,
-      "assignments"
+    // Extract other data from the request
+    const { plainAuthData } = req;
+    console.log("AuthData", req.plainAuthData);
+    const { topicName, topicId, description} = req.body;
+
+    // Save assignment information in the Assignment model
+    const assignment = await Assignment.create({
+      topicName,
+      topicId,
+      description,
+      instructorName: plainAuthData.name,
+    });
+
+    // Upload files to S3 or your desired storage
+    const filesUploading = await uploadFilesToS3(addFilesInArray, "assignments");
+
+    // Create AssignmentFiles records for each uploaded file
+    const assignmentFiles = await Promise.all(
+      filesUploading.map(async (file) => {
+        const { key, url } = file;
+
+        // Create a new AssignmentFiles record
+        const assignmentFile = await AssignmentFiles.create({
+          key,
+          url,
+          isDownloadable: true,
+          isShareable: true,
+          assignmentId: assignment.id, // Assign the assignment ID to the file
+        });
+
+        return assignmentFile;
+      })
     );
-    console.log("Files", filesUploading);
+
     res.status(201).json({
-      message: "Files uploaded successfully",
-      fileKey: filesUploading.key,
-      fileUrl: filesUploading.url,
+      message: "Assignment and files uploaded successfully",
+      assignmentFiles,
     });
   } catch (error) {
     console.error("Error uploading files:", error);
     res.status(500).json({ error: "An error occurred while uploading files" });
   }
 };
-
-
-exports.submitAssignment = async (req, res) => {
-  try {
-    const { plainAuthData } = req;
-    const { topicName, description } = req.body;
-
-    console.log("AuthData", req.plainAuthData);
-    const assignment = await Assignment.create({
-      topicName: topicName,
-      instructorName: plainAuthData.name,
-      description: description,
-    });
-    console.log("assignment", assignment);
-
-    res.status(201).json({ message: "Assignment submitted successfully" });
-  } catch (error) {
-    console.error("Error submitting assignment:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
-
 
 
 
