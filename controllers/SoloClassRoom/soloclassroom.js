@@ -5,46 +5,6 @@ const {
 } = require("../../models");
 const { uploadFilesToS3 } = require("../../utils/awsFunctions");
 
-// exports.createSoloClassRoom11 = async (req, res) => {
-//   try {
-//     const { selectedSubject, topic, agenda, description } = req.body;
-//     const { plainAuthData } = req;
-//     console.log("AuthData", req.plainAuthData);
-//     const createsoloroom = await SoloClassRoom.create({
-//       subjectId: selectedSubject,
-//       topic: topic,
-//       agenda: agenda,
-//       mentorName: plainAuthData.name,
-//       description: description,
-//     });
-//     res.status(201).json({
-//       message: "Solo-classroom created  successfully",
-//       data: createsoloroom,
-//     });
-//   } catch (error) {
-//     console.error("Error creating the solo-classroom record:", error);
-//     res
-//       .status(500)
-//       .json({ error: "An error occurred while  creating  the solo-classroom" });
-//   }
-// };
-exports.getLatestSoloclassroom = async (req, res) => {
-  try {
-    // Fetch the latest two solo class room records
-    const latestSoloClassRooms = await SoloClassRoom.findAll({
-      order: [["createdAt", "DESC"]],
-      limit: 2,
-    });
-
-    res.status(200).json({ data: latestSoloClassRooms });
-  } catch (error) {
-    console.error("Error fetching latest solo class rooms:", error);
-    res.status(500).json({
-      error: "An error occurred while fetching the latest solo class rooms",
-    });
-  }
-};
-
 exports.createSoloClassRoom = async (req, res) => {
   try {
     const { files } = req;
@@ -109,64 +69,159 @@ exports.createSoloClassRoom = async (req, res) => {
   }
 };
 
+// this is the api for where mentor will record the lecture and stored in aws ..
+
+// exports.uploadSoloClassRoomRecordings = async (req, res) => {
+//   try {
+//     const { files } = req;
+
+//     if (!files?.files) {
+//       return res.status(400).json({ message: "No files were uploaded." });
+//     }
+
+//     let addFilesInArray = [];
+
+//     if (files) {
+//       addFilesInArray = Array.isArray(files?.files)
+//         ? files?.files
+//         : [files?.files];
+//     }
+
+//     // Extract other data from the request
+
+//     // Save assignment information in the Assignment model
+//     const { soloClassRoomId } = req.query;
+//     // Upload files to S3 or your desired storage
+//     const filesUploading = await uploadFilesToS3(
+//       addFilesInArray,
+//       "soloclassroom-recordings"
+//     );
+
+//     // Create AssignmentFiles records for each uploaded file
+//     const solorecordings = await Promise.all(
+//       filesUploading.map(async (file) => {
+//         const { url } = file;
+
+//         // Create a new AssignmentFiles record
+//         const soloClassRoomFile = await SoloClassRoomRecording.create({
+//           url,
+//           soloClassRoomId,
+//         });
+
+//         return soloClassRoomFile;
+//       })
+//     );
+
+//     res.status(201).json({
+//       message: " files uploaded successfully",
+//       solorecordings,
+//     });
+//   } catch (error) {
+//     console.error("Error uploading files:", error);
+//     res.status(500).json({ error: "An error occurred while uploading files" });
+//   }
+// };
+
+
+
+
+
+
+
 exports.uploadSoloClassRoomRecordings = async (req, res) => {
   try {
     const { files } = req;
+    const { soloClassRoomId } = req.query; 
 
-    if (!files || !Array.isArray(files) || files.length === 0) {
+    if (!files?.files) {
       return res.status(400).json({ message: "No files were uploaded." });
     }
 
-    
-    const soloClassRoomId = req.body.soloClassRoomId; // Adjust this as needed
+    let addFilesInArray = [];
 
-    const recordingUploads = await uploadFilesToS3(files, "recordings"); // Modify this as needed
+    if (files) {
+      addFilesInArray = Array.isArray(files?.files)
+        ? files?.files
+        : [files?.files];
+    }
 
-    // Save each recording URL to the database
-    const savedRecordings = await Promise.all(
-      recordingUploads.map(async (upload) => {
-        const {  url } = upload;
-        
-        // Create a new record in the SoloClassRoomRecording model
-        const recording = await SoloClassRoomRecording.create({
+    // Upload files to S3 or your desired storage
+    const filesUploading = await uploadFilesToS3(
+      addFilesInArray,
+      "soloclassroom-recordings"
+    );
+
+    // Create AssignmentFiles records for each uploaded file
+    const solorecordings = await Promise.all(
+      filesUploading.map(async (file) => {
+        const { url } = file;
+
+        // Create a new AssignmentFiles record
+        const soloClassRoomFile = await SoloClassRoomRecording.create({
           url,
-          soloClassRoomId,
+          soloClassRoomId, // Set the soloClassRoomId to the one that was passed in the request query
         });
 
-        return recording;
+        return soloClassRoomFile;
       })
     );
 
     res.status(201).json({
-      message: "Recording uploaded successfully",
-      recordingUploads: savedRecordings,
+      message: " files uploaded successfully",
+      solorecordings,
     });
   } catch (error) {
-    console.error("Error uploading recording:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while uploading recording" });
+    console.error("Error uploading files:", error);
+    res.status(500).json({ error: "An error occurred while uploading files" });
   }
 };
 
 
 
-exports.getTopicDetails = async (req, res) => {
-  const { topic } = req.query;
 
+
+
+
+
+
+
+exports.getTopicDetails = async (req, res) => {
   try {
-    const result = await SoloClassRoom.findOne({
+    const { topic } = req.query;
+
+    const assignments = await SoloClassRoom.findAll({
       where: { topic },
-      include: [{ model: soloClassRoomFiles }],
+      attributes: ["description", "agenda"], // Include only 'description' and 'agenda' from SoloClassRoom
+      include: [
+        {
+          model: soloClassRoomFiles,
+          attributes: ["key", "url"], // Include only 'url' from soloClassRoomFiles
+        },
+      ],
     });
 
-    if (result) {
-      res.json(result);
-    } else {
-      res.status(404).json({ message: 'Topic not found' });
-    }
+    res.status(200).json(assignments);
   } catch (error) {
-    console.error('Error:', error); // Log the error to the console
-    res.status(500).json({ message: 'Internal Server Error' });
+    console.error("Error fetching assignments:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching assignments" });
+  }
+};
+
+exports.getLatestSoloclassroom = async (req, res) => {
+  try {
+    // Fetch the latest two solo class room records
+    const latestSoloClassRooms = await SoloClassRoom.findAll({
+      order: [["createdAt", "DESC"]],
+      limit: 2,
+    });
+
+    res.status(200).json({ data: latestSoloClassRooms });
+  } catch (error) {
+    console.error("Error fetching latest solo class rooms:", error);
+    res.status(500).json({
+      error: "An error occurred while fetching the latest solo class rooms",
+    });
   }
 };
