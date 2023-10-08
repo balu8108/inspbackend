@@ -5,6 +5,9 @@ const {
 } = require("../../models");
 const { uploadFilesToS3 } = require("../../utils/awsFunctions");
 
+
+
+
 exports.createSoloClassRoom = async (req, res) => {
   try {
     const { files } = req;
@@ -24,11 +27,12 @@ exports.createSoloClassRoom = async (req, res) => {
     // Extract other data from the request
     const { plainAuthData } = req;
     console.log("AuthData", req.plainAuthData);
-    const { subjectId, topic, agenda, description } = req.body;
+    const { subjectId,topicId, topic, agenda, description } = req.body;
 
     // Save solo lecture  information in the  SoloClassRoom model
     const soloclassroomlecture = await SoloClassRoom.create({
       subjectId,
+      topicId,
       topic,
       mentorName: plainAuthData.name,
       agenda,
@@ -58,7 +62,6 @@ exports.createSoloClassRoom = async (req, res) => {
         return sololectureFile;
       })
     );
-
     res.status(201).json({
       message: "Solo classroom created and files uploaded successfully",
       soloLectureFiles,
@@ -69,69 +72,13 @@ exports.createSoloClassRoom = async (req, res) => {
   }
 };
 
+
+
 // this is the api for where mentor will record the lecture and stored in aws ..
-
-// exports.uploadSoloClassRoomRecordings = async (req, res) => {
-//   try {
-//     const { files } = req;
-
-//     if (!files?.files) {
-//       return res.status(400).json({ message: "No files were uploaded." });
-//     }
-
-//     let addFilesInArray = [];
-
-//     if (files) {
-//       addFilesInArray = Array.isArray(files?.files)
-//         ? files?.files
-//         : [files?.files];
-//     }
-
-//     // Extract other data from the request
-
-//     // Save assignment information in the Assignment model
-//     const { soloClassRoomId } = req.query;
-//     // Upload files to S3 or your desired storage
-//     const filesUploading = await uploadFilesToS3(
-//       addFilesInArray,
-//       "soloclassroom-recordings"
-//     );
-
-//     // Create AssignmentFiles records for each uploaded file
-//     const solorecordings = await Promise.all(
-//       filesUploading.map(async (file) => {
-//         const { url } = file;
-
-//         // Create a new AssignmentFiles record
-//         const soloClassRoomFile = await SoloClassRoomRecording.create({
-//           url,
-//           soloClassRoomId,
-//         });
-
-//         return soloClassRoomFile;
-//       })
-//     );
-
-//     res.status(201).json({
-//       message: " files uploaded successfully",
-//       solorecordings,
-//     });
-//   } catch (error) {
-//     console.error("Error uploading files:", error);
-//     res.status(500).json({ error: "An error occurred while uploading files" });
-//   }
-// };
-
-
-
-
-
-
-
 exports.uploadSoloClassRoomRecordings = async (req, res) => {
   try {
     const { files } = req;
-    const { soloClassRoomId } = req.query; 
+    // const { soloClassRoomId } = req.query; 
 
     if (!files?.files) {
       return res.status(400).json({ message: "No files were uploaded." });
@@ -159,7 +106,7 @@ exports.uploadSoloClassRoomRecordings = async (req, res) => {
         // Create a new AssignmentFiles record
         const soloClassRoomFile = await SoloClassRoomRecording.create({
           url,
-          soloClassRoomId, // Set the soloClassRoomId to the one that was passed in the request query
+          soloClassRoomId:SoloClassRoom.id, // Set the soloClassRoomId to the one that was passed in the request query
         });
 
         return soloClassRoomFile;
@@ -197,6 +144,10 @@ exports.getTopicDetails = async (req, res) => {
           model: soloClassRoomFiles,
           attributes: ["key", "url"], // Include only 'url' from soloClassRoomFiles
         },
+        {
+          model: SoloClassRoomRecording, // Include the SoloClassRoomRecording model
+          attributes: ["url"], // Include only 'url' from SoloClassRoomRecording
+        },
       ],
     });
 
@@ -208,6 +159,7 @@ exports.getTopicDetails = async (req, res) => {
       .json({ error: "An error occurred while fetching assignments" });
   }
 };
+
 
 exports.getLatestSoloclassroom = async (req, res) => {
   try {
