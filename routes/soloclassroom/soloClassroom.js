@@ -6,6 +6,8 @@ const { isAuthenticated, isTeacher } = require("../../middlewares");
 const {
   createSoloClassRoom,
   getLatestSoloclassroom,
+  uploadSoloClassRoomRecordings,
+  getTopicDetails,
 } = require("../../controllers/SoloClassRoom/soloclassroom");
 
 router.post(
@@ -15,4 +17,7 @@ router.post(
   createSoloClassRoom
 );
 router.get(routesConstants.LATEST_CLASSROOM, getLatestSoloclassroom);
+router.post(routesConstants.SOLO_CLASSROOM_RECORDINGS,uploadSoloClassRoomRecordings);
+router.get(routesConstants.SOLO_TOPIC_DETAILS_FILES_RECORDINGS,getTopicDetails)
+
 module.exports = router;

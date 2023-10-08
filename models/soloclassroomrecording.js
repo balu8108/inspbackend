@@ -1,7 +1,5 @@
-'use strict';
-const {
-  Model
-} = require('sequelize');
+"use strict";
+const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class SoloClassRoomRecording extends Model {
     /**
@@ -10,17 +8,20 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-    SoloClassRoomRecording.belongsTo(models.SoloClassRoom, {
+      SoloClassRoomRecording.belongsTo(models.SoloClassRoom, {
         foreignKey: "soloClassRoomId",
       });
     }
   }
-  SoloClassRoomRecording.init({
-    url: DataTypes.STRING,
-    soloClassRoomId: DataTypes.INTEGER,
-  }, {
-    sequelize,
-    modelName: 'SoloClassRoomRecording',
-  });
+  SoloClassRoomRecording.init(
+    {
+      url: DataTypes.STRING,
+      soloClassRoomId: DataTypes.INTEGER,
+    },
+    {
+      sequelize,
+      modelName: "SoloClassRoomRecording",
+    }
+  );
   return SoloClassRoomRecording;
 };
