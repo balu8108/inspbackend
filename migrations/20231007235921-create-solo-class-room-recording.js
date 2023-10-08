@@ -1,36 +1,23 @@
-"use strict";
+'use strict';
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("soloClassRoomFiles", {
+    await queryInterface.createTable('SoloClassRoomRecordings', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER,
-      },
-      key: {
-        type: Sequelize.STRING,
-        allowNull: false,
+        type: Sequelize.INTEGER
       },
       url: {
-        type: Sequelize.STRING,
-        allowNull: false,
+        type: Sequelize.STRING
       },
-      isDownloadable: {
-        type: Sequelize.BOOLEAN,
-      },
-      isShareable: {
-        type: Sequelize.BOOLEAN,
-      },
-
       soloClassRoomId: {
         type: Sequelize.INTEGER,
         references: {
           model: "SoloClassRooms",
           key: "id",
         },
-
         onDelete: "CASCADE",
       },
       createdAt: {
@@ -44,10 +31,10 @@ module.exports = {
         defaultValue: Sequelize.literal(
           "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
         ),
-      },
+      }
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("soloClassRoomFiles");
-  },
+    await queryInterface.dropTable('SoloClassRoomRecordings');
+  }
 };
