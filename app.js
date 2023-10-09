@@ -46,6 +46,8 @@ const {
   endMeetHandler,
   setIsAudioStreamEnabled,
   kickOutFromClassHandler,
+  blockOrUnblockMicHandler,
+  muteMicCommandByMentorHandler,
 } = require("./socketcontrollers");
 
 app.use(express.json({ limit: "100mb" }));
@@ -164,6 +166,12 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   });
   socket.on(SOCKET_EVENTS.IS_AUDIO_STREAM_ENABLED_TO_SERVER, (data) => {
     setIsAudioStreamEnabled(data, socket, io);
+  });
+  socket.on(SOCKET_EVENTS.BLOCK_OR_UNBLOCK_MIC_TO_SERVER, (data) => {
+    blockOrUnblockMicHandler(data, socket, io);
+  });
+  socket.on(SOCKET_EVENTS.MUTE_MIC_COMMAND_BY_MENTOR_TO_SERVER, (data) => {
+    muteMicCommandByMentorHandler(data, socket, io);
   });
   socket.on(SOCKET_EVENTS.KICK_OUT_FROM_CLASS_TO_SERVER, (data) => {
     kickOutFromClassHandler(data, socket, io);
