@@ -17,7 +17,8 @@ router.post(
   createSoloClassRoom
 );
 router.get(routesConstants.LATEST_CLASSROOM, getLatestSoloclassroom);
-router.post(routesConstants.SOLO_CLASSROOM_RECORDINGS,uploadSoloClassRoomRecordings);
-router.get(routesConstants.SOLO_TOPIC_DETAILS_FILES_RECORDINGS,getTopicDetails)
+router.post(`${routesConstants.SOLO_CLASSROOM_RECORDINGS}/:soloClassRoomId`,uploadSoloClassRoomRecordings);
+router.get(`${routesConstants.SOLO_TOPIC_DETAILS_FILES_RECORDINGS}/:topicId`,getTopicDetails)
 
+// `${routesConstants.TOPIC_FEEDBACK_RATING_DETAILS}/:topicId`,
 module.exports = router;

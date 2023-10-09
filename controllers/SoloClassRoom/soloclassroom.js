@@ -5,9 +5,6 @@ const {
 } = require("../../models");
 const { uploadFilesToS3 } = require("../../utils/awsFunctions");
 
-
-
-
 exports.createSoloClassRoom = async (req, res) => {
   try {
     const { files } = req;
@@ -27,7 +24,7 @@ exports.createSoloClassRoom = async (req, res) => {
     // Extract other data from the request
     const { plainAuthData } = req;
     console.log("AuthData", req.plainAuthData);
-    const { subjectId,topicId, topic, agenda, description } = req.body;
+    const { subjectId, topicId, topic, agenda, description } = req.body;
 
     // Save solo lecture  information in the  SoloClassRoom model
     const soloclassroomlecture = await SoloClassRoom.create({
@@ -39,6 +36,7 @@ exports.createSoloClassRoom = async (req, res) => {
       description,
     });
 
+    const soloClassRoomId = soloclassroomlecture.id;
     // Upload files to S3 or your desired storage
     const filesUploading = await uploadFilesToS3(
       addFilesInArray,
@@ -65,6 +63,7 @@ exports.createSoloClassRoom = async (req, res) => {
     res.status(201).json({
       message: "Solo classroom created and files uploaded successfully",
       soloLectureFiles,
+      soloClassRoomId,
     });
   } catch (error) {
     console.error("Error uploading files:", error);
@@ -72,13 +71,12 @@ exports.createSoloClassRoom = async (req, res) => {
   }
 };
 
-
-
 // this is the api for where mentor will record the lecture and stored in aws ..
+
 exports.uploadSoloClassRoomRecordings = async (req, res) => {
   try {
     const { files } = req;
-    // const { soloClassRoomId } = req.query; 
+    const { soloClassRoomId } = req.params;
 
     if (!files?.files) {
       return res.status(400).json({ message: "No files were uploaded." });
@@ -106,7 +104,7 @@ exports.uploadSoloClassRoomRecordings = async (req, res) => {
         // Create a new AssignmentFiles record
         const soloClassRoomFile = await SoloClassRoomRecording.create({
           url,
-          soloClassRoomId:SoloClassRoom.id, // Set the soloClassRoomId to the one that was passed in the request query
+          soloClassRoomId,
         });
 
         return soloClassRoomFile;
@@ -123,30 +121,21 @@ exports.uploadSoloClassRoomRecordings = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
-
-
-
 exports.getTopicDetails = async (req, res) => {
   try {
-    const { topic } = req.query;
+    const { topicId} = req.params;
 
     const assignments = await SoloClassRoom.findAll({
-      where: { topic },
-      attributes: ["description", "agenda"], // Include only 'description' and 'agenda' from SoloClassRoom
+      where: { topicId },
+      attributes: ["description", "agenda"],
       include: [
         {
           model: soloClassRoomFiles,
-          attributes: ["key", "url"], // Include only 'url' from soloClassRoomFiles
+          attributes: ["key", "url"],
         },
         {
-          model: SoloClassRoomRecording, // Include the SoloClassRoomRecording model
-          attributes: ["url"], // Include only 'url' from SoloClassRoomRecording
+          model: SoloClassRoomRecording,
+          attributes: ["url"],
         },
       ],
     });
@@ -159,7 +148,6 @@ exports.getTopicDetails = async (req, res) => {
       .json({ error: "An error occurred while fetching assignments" });
   }
 };
-
 
 exports.getLatestSoloclassroom = async (req, res) => {
   try {
@@ -177,3 +165,8 @@ exports.getLatestSoloclassroom = async (req, res) => {
     });
   }
 };
+
+
+
+
+
