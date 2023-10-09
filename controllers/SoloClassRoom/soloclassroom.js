@@ -123,7 +123,7 @@ exports.uploadSoloClassRoomRecordings = async (req, res) => {
 
 exports.getTopicDetails = async (req, res) => {
   try {
-    const { topicId} = req.params;
+    const { topicId } = req.params;
 
     const assignments = await SoloClassRoom.findAll({
       where: { topicId },
@@ -165,8 +165,3 @@ exports.getLatestSoloclassroom = async (req, res) => {
     });
   }
 };
-
-
-
-
-
