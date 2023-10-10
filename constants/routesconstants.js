@@ -8,12 +8,12 @@ const routesConstants = Object.freeze({
   GET_ALL_SUBJECTS: "/get-all-subjects",
   GENERATE_GET_PRESIGNED_URL: "/generate-get-presigned-url",
   CREATE_FEEDBACK: "/create-feedback",
-  LATEST_FEEDBACK:"/latest-feedback",
-  LATEST_COMPLETEDCLASSROOM:"/latest-completed-live-classroom",
-  TOPIC_FEEDBACK_RATING_DETAILS:"/topic-feedback-rating-details",
+  LATEST_FEEDBACK: "/latest-feedback",
+  LATEST_COMPLETEDCLASSROOM: "/latest-completed-live-classroom",
+  TOPIC_FEEDBACK_RATING_DETAILS: "/topic-feedback-rating-details",
   OPEN_FILE: "/open-file",
   IMAGE_TO_DOC: "/image-to-doc",
-  SOLO:"/solo-lecture",
+  SOLO: "/solo-lecture",
   SOLO_CLASSROOM: "/create-room",
   LATEST_CLASSROOM: "/latest-room",
   SOLO_CLASSROOM_RECORDINGS:"/solo-classroom-recording",
@@ -27,7 +27,10 @@ const routesConstants = Object.freeze({
   My_UPLOADS:"/upload-assignments",
   AUTH: "/auth",
   LOGIN: "/login",
- 
+  RECORDING: "/recording",
+  ALL_LIVE_RECORDINGS: "/all-live-recordings",
+  GET_SINGLE_RECORDING: "/get-single-recording",
+  GET_RECORDING_BY_TOPIC_ONLY: "/get-recording-by-topic", // This is for INSP external website not for video portal at the moment
 });
 
 module.exports = routesConstants;

@@ -12,6 +12,11 @@ const {
   getLiveClassDetails,
   getUpcomingClass,
 } = require("./scheduleliveclasses/scheduleLiveClassController");
+const {
+  getRecordingsWithDetails,
+  getSingleRecording,
+  getRecordingsByTopicOnly,
+} = require("./recordingscontrollers/recordingsController");
 
 module.exports = {
   loginHandler,
@@ -24,4 +29,7 @@ module.exports = {
   getUpcomingClass,
   generateGetPresignedUrl,
   createFeedback,
+  getRecordingsWithDetails,
+  getSingleRecording,
+  getRecordingsByTopicOnly,
 };

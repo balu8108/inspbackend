@@ -85,8 +85,9 @@ const getAllLiveClasses = async (req, res) => {
 
 const createLiveClass = async (req, res) => {
   try {
+    console.log("create live class");
     const { body, files, plainAuthData } = req;
-
+    console.log("files", files);
     let addFilesInArray = [];
     if (files) {
       addFilesInArray = Array.isArray(files?.files)
@@ -187,11 +188,6 @@ const getUpcomingClass = async (req, res) => {
     return res.status(400).json({ error: err.message });
   }
 };
-
-
-
-
-
 
 module.exports = {
   createLiveClass,

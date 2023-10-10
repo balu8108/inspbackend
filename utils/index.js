@@ -9,6 +9,8 @@ const {
   isObjectExistInS3,
   getObjectFromS3,
   uploadToS3,
+  generateAWSS3LocationUrl,
+  isObjectExistInS3ByKey,
 } = require("./awsFunctions");
 const checkArraysHaveSameElements = require("./checkArrayHaveSameElement");
 const updateLeaderboard = require("./updateLeaderboard");
@@ -35,4 +37,6 @@ module.exports = {
   fetchAllStudentsFromInspApi,
   validateCreateFeedBack,
   isFeedbackProvided,
+  generateAWSS3LocationUrl,
+  isObjectExistInS3ByKey,
 };

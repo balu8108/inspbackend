@@ -25,13 +25,15 @@ const {
   LiveClassLog,
   LiveClassTestQuestionLog,
   LiveClassBlockedPeer,
+  LiveClassRoomRecording,
 } = require("../models");
 const {
   uploadFilesToS3,
   updateLeaderboard,
   isFeedbackProvided,
+  generateAWSS3LocationUrl,
 } = require("../utils");
-const { ENVIRON } = require("../envvar");
+const { PLATFORM, ENVIRON } = require("../envvar");
 
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
@@ -61,10 +63,12 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           errMsg: "No Class with this room id",
         }; // No corresponding room in db
       }
+
       // update logs if peer is a teacher and change status of class to Ongoing
       if (peerDetails) {
         // check if the peer is blocked from this class
         // check if this peer is not blocked
+
         const isPeerBlocked = await LiveClassBlockedPeer.findOne({
           where: {
             classRoomId: liveClass?.id,
@@ -72,6 +76,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
             isBlocked: true,
           },
         });
+
         if (isPeerBlocked) {
           return {
             roomId: false,
@@ -83,9 +88,11 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
         }
 
         // check if already this peer exists in peers
+
         const isPeerExists = rooms[roomId]?.peers.find(
           (peer) => peer.id === peerDetails.id
         );
+
         if (isPeerExists) {
           return {
             roomId: false,
@@ -93,6 +100,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
             errMsg: "You have already joined the class!!",
           };
         }
+
         if (peerDetails.user_type === 1) {
           liveClass.classStatus = classStatus.ONGOING;
           await liveClass.save();
@@ -114,6 +122,10 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
             ? authData.name
             : authData.name + Math.floor(Math.random() * (10000 - 1 + 1)) + 1,
         isTeacher: authData?.user_type === 1,
+        isAudioBlocked:
+          authData?.user_type === 1 ? false : liveClass?.muteAllStudents, // At the moment we used blocked and enabled differently need optimzation later on
+        isVideoBlocked: authData?.user_type === 1 ? false : true,
+        isScreenShareBlocked: authData?.user_type === 1 ? false : true,
         isAudioEnabled: false,
         isVideoEnabled: false,
         isScreenSharingEnabled: false,
@@ -133,9 +145,9 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
         rooms[roomId] = {
           router: router1,
           mentors: newPeerDetails.isTeacher
-            ? [...mentors, newPeerDetails]
+            ? [newPeerDetails, ...mentors]
             : [...mentors],
-          peers: [...peers, newPeerDetails],
+          peers: [newPeerDetails, ...peers],
         };
 
         return { roomId, router1, newPeerDetails, liveClass: liveClass };
@@ -148,10 +160,11 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
         rooms[roomId] = {
           router: router1,
           mentors: newPeerDetails.isTeacher
-            ? [...mentors, newPeerDetails]
+            ? [newPeerDetails, ...mentors]
             : [...mentors],
-          peers: [...peers, newPeerDetails],
+          peers: [newPeerDetails, ...peers],
         };
+
         return { roomId, router1, newPeerDetails, liveClass: liveClass };
       }
     } else {
@@ -193,6 +206,7 @@ const joinRoomHandler = async (data, callback, socket, io, worker) => {
     const { authData } = socket;
     const { roomId, router1, newPeerDetails, liveClass, errMsg } =
       await createOrJoinRoomFunction(data, authData, socket.id, worker);
+
     if (roomId === false && router1 === false) {
       callback({ success: false, errMsg }); // No room id/something not supplied
     } else {
@@ -207,8 +221,13 @@ const joinRoomHandler = async (data, callback, socket, io, worker) => {
       };
 
       const rtpCapabilities = router1.rtpCapabilities;
-      callback({ success: true, roomId, rtpCapabilities });
-      socket.broadcast.to(roomId).emit(SOCKET_EVENTS.NEW_PEER_JOINED, {
+      callback({
+        success: true,
+        selfDetails: newPeerDetails,
+        roomId,
+        rtpCapabilities,
+      });
+      socket.to(roomId).emit(SOCKET_EVENTS.NEW_PEER_JOINED, {
         peer: newPeerDetails,
       }); // later on we will send the peer details send all joined user that new user joined
       socket.emit(SOCKET_EVENTS.ROOM_UPDATE, { peers: rooms[roomId].peers }); // send all peers to new joinee
@@ -504,7 +523,7 @@ const chatMsgHandler = (data, socket) => {
   try {
     const { roomId, peerDetails } = peers[socket.id];
     const { msg } = data;
-    socket.broadcast.to(roomId).emit(SOCKET_EVENTS.CHAT_MSG_FROM_SERVER, {
+    socket.to(roomId).emit(SOCKET_EVENTS.CHAT_MSG_FROM_SERVER, {
       msg: msg,
       peerDetails: peerDetails,
     }); // broadcast message to all
@@ -707,7 +726,6 @@ const uploadFileHandler = async (data, callback, socket) => {
       throw new Error("Something went wrong");
     }
 
-    console.log("data", data);
     const fileUploads = await uploadFilesToS3(
       data?.files,
       `files/roomId_${data?.roomId}`
@@ -734,11 +752,14 @@ const uploadFileHandler = async (data, callback, socket) => {
         files: filesResArray,
       },
     });
-    socket.broadcast.to(roomId).emit(SOCKET_EVENTS.UPLOAD_FILE_FROM_SERVER, {
-      roomType: data?.roomType,
-      roomId: data?.roomId,
-      files: filesResArray,
-    });
+
+    socket.broadcast
+      .to(data?.roomId)
+      .emit(SOCKET_EVENTS.UPLOAD_FILE_FROM_SERVER, {
+        roomType: data?.roomType,
+        roomId: data?.roomId,
+        files: filesResArray,
+      });
   } catch (err) {
     callback({ success: false, data: err.message });
   }
@@ -830,9 +851,25 @@ const startRecord = async (peer, peerProducersList, router) => {
     recordInfo.fileName = `${peer.roomId}-${Date.now().toString()}`;
 
     let recordProcess = getProcess(recordInfo);
-    peers[peer.socket.id] = { ...peer, recordProcess: recordProcess };
+    if (recordProcess) {
+      let fileKeyName = "";
+      let url = "";
+      if (PLATFORM === "windows") {
+        fileKeyName = `recordfiles/${recordInfo?.fileName}.webm`;
+        url = "localhost";
+      } else {
+        fileKeyName = `liveclassrecordings/${recordInfo?.fileName}`;
+        url = generateAWSS3LocationUrl(fileKeyName);
+      }
 
-    console.log("consumer", consumers);
+      await LiveClassRoomRecording.create({
+        key: fileKeyName,
+        url: url,
+        classRoomId: peer.classPk,
+      });
+    }
+
+    peers[peer.socket.id] = { ...peer, recordProcess: recordProcess };
 
     setTimeout(async () => {
       for (const consumer of consumers) {
@@ -972,16 +1009,63 @@ const setIsAudioStreamEnabled = (data, socket, io) => {
 };
 
 const kickOutFromClassHandler = async (data, socket, io) => {
-  const { classPk } = peers[socket.id];
-  const { peerSocketId, peerId } = data;
-  if (peerSocketId && peerId) {
-    // TODO write in db that this user is kicked out from class
-    await LiveClassBlockedPeer.create({
-      blockedPersonId: peerId,
-      classRoomId: classPk,
-      isBlocked: true,
-    });
-    io.to(peerSocketId).emit(SOCKET_EVENTS.KICK_OUT_FROM_CLASS_FROM_SERVER);
+  try {
+    const { classPk } = peers[socket.id];
+    const { peerSocketId, peerId } = data;
+    if (peerSocketId && peerId) {
+      // TODO write in db that this user is kicked out from class
+      await LiveClassBlockedPeer.create({
+        blockedPersonId: peerId,
+        classRoomId: classPk,
+        isBlocked: true,
+      });
+      io.to(peerSocketId).emit(SOCKET_EVENTS.KICK_OUT_FROM_CLASS_FROM_SERVER);
+    }
+  } catch (err) {
+    console.log("Error in kick out from class handler", err);
+  }
+};
+
+const blockOrUnblockMicHandler = (data, socket, io) => {
+  try {
+    const { value, peerSocketId, peerId } = data;
+    const { roomId } = peers[socket.id];
+
+    if (peerSocketId && peerId) {
+      // made isAudioBlocked true or false as per value
+      peers[peerSocketId].peerDetails.isAudioBlocked = value; // the same peerDetails object is in rooms as well which automatically gets changes
+      // If value is true means blocking then do isAudioEnabled = false
+      if (value === true) {
+        peers[peerSocketId].peerDetails.isAudioEnabled = !value;
+      }
+
+      // inform the targetted peer about block or unblock of his mic
+      io.to(peerSocketId).emit(
+        SOCKET_EVENTS.BLOCK_OR_UNBLOCK_MIC_FROM_SERVER,
+        peers[peerSocketId].peerDetails
+      );
+    }
+  } catch (err) {
+    console.log("Error in block or unblock mic handler", err);
+  }
+};
+
+const muteMicCommandByMentorHandler = (data, socket, io) => {
+  try {
+    const { value, peerSocketId, peerId } = data;
+    const { roomId } = peers[socket.id];
+    if (value === false) {
+      // mostly mute command given by a mentor to student
+      // so make isAudioEnabled false
+
+      peers[peerSocketId].peerDetails.isAudioEnabled = value;
+      io.to(peerSocketId).emit(
+        SOCKET_EVENTS.MUTE_MIC_COMMAND_BY_MENTOR_FROM_SERVER,
+        peers[peerSocketId].peerDetails
+      );
+    }
+  } catch (err) {
+    console.log("Mute mic command by mentor handler", err);
   }
 };
 module.exports = {
@@ -1010,4 +1094,6 @@ module.exports = {
   stopRecordingHandler,
   setIsAudioStreamEnabled,
   kickOutFromClassHandler,
+  blockOrUnblockMicHandler,
+  muteMicCommandByMentorHandler,
 };

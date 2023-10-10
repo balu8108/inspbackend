@@ -9,13 +9,14 @@ const {
   AWS_REGION,
   AWS_BUCKET_NAME,
 } = require("../envvar");
+
 const RECORD_FILE_LOCATION_PATH = "./recordfiles";
-const AWS_S3_RECORD_FILES = "./insp_dev_s3_bucket/liveclassrecordings"; // we have mounted the s3 bucket directly to ec2 instance
+const AWS_S3_RECORD_FILES = "liveclassrecordings"; // we have mounted the s3 bucket directly to ec2 instance
 const kill = require("tree-kill");
 const GSTREAMER_DEBUG_LEVEL = 3;
 const GSTREAMER_COMMAND = "gst-launch-1.0";
 const GSTREAMER_OPTIONS = "-v -e";
-
+const getGStreamerPIDs = require("./gstreamerPids");
 module.exports = class GStreamer {
   constructor(rtpParameters) {
     this._rtpParameters = rtpParameters;
@@ -52,6 +53,7 @@ module.exports = class GStreamer {
         message
       )
     );
+
     this._process.on("error", (error) =>
       console.error(
         "gstreamer::process::error [pid:%d, error:%o]",
@@ -65,17 +67,24 @@ module.exports = class GStreamer {
     });
 
     this._process.stderr.on("data", (data) => {
-      console.log("gstreamer::process::stderr::data [data:%o]", data);
+      // console.log("gstreamer::process::stderr::data [data:%o]", data);
     });
 
     this._process.stdout.on("data", (data) => {
-      console.log("gstreamer::process::stdout::data [data:%o]", data);
+      // console.log("gstreamer::process::stdout::data [data:%o]", data);
     });
   }
 
-  kill() {
-    console.log("kill() [pid:%d]", this._process.pid);
-    kill(this._process.pid, "SIGINT");
+  async kill() {
+    if (PLATFORM === "ubuntu" || PLATFORM === "linux") {
+      const gstPid = await getGStreamerPIDs(this._process.pid);
+      gstPid.forEach((gstPid) => kill(gstPid, "SIGINT")); // In linux we can get the gst-launch-1.0 pid and kill it only then it kills process
+      this._process.stdin.end();
+      this._process.kill("SIGINT");
+    } else {
+      this._process.stdin.end();
+      kill(this._process.pid, "SIGINT"); // Kill method of treekill pacakge, but please note it will abruptly closes record process therefore we are using local file system in case of windows/local environment
+    }
   }
 
   get _commandArgs() {
@@ -171,7 +180,7 @@ module.exports = class GStreamer {
   }
 
   get _sinkArgs() {
-    if (ENVIRON === "local") {
+    if (PLATFORM === "windows") {
       return [
         "webmmux name=mux",
         "!",
@@ -181,15 +190,8 @@ module.exports = class GStreamer {
       return [
         "webmmux name=mux",
         "!",
-        `filesink location=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`,
+        `awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`,
       ];
     }
   }
-  // get _sinkArgs() {
-  //   return [
-  //     "webmmux name=mux",
-  //     "!",
-  //     `awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${this._rtpParameters.fileName}.webm`,
-  //   ];
-  // }
 };

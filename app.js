@@ -13,7 +13,8 @@ const scheduleLiveClass = require("./routes/scheduleliveclasses/scheduleLiveClas
 const genericRoutes = require("./routes/genericroutes/genericroutes");
 const authenticationRoutes = require("./routes/authentication/authenticationRoutes");
 const soloClassroomRoutes = require("./routes/soloclassroom/soloClassroom");
-const myUploadRoutes = require("./routes/myuploads/assignment")
+const myUploadRoutes = require("./routes/myuploads/assignment");
+const recordingRoutes = require("./routes/recordings/recordings");
 const { ENVIRON } = require("./envvar");
 const {
   isSocketUserAuthenticated,
@@ -45,13 +46,15 @@ const {
   endMeetHandler,
   setIsAudioStreamEnabled,
   kickOutFromClassHandler,
+  blockOrUnblockMicHandler,
+  muteMicCommandByMentorHandler,
 } = require("./socketcontrollers");
 
-app.use(express.json({ limit: "50mb" }));
+app.use(express.json({ limit: "100mb" }));
 app.use(bodyParser.json());
 app.use(
   bodyParser.urlencoded({
-    limit: "50mb",
+    limit: "100mb",
     extended: true,
   })
 );
@@ -63,11 +66,12 @@ app.use(cookieParser());
 app.use(routesConstants.SCHEDULE_LIVE_CLASS, scheduleLiveClass);
 app.use(routesConstants.GENERIC_API, genericRoutes);
 app.use(routesConstants.AUTH, authenticationRoutes);
-app.use(routesConstants.SOLO,soloClassroomRoutes);
-app.use(routesConstants.TOPIC_ASSIGNMENTS,myUploadRoutes);
+app.use(routesConstants.SOLO, soloClassroomRoutes);
+app.use(routesConstants.TOPIC_ASSIGNMENTS, myUploadRoutes);
+app.use(routesConstants.RECORDING, recordingRoutes);
 // Cron jobs function
 if (ENVIRON !== "local") {
-  // scheduleJob();
+  scheduleJob();
 }
 // scheduleJob();
 // Cron jobs function
@@ -86,6 +90,7 @@ let worker;
 
 const httpServer = http.createServer(app);
 const io = socketIo(httpServer, {
+  maxHttpBufferSize: 1e8, // 100 MB,
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
@@ -141,6 +146,7 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
     raiseHandHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.UPLOAD_FILE_TO_SERVER, (data, callback) => {
+    console.log("file handler triggering", socket);
     uploadFileHandler(data, callback, socket);
   });
   socket.on(SOCKET_EVENTS.PRODUCER_PAUSE, (data) => {
@@ -160,6 +166,12 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   });
   socket.on(SOCKET_EVENTS.IS_AUDIO_STREAM_ENABLED_TO_SERVER, (data) => {
     setIsAudioStreamEnabled(data, socket, io);
+  });
+  socket.on(SOCKET_EVENTS.BLOCK_OR_UNBLOCK_MIC_TO_SERVER, (data) => {
+    blockOrUnblockMicHandler(data, socket, io);
+  });
+  socket.on(SOCKET_EVENTS.MUTE_MIC_COMMAND_BY_MENTOR_TO_SERVER, (data) => {
+    muteMicCommandByMentorHandler(data, socket, io);
   });
   socket.on(SOCKET_EVENTS.KICK_OUT_FROM_CLASS_TO_SERVER, (data) => {
     kickOutFromClassHandler(data, socket, io);
