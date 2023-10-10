@@ -1068,6 +1068,33 @@ const muteMicCommandByMentorHandler = (data, socket, io) => {
     console.log("Mute mic command by mentor handler", err);
   }
 };
+
+const questionMsgSentByStudentHandler = (data, callback, socket, io) => {
+  try {
+    // getting question message in data
+
+    const { questionMsg } = data;
+    const { roomId, peerDetails } = peers[socket.id];
+    const { mentors } = rooms[roomId];
+
+    callback({ success: true, data: { questionMsg, peerDetails } });
+    if (mentors.length > 0) {
+      mentors.forEach((mentor) => {
+        socket
+          .to(mentor?.socketId)
+          .emit(SOCKET_EVENTS.QUESTION_MSG_SENT_FROM_SERVER, {
+            questionMsg,
+            peerDetails,
+          });
+      });
+    }
+
+    // send this question message to only the teacher
+  } catch (err) {
+    console.log("Error in question msg sent by student handler", err);
+  }
+};
+
 module.exports = {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -1096,4 +1123,5 @@ module.exports = {
   kickOutFromClassHandler,
   blockOrUnblockMicHandler,
   muteMicCommandByMentorHandler,
+  questionMsgSentByStudentHandler,
 };

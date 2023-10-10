@@ -48,6 +48,7 @@ const {
   kickOutFromClassHandler,
   blockOrUnblockMicHandler,
   muteMicCommandByMentorHandler,
+  questionMsgSentByStudentHandler,
 } = require("./socketcontrollers");
 
 app.use(express.json({ limit: "100mb" }));
@@ -175,6 +176,9 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   });
   socket.on(SOCKET_EVENTS.KICK_OUT_FROM_CLASS_TO_SERVER, (data) => {
     kickOutFromClassHandler(data, socket, io);
+  });
+  socket.on(SOCKET_EVENTS.QUESTION_MSG_SENT_TO_SERVER, (data, callback) => {
+    questionMsgSentByStudentHandler(data, callback, socket, io);
   });
   socket.on(SOCKET_EVENTS.LEAVE_ROOM, (callback) => {
     leaveRoomHandler(callback, socket, worker, io);
