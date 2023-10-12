@@ -9,8 +9,13 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      key: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
       url: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false,
       },
       soloClassRoomId: {
         type: Sequelize.INTEGER,

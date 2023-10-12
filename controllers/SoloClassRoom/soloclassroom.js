@@ -28,12 +28,12 @@ exports.createSoloClassRoom = async (req, res) => {
 
     // Save solo lecture  information in the  SoloClassRoom model
     const soloclassroomlecture = await SoloClassRoom.create({
-      subjectId,
-      topicId,
-      topic,
+      subjectId:subjectId,
+      topicId:topicId,
+      topic:topic,
       mentorName: plainAuthData.name,
-      agenda,
-      description,
+      agenda:agenda,
+      description:description,
     });
 
     const soloClassRoomId = soloclassroomlecture.id;
@@ -96,15 +96,16 @@ exports.uploadSoloClassRoomRecordings = async (req, res) => {
       "soloclassroom-recordings"
     );
 
-    // Create AssignmentFiles records for each uploaded file
+    // Create  records for each uploaded file
     const solorecordings = await Promise.all(
       filesUploading.map(async (file) => {
-        const { url } = file;
+        const { key , url } = file;
 
-        // Create a new AssignmentFiles record
+        // Create a new solo lecture record
         const soloClassRoomFile = await SoloClassRoomRecording.create({
-          url,
-          soloClassRoomId,
+          key:key,
+          url:url,
+          soloClassRoomId:soloClassRoomId,
         });
 
         return soloClassRoomFile;
