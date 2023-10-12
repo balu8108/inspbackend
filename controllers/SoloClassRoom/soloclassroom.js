@@ -3,7 +3,7 @@ const {
   soloClassRoomFiles,
   SoloClassRoomRecording,
 } = require("../../models");
-const { uploadFilesToS3 } = require("../../utils/awsFunctions");
+const { uploadFilesToS3,generatePresignedUrls } = require("../../utils/awsFunctions");
 
 exports.createSoloClassRoom = async (req, res) => {
   try {
@@ -164,5 +164,43 @@ exports.getLatestSoloclassroom = async (req, res) => {
     res.status(500).json({
       error: "An error occurred while fetching the latest solo class rooms",
     });
+  }
+};
+
+
+exports.generateGetSoloLecturePresignedUrl = async (req, res) => {
+  try {
+     const { s3_key } = req.body;
+   
+    if (!s3_key) {
+      throw new Error("s3 url is required");
+    }
+    const presignedUrls = await generatePresignedUrls(s3_key);
+    return res
+      .status(200)
+      .json({ status: true, data: { getUrl: presignedUrls } });
+  } catch (err) {
+    return res.status(400).json({ status: false, data: err.message });
+  }
+};
+
+exports.openSoloLetureFile = async (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    return res.status(400).json({ error: "File id is required" });
+  }
+  // All files uploaded to S3 so we need to generate presigned urls
+  try {
+    const file = await SoloClassRoomRecording.findOne({ where: { id: id } });
+    if (!file) {
+      throw new Error("No file found with this id");
+    } else {
+      const presignedUrls = await generatePresignedUrls(file.key);
+      return res
+        .status(200)
+        .json({ status: true, data: { getUrl: presignedUrls } });
+    }
+  } catch (err) {
+    return res.status(400).json({ status: false, data: err.message });
   }
 };
