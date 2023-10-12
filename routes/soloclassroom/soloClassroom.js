@@ -1,11 +1,24 @@
 const express = require("express");
 const router = express.Router();
 const { routesConstants } = require("../../constants");
+const { isAuthenticated, isTeacher } = require("../../middlewares");
+
 const {
-  createSoloClassRoom, getLatestSoloclassroom,
+  createSoloClassRoom,
+  getLatestSoloclassroom,
+  uploadSoloClassRoomRecordings,
+  getTopicDetails,
 } = require("../../controllers/SoloClassRoom/soloclassroom");
 
+router.post(
+  routesConstants.SOLO_CLASSROOM,
+  isAuthenticated,
+  isTeacher,
+  createSoloClassRoom
+);
+router.get(routesConstants.LATEST_CLASSROOM, getLatestSoloclassroom);
+router.post(`${routesConstants.SOLO_CLASSROOM_RECORDINGS}/:soloClassRoomId`,uploadSoloClassRoomRecordings);
+router.get(`${routesConstants.SOLO_TOPIC_DETAILS_FILES_RECORDINGS}/:topicId`,getTopicDetails)
 
-router.post( routesConstants.SOLO_CLASSROOM, createSoloClassRoom);
-router.get(routesConstants.LATEST_CLASSROOM,getLatestSoloclassroom)
+// `${routesConstants.TOPIC_FEEDBACK_RATING_DETAILS}/:topicId`,
 module.exports = router;

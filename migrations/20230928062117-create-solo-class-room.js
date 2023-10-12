@@ -15,6 +15,9 @@ module.exports = {
       mentorName: {
         type: Sequelize.STRING
       },
+      topicId: {
+        type: Sequelize.STRING
+      },
       topic: {
         type: Sequelize.STRING
       },
