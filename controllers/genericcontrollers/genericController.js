@@ -18,6 +18,7 @@ const getAllSubjects = async (req, res) => {
 const generateGetPresignedUrl = async (req, res) => {
   try {
     const { s3_key } = req.body;
+
     if (!s3_key) {
       throw new Error("s3 url is required");
     }
@@ -181,7 +182,6 @@ const latestfeedback = async (req, res) => {
   }
 };
 
-
 const getCompletedLiveClasses = async (req, res) => {
   try {
     const completedLiveClasses = await LiveClassRoom.findAll({
@@ -223,8 +223,6 @@ const getTopicDetails = async (req, res) => {
   }
 };
 
-
-
 module.exports = {
   getAllSubjects,
   openFile,
@@ -233,5 +231,5 @@ module.exports = {
   createFeedback,
   latestfeedback,
   getCompletedLiveClasses,
-  getTopicDetails
+  getTopicDetails,
 };

@@ -3,7 +3,10 @@ const {
   soloClassRoomFiles,
   SoloClassRoomRecording,
 } = require("../../models");
-const { uploadFilesToS3,generatePresignedUrls } = require("../../utils/awsFunctions");
+const {
+  uploadFilesToS3,
+  generatePresignedUrls,
+} = require("../../utils/awsFunctions");
 
 exports.createSoloClassRoom = async (req, res) => {
   try {
@@ -23,17 +26,17 @@ exports.createSoloClassRoom = async (req, res) => {
 
     // Extract other data from the request
     const { plainAuthData } = req;
-    console.log("AuthData", req.plainAuthData);
+
     const { subjectId, topicId, topic, agenda, description } = req.body;
 
     // Save solo lecture  information in the  SoloClassRoom model
     const soloclassroomlecture = await SoloClassRoom.create({
-      subjectId:subjectId,
-      topicId:topicId,
-      topic:topic,
+      subjectId: subjectId,
+      topicId: topicId,
+      topic: topic,
       mentorName: plainAuthData.name,
-      agenda:agenda,
-      description:description,
+      agenda: agenda,
+      description: description,
     });
 
     const soloClassRoomId = soloclassroomlecture.id;
@@ -99,13 +102,13 @@ exports.uploadSoloClassRoomRecordings = async (req, res) => {
     // Create  records for each uploaded file
     const solorecordings = await Promise.all(
       filesUploading.map(async (file) => {
-        const { key , url } = file;
+        const { key, url } = file;
 
         // Create a new solo lecture record
         const soloClassRoomFile = await SoloClassRoomRecording.create({
-          key:key,
-          url:url,
-          soloClassRoomId:soloClassRoomId,
+          key: key,
+          url: url,
+          soloClassRoomId: soloClassRoomId,
         });
 
         return soloClassRoomFile;
@@ -136,7 +139,7 @@ exports.getTopicDetails = async (req, res) => {
         },
         {
           model: SoloClassRoomRecording,
-          attributes: ["url"],
+          attributes: ["key", "url"],
         },
       ],
     });
@@ -167,11 +170,10 @@ exports.getLatestSoloclassroom = async (req, res) => {
   }
 };
 
-
 exports.generateGetSoloLecturePresignedUrl = async (req, res) => {
   try {
-     const { s3_key } = req.body;
-   
+    const { s3_key } = req.body;
+
     if (!s3_key) {
       throw new Error("s3 url is required");
     }
