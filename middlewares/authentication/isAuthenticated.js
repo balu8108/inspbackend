@@ -5,7 +5,7 @@ const isAuthenticated = async (req, res, next) => {
   try {
     // we need secret_token during login from params
     // for making other rest apis protected we need secret_token from cookies for any subsequent request after login
-    console.log(req.headers);
+
     let secret_token = null;
     if (req?.params?.secret_token) {
       secret_token = req.params.secret_token;

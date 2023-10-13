@@ -6,6 +6,7 @@ let {
   consumers,
   testQuestions,
   testResponses,
+  leaderBoard,
 } = require("./socketglobalvariables");
 
 const uuidv4 = require("uuid").v4;
@@ -26,18 +27,51 @@ const {
   LiveClassTestQuestionLog,
   LiveClassBlockedPeer,
   LiveClassRoomRecording,
+  LeaderBoard,
 } = require("../models");
 const {
   uploadFilesToS3,
   updateLeaderboard,
   isFeedbackProvided,
   generateAWSS3LocationUrl,
+  isObjectValid,
 } = require("../utils");
 const { PLATFORM, ENVIRON } = require("../envvar");
 
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
+
 const RECORD_PROCESS_NAME = "GStreamer";
+
+// This function process leaderboard data that is already in database
+// because there is possiblity the teacher got diconnected and then reconnected tehrefore we need to update leaderBoard variable again with data from db
+// and again if the new data comes it can be updated in db and leaderBoard variable
+const processLeaderBoardData = (roomId, leaderBoardData) => {
+  try {
+    let leaderBoardObjects = {};
+    for (const record of leaderBoardData) {
+      leaderBoardObjects = {
+        ...leaderBoardObjects,
+        [record?.peerId]: {
+          peerDetails: {
+            id: record?.peerId,
+            name: record?.peerName,
+            email: record?.peerEmail,
+          },
+          correctAnswers: record?.correctAnswers,
+          combinedResponseTime: record?.combinedResponseTime,
+        },
+      };
+    }
+    if (isObjectValid(leaderBoardObjects)) {
+      leaderBoard = { ...leaderBoard, [roomId]: leaderBoardObjects };
+    }
+
+    console.log("leaderboard from prcoess", leaderBoard);
+  } catch (err) {
+    console.log("Error in processing leaderboard data", err);
+  }
+};
 
 const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
   try {
@@ -45,6 +79,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
     let router1;
     let peers = [];
     let mentors = [];
+    let leaderBoardData = [];
     if ("roomId" in data) {
       // means room exist then add this peer to given room
       let roomId = data.roomId;
@@ -111,6 +146,19 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
         }
       }
 
+      // Get leaderboard for teacher if the authDtaa if of teacher
+      if (authData?.user_type === 1) {
+        leaderBoardData = await LeaderBoard.findAll({
+          where: { classRoomId: liveClass?.id },
+          order: [
+            ["correctAnswers", "DESC"],
+            ["combinedResponseTime", "ASC"],
+          ],
+          limit: 10,
+        });
+        await processLeaderBoardData(roomId, leaderBoardData);
+      }
+
       let newPeerDetails = {
         socketId: socketId,
         id:
@@ -150,7 +198,13 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           peers: [newPeerDetails, ...peers],
         };
 
-        return { roomId, router1, newPeerDetails, liveClass: liveClass };
+        return {
+          roomId,
+          router1,
+          newPeerDetails,
+          leaderBoardData: leaderBoardData,
+          liveClass: liveClass,
+        };
       } else {
         // TODO Check in db and then create room if it exists otherwise don't create and send false,false
         // Right now we will create using uuid
@@ -165,7 +219,13 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           peers: [newPeerDetails, ...peers],
         };
 
-        return { roomId, router1, newPeerDetails, liveClass: liveClass };
+        return {
+          roomId,
+          router1,
+          newPeerDetails,
+          leaderBoardData: leaderBoardData,
+          liveClass: liveClass,
+        };
       }
     } else {
       // no room Id supplied then send false,false
@@ -204,8 +264,14 @@ const joinRoomPreviewHandler = (data, callback, socket, io) => {
 const joinRoomHandler = async (data, callback, socket, io, worker) => {
   try {
     const { authData } = socket;
-    const { roomId, router1, newPeerDetails, liveClass, errMsg } =
-      await createOrJoinRoomFunction(data, authData, socket.id, worker);
+    const {
+      roomId,
+      router1,
+      newPeerDetails,
+      leaderBoardData,
+      liveClass,
+      errMsg,
+    } = await createOrJoinRoomFunction(data, authData, socket.id, worker);
 
     if (roomId === false && router1 === false) {
       callback({ success: false, errMsg }); // No room id/something not supplied
@@ -224,6 +290,7 @@ const joinRoomHandler = async (data, callback, socket, io, worker) => {
       callback({
         success: true,
         selfDetails: newPeerDetails,
+        leaderBoardData: leaderBoardData,
         roomId,
         rtpCapabilities,
       });
@@ -534,6 +601,7 @@ const chatMsgHandler = (data, socket) => {
 
 const disconnectHandler = async (socket, worker, io) => {
   try {
+    console.log("leaderboards", leaderBoard);
     consumers = removeItems(consumers, socket.id, "consumer");
     producers = removeItems(producers, socket.id, "producer");
     transports = removeItems(transports, socket.id, "transport");
@@ -554,6 +622,7 @@ const disconnectHandler = async (socket, worker, io) => {
 
       if (rooms[roomId].peers.length === 0) {
         delete rooms[roomId];
+        delete leaderBoard[roomId];
         socket.leave(roomId);
         io.to(roomId).emit(SOCKET_EVENTS.PEER_LEAVED, {
           peerLeaved: leavingPeer.peerDetails,
@@ -959,6 +1028,7 @@ const studentTestAnswerResponseHandler = (data, socket, io) => {
       peerDetails,
       data
     );
+    console.log("leaderboard from answer", leaderBoard);
     const getAllTeachers = rooms[roomId].mentors;
 
     getAllTeachers.forEach(async (peer) => {
@@ -967,7 +1037,6 @@ const studentTestAnswerResponseHandler = (data, socket, io) => {
         leaderBoard: updatedLeaderboard,
       });
     });
-    console.log("updatedLeaderboard", updatedLeaderboard);
   } catch (err) {
     console.log("Error in studentTestAnswerResponseHandler", err);
   }
