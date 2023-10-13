@@ -8,13 +8,11 @@ const {
   generatePresignedUrls,
 } = require("../../utils/awsFunctions");
 
+
+
 exports.createSoloClassRoom = async (req, res) => {
   try {
     const { files } = req;
-
-    if (!files?.files) {
-      return res.status(400).json({ message: "No files were uploaded." });
-    }
 
     let addFilesInArray = [];
 
@@ -45,7 +43,6 @@ exports.createSoloClassRoom = async (req, res) => {
       addFilesInArray,
       "soloclassroomfiles"
     );
-
     // Create Files records for each uploaded file
     const soloLectureFiles = await Promise.all(
       filesUploading.map(async (file) => {
@@ -53,11 +50,11 @@ exports.createSoloClassRoom = async (req, res) => {
 
         // Create a new sololectureFiles record
         const sololectureFile = await soloClassRoomFiles.create({
-          key,
-          url,
+          key: key,
+          url: url,
           isDownloadable: true,
           isShareable: true,
-          soloClassRoomId: soloclassroomlecture.id, // Assign the assignment ID to the file
+          soloClassRoomId: soloclassroomlecture.id, 
         });
 
         return sololectureFile;
@@ -73,6 +70,10 @@ exports.createSoloClassRoom = async (req, res) => {
     res.status(500).json({ error: "An error occurred while uploading files" });
   }
 };
+
+
+
+
 
 // this is the api for where mentor will record the lecture and stored in aws ..
 
