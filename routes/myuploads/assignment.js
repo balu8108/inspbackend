@@ -10,6 +10,7 @@ const {
   latestAssignments,
   allAssignmentsWithFiles,
   allAssignmentsbytopicid,
+  recentOneAssignments,
 } = require("../../controllers/MyUploads/assignments");
 
 const { isAuthenticated, isTeacher } = require("../../middlewares");
@@ -30,4 +31,5 @@ router.post(
   uploadAssignment
 );
 router.get(routesConstants.All_ASSIGNMENT_WITH_FILES, allAssignmentsWithFiles);
+router.get(routesConstants.RECENT_ONE_ASSIGNMENT,recentOneAssignments)
 module.exports = router;
