@@ -4,6 +4,7 @@ const {
   LiveClassRoomQNANotes,
   LiveClassRoomDetail,
   Rating,
+  LiveClassRoomRecording,
 } = require("../../models");
 const {
   generatePresignedUrls,
@@ -223,6 +224,30 @@ const getTopicDetails = async (req, res) => {
   }
 };
 
+// THE BELOW IS A SPECIAL API TO UPDATE KEY AND URL OF RECORDINGS UPLOADED TO AWS
+// WHEN WEBM OR MP4 VIDEO FILE UPLOADED IN AWS S3 THEN AWS LAMBDA CONVERTS INTO m3u8 FORMAT USING MEDIACONVERT API
+// THEN AFTER SUCCESS JOB CREATION IT WILL TRIGGER THIS API TO UPDATE DATABASES
+const updateRecordingData = async (req, res) => {
+  try {
+    const { bucketName, inputFileKey, outputLocation } = req.body;
+    // we expect the above data from AWS lambda
+    // input file key is to search in db whether the inputFileKey is present in any of recording table means either in Live or soloRecord
+    const liveRecording = await LiveClassRoomRecording.findOne({
+      where: { key: inputFileKey },
+    });
+    if (liveRecording) {
+      liveRecording.key = "recordfiles/UryCKL3Qy2-1697449920211.webm";
+      liveRecording.save();
+    }
+    return res.status(200).json({
+      success: true,
+      data: liveRecording,
+    });
+  } catch (err) {
+    return res.status(400).json({ success: false, error: err.message });
+  }
+};
+
 module.exports = {
   getAllSubjects,
   openFile,
@@ -232,4 +257,5 @@ module.exports = {
   latestfeedback,
   getCompletedLiveClasses,
   getTopicDetails,
+  updateRecordingData,
 };
