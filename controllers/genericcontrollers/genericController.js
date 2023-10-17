@@ -5,12 +5,18 @@ const {
   LiveClassRoomDetail,
   Rating,
   LiveClassRoomRecording,
+  SoloClassRoomRecording,
 } = require("../../models");
 const {
   generatePresignedUrls,
   createOrUpdateQnANotes,
   validateCreateFeedBack,
+  splitStringWithSlash,
+  formM3U8String,
+  generateAWSS3LocationUrl,
 } = require("../../utils");
+
+const { Op } = require("sequelize");
 
 const getAllSubjects = async (req, res) => {
   return res.status(200).json({ data: "No Subjects" });
@@ -224,24 +230,65 @@ const getTopicDetails = async (req, res) => {
   }
 };
 
+const formM3U8Key = (inputFileKey, outputFolder) => {
+  try {
+    const splitKeyToArray = splitStringWithSlash(inputFileKey);
+    const convertToM3U8format = formM3U8String(splitKeyToArray);
+    const finalOutputKey = `${outputFolder}/${convertToM3U8format}`;
+    return finalOutputKey;
+  } catch (err) {
+    console.log("Err", err);
+    throw err;
+  }
+};
+
 // THE BELOW IS A SPECIAL API TO UPDATE KEY AND URL OF RECORDINGS UPLOADED TO AWS
 // WHEN WEBM OR MP4 VIDEO FILE UPLOADED IN AWS S3 THEN AWS LAMBDA CONVERTS INTO m3u8 FORMAT USING MEDIACONVERT API
 // THEN AFTER SUCCESS JOB CREATION IT WILL TRIGGER THIS API TO UPDATE DATABASES
 const updateRecordingData = async (req, res) => {
   try {
-    const { bucketName, inputFileKey, outputLocation } = req.body;
+    const { bucketName, inputFileKey, outputFolder } = req.body;
     // we expect the above data from AWS lambda
     // input file key is to search in db whether the inputFileKey is present in any of recording table means either in Live or soloRecord
+    // Example of above data:-
+    // bucketName = insp_development_bucket // bucket name where all recordings will live
+    // inputFileKey = liverecords/sample.webm // key of the input bucket , required for searching and to form .m3u8 from it
+    // outputFolder - outputvideofiles //this folder is output folder where all the m3u8 recoridng will live
+    // therefore the new key we need to form with this data is somethinglike:
+    // outputvideofiles/sample.m3u8
+    if (!bucketName || !inputFileKey || !outputFolder) {
+      throw new Error("Some required data missing");
+    }
+
     const liveRecording = await LiveClassRoomRecording.findOne({
-      where: { key: inputFileKey },
+      where: { key: { [Op.like]: `%${inputFileKey}%` } },
     });
+
     if (liveRecording) {
-      liveRecording.key = "recordfiles/UryCKL3Qy2-1697449920211.webm";
-      liveRecording.save();
+      const finalOutputKey = formM3U8Key(inputFileKey, outputFolder);
+      if (finalOutputKey) {
+        const awsUrl = generateAWSS3LocationUrl(finalOutputKey);
+        liveRecording.key = finalOutputKey;
+        liveRecording.url = awsUrl;
+        liveRecording.save();
+      }
+    }
+    // Now if above we are not able to find recording in live one then there may be possiblity we have recording under solorecord tabel
+    const soloRecord = await SoloClassRoomRecording.findOne({
+      where: { key: { [Op.like]: `%${inputFileKey}%` } },
+    });
+    if (soloRecord) {
+      const finalOutputKey = formM3U8Key(inputFileKey, outputFolder);
+      if (finalOutputKey) {
+        const awsUrl = generateAWSS3LocationUrl(finalOutputKey);
+        soloRecord.key = finalOutputKey;
+        soloRecord.url = awsUrl;
+        soloRecord.save();
+      }
     }
     return res.status(200).json({
       success: true,
-      data: liveRecording,
+      data: liveRecording || soloRecord,
     });
   } catch (err) {
     return res.status(400).json({ success: false, error: err.message });
