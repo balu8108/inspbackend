@@ -64,12 +64,15 @@ const processLeaderBoardData = (roomId, leaderBoardData) => {
       };
     }
     if (isObjectValid(leaderBoardObjects)) {
-      leaderBoard = { ...leaderBoard, [roomId]: leaderBoardObjects };
+      leaderBoard[roomId] = leaderBoardObjects;
     }
 
-    console.log("leaderboard from prcoess", leaderBoard);
+    return leaderBoard.hasOwnProperty(roomId)
+      ? Object.values(leaderBoard[roomId])
+      : [];
   } catch (err) {
     console.log("Error in processing leaderboard data", err);
+    return;
   }
 };
 
@@ -79,7 +82,8 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
     let router1;
     let peers = [];
     let mentors = [];
-    let leaderBoardData = [];
+
+    let leaderBoardArray = [];
     if ("roomId" in data) {
       // means room exist then add this peer to given room
       let roomId = data.roomId;
@@ -148,7 +152,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
 
       // Get leaderboard for teacher if the authDtaa if of teacher
       if (authData?.user_type === 1) {
-        leaderBoardData = await LeaderBoard.findAll({
+        const leaderBoardData = await LeaderBoard.findAll({
           where: { classRoomId: liveClass?.id },
           order: [
             ["correctAnswers", "DESC"],
@@ -156,7 +160,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           ],
           limit: 10,
         });
-        await processLeaderBoardData(roomId, leaderBoardData);
+        leaderBoardArray = processLeaderBoardData(roomId, leaderBoardData); // process leaderboard data
       }
 
       let newPeerDetails = {
@@ -202,7 +206,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           roomId,
           router1,
           newPeerDetails,
-          leaderBoardData: leaderBoardData,
+          leaderBoardData: leaderBoardArray,
           liveClass: liveClass,
         };
       } else {
@@ -223,7 +227,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           roomId,
           router1,
           newPeerDetails,
-          leaderBoardData: leaderBoardData,
+          leaderBoardData: leaderBoardArray,
           liveClass: liveClass,
         };
       }
@@ -808,6 +812,7 @@ const uploadFileHandler = async (data, callback, socket) => {
           url: file.url,
           classRoomId: getRoom.id,
         });
+
         filesResArray.push(newFileToDB);
       }
     } else {
@@ -822,13 +827,14 @@ const uploadFileHandler = async (data, callback, socket) => {
       },
     });
 
-    socket.broadcast
-      .to(data?.roomId)
-      .emit(SOCKET_EVENTS.UPLOAD_FILE_FROM_SERVER, {
+    socket.to(data?.roomId).emit(SOCKET_EVENTS.UPLOAD_FILE_FROM_SERVER, {
+      success: true,
+      data: {
         roomType: data?.roomType,
         roomId: data?.roomId,
         files: filesResArray,
-      });
+      },
+    });
   } catch (err) {
     callback({ success: false, data: err.message });
   }

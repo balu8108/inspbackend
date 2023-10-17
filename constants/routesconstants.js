@@ -34,6 +34,7 @@ const routesConstants = Object.freeze({
   ALL_LIVE_RECORDINGS: "/all-live-recordings",
   GET_SINGLE_RECORDING: "/get-single-recording",
   GET_RECORDING_BY_TOPIC_ONLY: "/get-recording-by-topic", // This is for INSP external website not for video portal at the moment
+  UPDATE_RECORDING_DATA: "/update-recording-data",
 });
 
 module.exports = routesConstants;
