@@ -100,6 +100,26 @@ exports.latestAssignments = async (req, res) => {
 };
 
 
+// this is the controller  for student home page where  only 1 recent assignment will be show ..
+exports.recentOneAssignments = async (req, res) => {
+  try {
+    const latestAssignments = await Assignment.findAll({
+      order: [["createdAt", "DESC"]],
+      limit: 1,
+    });
+
+    res.status(200).json({ data: latestAssignments });
+  } catch (error) {
+    console.error("Error fetching latest assignments:", error);
+    res.status(500).json({
+      error: "An error occurred while fetching the latest assignments",
+    });
+  }
+};
+
+
+
+// this is the controller where  assignement will be created.
 exports.uploadAssignment = async (req, res) => {
   try {
     const { files } = req;
@@ -159,6 +179,4 @@ exports.uploadAssignment = async (req, res) => {
     res.status(500).json({ error: "An error occurred while uploading files" });
   }
 };
-
-
 
