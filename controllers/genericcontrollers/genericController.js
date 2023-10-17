@@ -6,6 +6,8 @@ const {
   Rating,
   LiveClassRoomRecording,
   SoloClassRoomRecording,
+  soloClassRoomFiles,
+  AssignmentFiles,
 } = require("../../models");
 const {
   generatePresignedUrls,
@@ -39,13 +41,30 @@ const generateGetPresignedUrl = async (req, res) => {
 };
 
 const openFile = async (req, res) => {
-  const { id } = req.params;
-  if (!id) {
-    return res.status(400).json({ error: "File id is required" });
-  }
-  // All files uploaded to S3 so we need to generate presigned urls
   try {
-    const file = await LiveClassRoomFile.findOne({ where: { id: id } });
+    const { docId, docType } = req.query;
+
+    if (!docId || !docType) {
+      return res.status(400).json({ error: "File id and type is required" });
+    }
+    if (
+      docType &&
+      !(docType === "live" || docType === "solo" || docType === "assignment")
+    ) {
+      return res
+        .status(400)
+        .json({ error: "File type can be only live,solo,assignment" });
+    }
+    // All files uploaded to S3 so we need to generate presigned urls
+    let file = null;
+    if (docType === "live") {
+      file = await LiveClassRoomFile.findOne({ where: { id: docId } });
+    } else if (docType === "solo") {
+      file = await soloClassRoomFiles.findOne({ where: { id: docId } });
+    } else if (docType === "assignment") {
+      file = await AssignmentFiles.findOne({ where: { id: docId } });
+    }
+
     if (!file) {
       throw new Error("No file found with this id");
     } else {

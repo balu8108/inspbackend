@@ -20,7 +20,7 @@ const {
 } = require("../../controllers/genericcontrollers/genericController");
 
 router.get(routesConstants.GET_ALL_SUBJECTS, getAllSubjects);
-router.get(`${routesConstants.OPEN_FILE}/:id`, openFile);
+router.get(`${routesConstants.OPEN_FILE}`, openFile);
 router.post(
   routesConstants.GENERATE_GET_PRESIGNED_URL,
   generateGetPresignedUrl
