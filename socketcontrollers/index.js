@@ -933,7 +933,7 @@ const startRecord = async (peer, peerProducersList, router) => {
         fileKeyName = `recordfiles/${recordInfo?.fileName}.webm`;
         url = "localhost";
       } else {
-        fileKeyName = `liveclassrecordings/${recordInfo?.fileName}`;
+        fileKeyName = `liveclassrecordings/${recordInfo?.fileName}.webm`;
         url = generateAWSS3LocationUrl(fileKeyName);
       }
 
