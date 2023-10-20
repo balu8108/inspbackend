@@ -727,7 +727,7 @@ const endMeetHandler = async (socket, worker, io) => {
     console.log("Error in ending meet", err);
   }
 };
-const questionsHandler = async (data, socket) => {
+const questionsHandler = async (data, callback, socket) => {
   try {
     const { roomId, classPk } = peers[socket.id];
     const qId = uuidv4();
@@ -745,10 +745,11 @@ const questionsHandler = async (data, socket) => {
       questionType: data.type,
       classRoomId: classPk,
     });
+
+    callback(data); // send the data to emitter
+
     // there can be polls mcq and qna
-    socket.broadcast
-      .to(roomId)
-      .emit(SOCKET_EVENTS.QUESTION_SENT_FROM_SERVER, { data });
+    socket.to(roomId).emit(SOCKET_EVENTS.QUESTION_SENT_FROM_SERVER, { data });
   } catch (err) {
     console.log("Error in questionsHandler", err);
   }
@@ -1170,6 +1171,23 @@ const questionMsgSentByStudentHandler = (data, callback, socket, io) => {
   }
 };
 
+const pollTimeIncreaseHandler = (data, socket) => {
+  try {
+    const { roomId } = peers[socket.id];
+    const { questionId, timeIncreaseBy } = data;
+    const findTestQuestion = testQuestions[roomId].find(
+      (q) => q.questionId === questionId
+    );
+
+    if (findTestQuestion) {
+      findTestQuestion.time = findTestQuestion.time + timeIncreaseBy;
+    }
+    socket.to(roomId).emit(SOCKET_EVENTS.POLL_TIME_INCREASE_FROM_SERVER, data);
+  } catch (err) {
+    console.log("error in increasing poll timer", err);
+  }
+};
+
 module.exports = {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -1199,4 +1217,5 @@ module.exports = {
   blockOrUnblockMicHandler,
   muteMicCommandByMentorHandler,
   questionMsgSentByStudentHandler,
+  pollTimeIncreaseHandler,
 };

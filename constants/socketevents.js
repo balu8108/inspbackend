@@ -57,6 +57,8 @@ const SOCKET_EVENTS = Object.freeze({
     "mute_mic_command_by_mentor_from_server",
   QUESTION_MSG_SENT_TO_SERVER: "question_msg_sent_to_server",
   QUESTION_MSG_SENT_FROM_SERVER: "question_msg_sent_from_server",
+  POLL_TIME_INCREASE_TO_SERVER: "poll_time_increase_to_server",
+  POLL_TIME_INCREASE_FROM_SERVER: "poll_time_increase_from_server",
 });
 
 module.exports = SOCKET_EVENTS;

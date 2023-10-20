@@ -49,6 +49,7 @@ const {
   blockOrUnblockMicHandler,
   muteMicCommandByMentorHandler,
   questionMsgSentByStudentHandler,
+  pollTimeIncreaseHandler,
 } = require("./socketcontrollers");
 
 app.use(express.json({ limit: "100mb" }));
@@ -134,8 +135,8 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   socket.on(SOCKET_EVENTS.CHAT_MSG_TO_SERVER, (data) => {
     chatMsgHandler(data, socket);
   });
-  socket.on(SOCKET_EVENTS.QUESTION_SENT_TO_SERVER, (data) => {
-    questionsHandler(data, socket);
+  socket.on(SOCKET_EVENTS.QUESTION_SENT_TO_SERVER, (data, callback) => {
+    questionsHandler(data, callback, socket);
   });
   socket.on(SOCKET_EVENTS.ANSWER_SENT_TO_SERVER, (data) => {
     studentTestAnswerResponseHandler(data, socket, io);
@@ -187,6 +188,9 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   socket.on(SOCKET_EVENTS.END_MEET_TO_SERVER, () => {
     endMeetHandler(socket, worker, io);
     console.log("Client ended the meet", socket.id);
+  });
+  socket.on(SOCKET_EVENTS.POLL_TIME_INCREASE_TO_SERVER, (data) => {
+    pollTimeIncreaseHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.DISCONNECT, () => {
     disconnectHandler(socket, worker, io);
