@@ -15,6 +15,7 @@ const {
   validateCreateFeedBack,
   splitStringWithSlash,
   formM3U8String,
+  formMPDString,
   generateAWSS3LocationUrl,
 } = require("../../utils");
 
@@ -77,8 +78,6 @@ const openFile = async (req, res) => {
     return res.status(400).json({ status: false, data: err.message });
   }
 };
-
-
 
 const imageToDoc = async (req, res) => {
   try {
@@ -254,7 +253,7 @@ const getTopicDetails = async (req, res) => {
 const formM3U8Key = (inputFileKey, outputFolder) => {
   try {
     const splitKeyToArray = splitStringWithSlash(inputFileKey);
-    const convertToM3U8format = formM3U8String(splitKeyToArray);
+    const convertToM3U8format = formMPDString(splitKeyToArray);
     const finalOutputKey = `${outputFolder}/${convertToM3U8format}`;
     return finalOutputKey;
   } catch (err) {

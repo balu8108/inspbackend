@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
       key: DataTypes.STRING,
       url: DataTypes.STRING,
       classRoomId: DataTypes.INTEGER,
+      drmKeyId: DataTypes.STRING,
     },
     {
       sequelize,

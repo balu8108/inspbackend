@@ -20,7 +20,11 @@ const dbObjectConverter = require("./dbObjectConverter");
 const { encryptData } = require("./crypticFunctions");
 const { fetchAllStudentsFromInspApi } = require("./inspexternalapis");
 const { isFeedbackProvided } = require("./dbUtilityFunctions");
-const { splitStringWithSlash, formM3U8String } = require("./stringFunctions");
+const {
+  splitStringWithSlash,
+  formM3U8String,
+  formMPDString,
+} = require("./stringFunctions");
 module.exports = {
   generateRandomCharacters,
   validateCreationOfLiveClass,
@@ -42,4 +46,5 @@ module.exports = {
   isObjectExistInS3ByKey,
   splitStringWithSlash,
   formM3U8String,
+  formMPDString,
 };
