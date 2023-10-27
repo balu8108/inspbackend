@@ -7,6 +7,7 @@ const {
 const {
   isObjectExistInS3ByKey,
   generatePresignedUrls,
+  generateDRMJWTToken,
 } = require("../../utils");
 const getRecordingsWithDetails = async (req, res) => {
   try {
@@ -116,8 +117,112 @@ const getRecordingsByTopicOnly = async (req, res) => {
     return res.status(400).json({ status: false, data: err.message });
   }
 };
+const viewRecording = async (req, res) => {
+  try {
+    const { type, id } = req.query;
+    if (
+      !type ||
+      !id ||
+      (type !== "live" &&
+        type !== "solo" &&
+        type !== "live_specific" &&
+        type !== "solo_specific")
+    ) {
+      // if not correct query params then return error
+      throw new Error("Invalid parameters or no recordings available");
+    }
+
+    let responseData = null;
+
+    if (type === "live") {
+      // we are expecting to search in liveclassrecordings along with id of classRoom (majorly if user comes from view recording button from frontend )
+      responseData = await LiveClassRoom.findOne({
+        where: { id: id },
+        include: [
+          { model: LiveClassRoomDetail },
+          { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
+          { model: LiveClassRoomFile },
+        ],
+      });
+      if (responseData?.LiveClassRoomRecordings.length > 0) {
+        const combinedData = {
+          ...responseData.dataValues, // Extract data from the Sequelize instance
+          activeRecordingToPlay: responseData?.LiveClassRoomRecordings[0], // Add the activeRecording property
+        };
+
+        responseData = combinedData;
+      }
+    } else if (type === "live_specific") {
+      // in live specific user clicks a particular video from library now it will give the id of the liveclassrecording
+      // first we retreive the class id for that particular recording
+      const specificLiveRecording = await LiveClassRoomRecording.findOne({
+        where: { id: id },
+      });
+      if (specificLiveRecording !== null) {
+        responseData = await LiveClassRoom.findOne({
+          where: { id: specificLiveRecording?.classRoomId },
+          include: [
+            { model: LiveClassRoomDetail },
+            { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
+            { model: LiveClassRoomFile },
+          ],
+        });
+        const combinedData = {
+          ...responseData.dataValues, // Extract data from the Sequelize instance
+          activeRecordingToPlay: specificLiveRecording, // Add the activeRecording property
+        };
+
+        responseData = combinedData;
+      }
+    }
+    return res.status(200).json({
+      status: true,
+      data: responseData,
+    });
+  } catch (err) {
+    console.log("Error in view recordings", err);
+    return res.status(400).json({ status: false, data: err.message });
+  }
+};
+
+const playRecording = async (req, res) => {
+  try {
+    const { type, recordId } = req.body;
+    if (
+      !type ||
+      !recordId ||
+      (type !== "live" &&
+        type !== "solo" &&
+        type !== "live_specific" &&
+        type !== "solo_specific")
+    ) {
+      // if not correct query params then return error
+      throw new Error("Invalid parameters or no recordings available");
+    }
+    let jwtToken = null;
+    if (type === "live" || type === "live_specific") {
+      // we need to search in LiveClassRecording table
+      const getRecording = await LiveClassRoomRecording.findOne({
+        where: { id: recordId },
+      });
+      if (getRecording && getRecording?.drmKeyId) {
+        const tok = generateDRMJWTToken();
+        jwtToken = tok;
+      }
+    }
+    return res
+      .status(200)
+      .json({ status: true, data: { DRMjwtToken: jwtToken } });
+  } catch (err) {
+    console.log("Error in play recordings", err);
+    return res.status(400).json({ status: false, data: err.message });
+  }
+};
+
 module.exports = {
   getRecordingsWithDetails,
   getSingleRecording,
   getRecordingsByTopicOnly,
+  viewRecording,
+  playRecording,
 };

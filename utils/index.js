@@ -20,6 +20,7 @@ const dbObjectConverter = require("./dbObjectConverter");
 const { encryptData } = require("./crypticFunctions");
 const { fetchAllStudentsFromInspApi } = require("./inspexternalapis");
 const { isFeedbackProvided } = require("./dbUtilityFunctions");
+const generateDRMJWTToken = require("./generateDRMJWTToken");
 const {
   splitStringWithSlash,
   formM3U8String,
@@ -47,4 +48,5 @@ module.exports = {
   splitStringWithSlash,
   formM3U8String,
   formMPDString,
+  generateDRMJWTToken,
 };

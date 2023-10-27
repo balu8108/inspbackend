@@ -16,6 +16,8 @@ const {
   getRecordingsWithDetails,
   getSingleRecording,
   getRecordingsByTopicOnly,
+  viewRecording,
+  playRecording,
 } = require("./recordingscontrollers/recordingsController");
 
 module.exports = {
@@ -32,4 +34,6 @@ module.exports = {
   getRecordingsWithDetails,
   getSingleRecording,
   getRecordingsByTopicOnly,
+  viewRecording,
+  playRecording,
 };

@@ -16,18 +16,18 @@ const routesConstants = Object.freeze({
   SOLO: "/solo-lecture",
   SOLO_CLASSROOM: "/create-room",
   LATEST_CLASSROOM: "/latest-room",
-  SOLO_CLASSROOM_RECORDINGS:"/solo-classroom-recording",
-  SOLO_TOPIC_DETAILS_FILES_RECORDINGS:"/get-topic-details",
-  SOLO_CLASSROOM_PRESIGNED_URL:"/generate-url",
-  SOLOCLASSROOM_FILES:"/open-file/solo-files",
-  TOPIC_ASSIGNMENTS:'/topic',
-  CREATE_ASSIGNMENT:'/create',
-  GET_ASSIGNMENT_TOPIC_ID:'/get-all-assignments-topic-id',
-  DELETE_ASSIGNMENT:'/delete-assignment',
-  LATEST_ASSIGNMENT:'/latest-assignment',
-  RECENT_ONE_ASSIGNMENT:'/recent-assignment', // for student home page.
-  All_ASSIGNMENT_WITH_FILES:'/all-assignment-with-files',
-  My_UPLOADS:"/upload-assignments",
+  SOLO_CLASSROOM_RECORDINGS: "/solo-classroom-recording",
+  SOLO_TOPIC_DETAILS_FILES_RECORDINGS: "/get-topic-details",
+  SOLO_CLASSROOM_PRESIGNED_URL: "/generate-url",
+  SOLOCLASSROOM_FILES: "/open-file/solo-files",
+  TOPIC_ASSIGNMENTS: "/topic",
+  CREATE_ASSIGNMENT: "/create",
+  GET_ASSIGNMENT_TOPIC_ID: "/get-all-assignments-topic-id",
+  DELETE_ASSIGNMENT: "/delete-assignment",
+  LATEST_ASSIGNMENT: "/latest-assignment",
+  RECENT_ONE_ASSIGNMENT: "/recent-assignment", // for student home page.
+  All_ASSIGNMENT_WITH_FILES: "/all-assignment-with-files",
+  My_UPLOADS: "/upload-assignments",
   AUTH: "/auth",
   LOGIN: "/login",
   RECORDING: "/recording",
@@ -35,6 +35,8 @@ const routesConstants = Object.freeze({
   GET_SINGLE_RECORDING: "/get-single-recording",
   GET_RECORDING_BY_TOPIC_ONLY: "/get-recording-by-topic", // This is for INSP external website not for video portal at the moment
   UPDATE_RECORDING_DATA: "/update-recording-data",
+  VIEW_RECORDING: "/view-recording",
+  PLAY_RECORDING: "/play-recording",
 });
 
 module.exports = routesConstants;

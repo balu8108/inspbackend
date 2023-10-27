@@ -6,6 +6,8 @@ const {
   getRecordingsWithDetails,
   getSingleRecording,
   getRecordingsByTopicOnly,
+  viewRecording,
+  playRecording,
 } = require("../../controllers");
 
 router.get(routesConstants.ALL_LIVE_RECORDINGS, getRecordingsWithDetails);
@@ -14,5 +16,7 @@ router.post(
   routesConstants.GET_RECORDING_BY_TOPIC_ONLY,
   getRecordingsByTopicOnly
 );
+router.get(routesConstants.VIEW_RECORDING, viewRecording);
+router.post(routesConstants.PLAY_RECORDING, playRecording);
 
 module.exports = router;
