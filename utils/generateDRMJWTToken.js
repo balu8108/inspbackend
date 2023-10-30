@@ -5,9 +5,6 @@ const {
 const jwt = require("jsonwebtoken");
 const moment = require("moment-timezone");
 const generateDRMJWTToken = (drmKeyId) => {
-  console.log("drm key id", drmKeyId);
-  console.log("axinom ck", AXINOM_COMMUNICATION_KEY);
-  console.log("axinom cki", AXINOM_COMMUNICATION_KEY_ID);
   try {
     let communicationKeyAsBuffer = Buffer.from(
       AXINOM_COMMUNICATION_KEY,
@@ -43,8 +40,6 @@ const generateDRMJWTToken = (drmKeyId) => {
       algorithm: "HS256",
       noTimestamp: true,
     });
-
-    console.log("licence token", licenseToken);
 
     return licenseToken;
   } catch (err) {
