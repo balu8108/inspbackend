@@ -205,8 +205,8 @@ const playRecording = async (req, res) => {
       const getRecording = await LiveClassRoomRecording.findOne({
         where: { id: recordId },
       });
-      if (getRecording && getRecording?.drmKeyId) {
-        const tok = generateDRMJWTToken();
+      if (getRecording?.drmKeyId) {
+        const tok = generateDRMJWTToken(getRecording?.drmKeyId);
         jwtToken = tok;
       }
     }
