@@ -158,7 +158,6 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
             ["correctAnswers", "DESC"],
             ["combinedResponseTime", "ASC"],
           ],
-          limit: 10,
         });
         leaderBoardArray = processLeaderBoardData(roomId, leaderBoardData); // process leaderboard data
       }
@@ -206,7 +205,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           roomId,
           router1,
           newPeerDetails,
-          leaderBoardData: leaderBoardArray,
+          leaderBoardData: leaderBoardArray.slice(0, 10),
           liveClass: liveClass,
         };
       } else {
@@ -227,7 +226,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           roomId,
           router1,
           newPeerDetails,
-          leaderBoardData: leaderBoardArray,
+          leaderBoardData: leaderBoardArray.slice(0, 10),
           liveClass: liveClass,
         };
       }
@@ -638,6 +637,8 @@ const disconnectHandler = async (socket, worker, io) => {
         });
       }
     }
+    console.log("rooms after disconnect", rooms);
+    console.log("leaderboard after disconnect", leaderBoard);
   } catch (err) {
     console.log("Error in disconnectHandler", err);
   }
@@ -1041,7 +1042,7 @@ const studentTestAnswerResponseHandler = (data, socket, io) => {
     getAllTeachers.forEach(async (peer) => {
       // send leader board to specific teacher
       io.to(peer.socketId).emit(SOCKET_EVENTS.LEADERBOARD_FROM_SERVER, {
-        leaderBoard: updatedLeaderboard,
+        leaderBoard: updatedLeaderboard.slice(0, 10),
       });
     });
   } catch (err) {
