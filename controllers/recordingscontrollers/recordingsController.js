@@ -174,6 +174,7 @@ const viewRecording = async (req, res) => {
 
         responseData = combinedData;
       }
+      
     }
     return res.status(200).json({
       status: true,
