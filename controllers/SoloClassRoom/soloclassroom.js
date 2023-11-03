@@ -185,9 +185,8 @@ exports.getSoloClassroomDetails = async (req, res) => {
     // Use Sequelize to query the 'soloclassroomfiles' table to retrieve related files.
     const soloClassRoomFile = await soloClassRoomFiles.findAll({
       where: { soloClassRoomId: soloClassRoomId },
-     
     });
- console.log("soloclassfile", soloClassRoomFile)
+    console.log("soloclassfile", soloClassRoomFile);
     // Combine the data into a single JSON response.
     const response = {
       soloClassroomDetails,
@@ -199,10 +198,11 @@ exports.getSoloClassroomDetails = async (req, res) => {
     console.error("Error fetching solo classroom details:", error);
     res
       .status(500)
-      .json({ error: "An error occurred while fetching solo classroom details" });
+      .json({
+        error: "An error occurred while fetching solo classroom details",
+      });
   }
 };
-
 
 exports.generateGetSoloLecturePresignedUrl = async (req, res) => {
   try {
