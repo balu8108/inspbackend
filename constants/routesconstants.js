@@ -20,6 +20,7 @@ const routesConstants = Object.freeze({
   SOLO_TOPIC_DETAILS_FILES_RECORDINGS: "/get-topic-details",
   SOLO_CLASSROOM_PRESIGNED_URL: "/generate-url",
   SOLOCLASSROOM_FILES: "/open-file/solo-files",
+  SOLOCLASSROOM_DETAILS:"/get-details-data-for-class",
   TOPIC_ASSIGNMENTS: "/topic",
   CREATE_ASSIGNMENT: "/create",
   GET_ASSIGNMENT_TOPIC_ID: "/get-all-assignments-topic-id",

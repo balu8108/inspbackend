@@ -168,6 +168,42 @@ exports.getLatestSoloclassroom = async (req, res) => {
   }
 };
 
+
+exports.getSoloClassroomDetails = async (req, res) => {
+  try {
+    const { soloClassRoomId } = req.params;
+
+    // Use Sequelize to query the 'soloclassrooms' table to retrieve topic, description, and agenda.
+    const soloClassroomDetails = await SoloClassRoom.findByPk(soloClassRoomId, {
+      attributes: ["topic", "description", "agenda"],
+    });
+
+    if (!soloClassroomDetails) {
+      return res.status(404).json({ error: "Solo classroom not found" });
+    }
+
+    // Use Sequelize to query the 'soloclassroomfiles' table to retrieve related files.
+    const soloClassRoomFile = await soloClassRoomFiles.findAll({
+      where: { soloClassRoomId: soloClassRoomId },
+      attributes: ["key", "url", "isDownloadable", "isShareable"],
+    });
+
+    // Combine the data into a single JSON response.
+    const response = {
+      soloClassroomDetails,
+      soloClassRoomFile,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error("Error fetching solo classroom details:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching solo classroom details" });
+  }
+};
+
+
 exports.generateGetSoloLecturePresignedUrl = async (req, res) => {
   try {
     const { s3_key } = req.body;
