@@ -168,7 +168,7 @@ exports.getLatestSoloclassroom = async (req, res) => {
   }
 };
 
-
+// this is the api for  getting desc, agenda , files --- for soloclassroomid
 exports.getSoloClassroomDetails = async (req, res) => {
   try {
     const { soloClassRoomId } = req.params;
