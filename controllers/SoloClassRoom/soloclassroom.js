@@ -185,9 +185,9 @@ exports.getSoloClassroomDetails = async (req, res) => {
     // Use Sequelize to query the 'soloclassroomfiles' table to retrieve related files.
     const soloClassRoomFile = await soloClassRoomFiles.findAll({
       where: { soloClassRoomId: soloClassRoomId },
-      attributes: ["key", "url", "isDownloadable", "isShareable"],
+     
     });
-
+ console.log("soloclassfile", soloClassRoomFile)
     // Combine the data into a single JSON response.
     const response = {
       soloClassroomDetails,
