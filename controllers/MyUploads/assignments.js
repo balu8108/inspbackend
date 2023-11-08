@@ -139,10 +139,12 @@ exports.uploadAssignment = async (req, res) => {
     // Extract other data from the request
     const { plainAuthData } = req;
     console.log("AuthData", req.plainAuthData);
-    const { topicName, topicId, description} = req.body;
+    const {subjectId, subjectName, topicName, topicId, description} = req.body;
 
     // Save assignment information in the Assignment model
     const assignment = await Assignment.create({
+      subjectId,
+      subjectName,
       topicName,
       topicId,
       description,
