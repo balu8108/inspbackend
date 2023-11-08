@@ -1,21 +1,20 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-  class soloClassRoomFiles extends Model {
+  class SoloClassRoomFiles extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      soloClassRoomFiles.belongsTo(models.SoloClassRoom, {
+      SoloClassRoomFiles.belongsTo(models.SoloClassRoom, {
         foreignKey: "soloClassRoomId",
       });
     }
   }
-  soloClassRoomFiles.init(
+  SoloClassRoomFiles.init(
     {
-      
       key: DataTypes.STRING,
       url: DataTypes.STRING,
       soloClassRoomId: DataTypes.STRING,
@@ -24,8 +23,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: "soloClassRoomFiles",
+      modelName: "SoloClassRoomFiles",
     }
   );
-  return soloClassRoomFiles;
+  return SoloClassRoomFiles;
 };

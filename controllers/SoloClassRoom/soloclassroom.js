@@ -1,6 +1,6 @@
 const {
   SoloClassRoom,
-  soloClassRoomFiles,
+  SoloClassRoomFiles,
   SoloClassRoomRecording,
 } = require("../../models");
 const {
@@ -50,7 +50,7 @@ exports.createSoloClassRoom = async (req, res) => {
         const { key, url } = file;
 
         // Create a new sololectureFiles record
-        const sololectureFile = await soloClassRoomFiles.create({
+        const sololectureFile = await SoloClassRoomFiles.create({
           key: key,
           url: url,
           isDownloadable: true,
@@ -132,7 +132,7 @@ exports.getTopicDetails = async (req, res) => {
       attributes: ["description", "agenda"],
       include: [
         {
-          model: soloClassRoomFiles,
+          model: SoloClassRoomFiles,
           attributes: ["key", "url"],
         },
         {
@@ -183,7 +183,7 @@ exports.getSoloClassroomDetails = async (req, res) => {
     }
 
     // Use Sequelize to query the 'soloclassroomfiles' table to retrieve related files.
-    const soloClassRoomFile = await soloClassRoomFiles.findAll({
+    const soloClassRoomFile = await SoloClassRoomFiles.findAll({
       where: { soloClassRoomId: soloClassRoomId },
     });
     console.log("soloclassfile", soloClassRoomFile);
@@ -196,11 +196,9 @@ exports.getSoloClassroomDetails = async (req, res) => {
     res.status(200).json(response);
   } catch (error) {
     console.error("Error fetching solo classroom details:", error);
-    res
-      .status(500)
-      .json({
-        error: "An error occurred while fetching solo classroom details",
-      });
+    res.status(500).json({
+      error: "An error occurred while fetching solo classroom details",
+    });
   }
 };
 

@@ -6,7 +6,7 @@ const {
   Rating,
   LiveClassRoomRecording,
   SoloClassRoomRecording,
-  soloClassRoomFiles,
+  SoloClassRoomFiles,
   AssignmentFiles,
 } = require("../../models");
 const {
@@ -61,7 +61,7 @@ const openFile = async (req, res) => {
     if (docType === "live") {
       file = await LiveClassRoomFile.findOne({ where: { id: docId } });
     } else if (docType === "solo") {
-      file = await soloClassRoomFiles.findOne({ where: { id: docId } });
+      file = await SoloClassRoomFiles.findOne({ where: { id: docId } });
     } else if (docType === "assignment") {
       file = await AssignmentFiles.findOne({ where: { id: docId } });
     }

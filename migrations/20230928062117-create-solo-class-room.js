@@ -1,33 +1,33 @@
-'use strict';
+"use strict";
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('SoloClassRooms', {
+    await queryInterface.createTable("SoloClassRooms", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
       },
       subjectId: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       mentorName: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       topicId: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       topic: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       agenda: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       description: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
-     
+
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -39,10 +39,10 @@ module.exports = {
         defaultValue: Sequelize.literal(
           "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
         ),
-      }
+      },
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('SoloClassRooms');
-  }
+    await queryInterface.dropTable("SoloClassRooms");
+  },
 };
