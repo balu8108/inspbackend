@@ -182,3 +182,55 @@ exports.uploadAssignment = async (req, res) => {
   }
 };
 
+
+// for getting assignments for a particular subjects :: CHEMISTRY , MATHEMATICS , PHYSICS ,.
+
+
+exports.getSubjectsAssignments = async (req, res) => {
+  try {
+    const subjectId = req.params.subjectId;
+
+    if (subjectId === 'ALL') {
+      // Handle the case when subjectId is 'ALL' (fetch all assignments)
+      const assignments = await Assignment.findAll({
+        include: AssignmentFiles, // Include AssignmentFiles model
+      });
+      res.status(200).json(assignments);
+    } else {
+      // Handle the case when subjectId is specific
+      const assignments = await Assignment.findAll({
+        where: { subjectId },
+        include: AssignmentFiles, // Include AssignmentFiles model
+      });
+      res.status(200).json(assignments);
+    }
+  } catch (err) {
+    console.error('Error in fetching assignments:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+
+// fetching the assignment by giving subjectName..
+exports.getAssignmentsBySubjectName = async (req, res) => {
+  try {
+    const { subjectName } = req.params;
+
+    // Find assignments by subjectName
+    const assignments = await Assignment.findAll({
+      where: { subjectName },
+      include: AssignmentFiles, // Include AssignmentFiles model
+    });
+
+    // if (assignments.length === 0) {
+    //   return res.status(404).json({ message: 'No assignments found for the given subjectName' });
+    // }
+    if (assignments.length === 0) {
+      return res.status(200).json({ message: 'No assignments found for the given subjectName' });
+    }
+    res.status(200).json(assignments);
+  } catch (err) {
+    console.error('Error in fetching assignments by subjectName:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
