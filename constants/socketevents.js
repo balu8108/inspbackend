@@ -52,6 +52,8 @@ const SOCKET_EVENTS = Object.freeze({
   MIRO_BOARD_DATA_FROM_SERVER: "miro_board_data_from_server",
   BLOCK_OR_UNBLOCK_MIC_TO_SERVER: "block_or_unblock_mic_to_server",
   BLOCK_OR_UNBLOCK_MIC_FROM_SERVER: "block_or_unblock_mic_FROM_server",
+  PEER_MIC_BLOCKED_OR_UNBLOCKED_FROM_SERVER:
+    "peer_mic_blocked_or_unblocked_from_server",
   MUTE_MIC_COMMAND_BY_MENTOR_TO_SERVER: "mute_mic_command_by_mentor_to_server",
   MUTE_MIC_COMMAND_BY_MENTOR_FROM_SERVER:
     "mute_mic_command_by_mentor_from_server",

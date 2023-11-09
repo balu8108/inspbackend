@@ -1122,9 +1122,16 @@ const blockOrUnblockMicHandler = (data, socket, io) => {
         peers[peerSocketId].peerDetails.isAudioEnabled = !value;
       }
 
+      console.log("peer blocking audio ", peers[peerSocketId]);
+
       // inform the targetted peer about block or unblock of his mic
       io.to(peerSocketId).emit(
         SOCKET_EVENTS.BLOCK_OR_UNBLOCK_MIC_FROM_SERVER,
+        peers[peerSocketId].peerDetails
+      );
+      // inform all the peers along with blocked peer, that this peer has mic blocked by mentor
+      io.to(roomId).emit(
+        SOCKET_EVENTS.PEER_MIC_BLOCKED_OR_UNBLOCKED_FROM_SERVER,
         peers[peerSocketId].peerDetails
       );
     }
