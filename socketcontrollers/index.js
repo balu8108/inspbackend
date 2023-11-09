@@ -662,6 +662,10 @@ const leaveRoomHandler = async (callback, socket, worker, io) => {
     if (socket.id in peers) {
       const { roomId } = peers[socket.id];
       const leavingPeer = peers[socket.id];
+      // before deleting peer delete the record process if exist(In case of teacher to allow gstreamer process to stop )
+      if (peers[socket.id].recordProcess) {
+        stopRecordingHandler(socket);
+      }
       delete peers[socket.id];
 
       rooms[roomId] = {
@@ -923,6 +927,7 @@ const getProcess = (recordInfo) => {
 
 const startRecord = async (peer, peerProducersList, router) => {
   try {
+    console.log("trying to start recording..");
     let recordInfo = {};
 
     for (const obj of peerProducersList) {
