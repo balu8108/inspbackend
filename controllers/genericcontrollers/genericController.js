@@ -217,14 +217,10 @@ const getCompletedLiveClasses = async (req, res) => {
       },
       limit: 3,
       order: [["createdAt", "DESC"]],
-      attributes: [
-        "mentorName", // Include mentorName from LiveClassRoom
-      ],
       include: [
         {
           model: LiveClassRoomDetail,
           as: "LiveClassRoomDetail",
-          attributes: ["topicId", "topicName", "description"], // Include these attributes from LiveClassRoomDetail
         },
       ],
     });

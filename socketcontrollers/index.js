@@ -538,7 +538,12 @@ const consumeHandler = async (data, callback, socket, worker) => {
       consumer.on(SOCKET_EVENTS.TRANSPORT_CLOSE, () => {});
       // on producer close
       consumer.on(SOCKET_EVENTS.PRODUCERCLOSE, () => {
-        socket.emit(SOCKET_EVENTS.PRODUCER_CLOSED, { remoteProducerId });
+        // In frontend we have used producerId and producerAppData because we used similar thing in SOME_PRODUCER_CLOSED
+        socket.emit(SOCKET_EVENTS.PRODUCER_CLOSED, {
+          producerId: remoteProducerId,
+          producerAppData: appData,
+        });
+
         // console.log("EXPECTED BUG POINT2");
         // console.log("transport on producer close before", transports);
         // consumerTransport.close();
@@ -698,7 +703,6 @@ const leaveRoomHandler = async (callback, socket, worker, io) => {
         io.to(roomId).emit(SOCKET_EVENTS.PEER_LEAVED, {
           peerLeaved: leavingPeer.peerDetails,
         });
-        console.log("transport 6", transports);
       }
     }
   } catch (err) {
