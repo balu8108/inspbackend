@@ -4,7 +4,7 @@ stages:
 deploy_dev_job:
   stage: deploy_dev
   script:
-    - echo "Starting Deploying to ..."
+    - echo "Starting Deploying to Dev ..."
     - echo "${INSP_PEM_FILE}" > ssh_key.pem
     - chmod 400 ssh_key.pem
     - ssh -o StrictHostKeyChecking=no -i ssh_key.pem -A "${INSP_DEV_USER}"@"${INSP_DEV_SERVER_IP}" "./script.sh"
