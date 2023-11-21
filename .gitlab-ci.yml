@@ -10,3 +10,12 @@ deploy_dev_job:
     - ssh -o StrictHostKeyChecking=no -i ssh_key.pem -A "${INSP_DEV_USER}"@"${INSP_DEV_SERVER_IP}" "./script.sh"
   only:
     - dev
+deploy_prod_job:
+  stage: deploy_prod
+  script:
+    - echo "Starting Deploying to Prod ..."
+    - echo "${INSP_PEM_FILE}" > ssh_key.pem
+    - chmod 400 ssh_key.pem
+    - ssh -o StrictHostKeyChecking=no -i ssh_key.pem -A "${INSP_PROD_USER}"@"${INSP_PROD_SERVER_IP}" "./script.sh"
+  only:
+    - master
