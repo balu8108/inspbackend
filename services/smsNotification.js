@@ -48,10 +48,6 @@ async function sendMeetingInvitation(mobileNumber) {
       from: twilioPhoneNumber,
       to: mobileNumber,
     });
-
-    console.log(
-      `Invitation message sent to ${mobileNumber}. Message SID: ${sentMessage.sid}`
-    );
   } catch (error) {
     console.log("Error sending invitation message:", error);
     throw error;

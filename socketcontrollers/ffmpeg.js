@@ -22,8 +22,6 @@ module.exports = class FFmpeg {
     this._isAudioAvailable = isAudioAvailable;
     this._isVideoAvailable = isVideoAvailable;
 
-    console.log("createProcess() [sdpString:%s]", sdpString);
-
     this._process = child_process.spawn("ffmpeg", this._commandArgs);
 
     if (this._process.stderr) {

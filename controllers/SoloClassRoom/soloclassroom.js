@@ -11,7 +11,7 @@ const {
 exports.createSoloClassRoom = async (req, res) => {
   try {
     const { files } = req;
-    console.log("files in solo", files);
+
     let addFilesInArray = [];
 
     if (files) {
@@ -24,7 +24,6 @@ exports.createSoloClassRoom = async (req, res) => {
     const { plainAuthData } = req;
 
     const { subjectId, topicId, topic, agenda, description } = req.body;
-    console.log("log body", req.body);
 
     // Save solo lecture  information in the  SoloClassRoom model
     const soloclassroomlecture = await SoloClassRoom.create({
@@ -35,8 +34,6 @@ exports.createSoloClassRoom = async (req, res) => {
       agenda: agenda,
       description: description,
     });
-
-    console.log("solo lec", soloclassroomlecture);
 
     const soloClassRoomId = soloclassroomlecture.id;
     // Upload files to S3 or your desired storage
@@ -186,7 +183,7 @@ exports.getSoloClassroomDetails = async (req, res) => {
     const soloClassRoomFile = await SoloClassRoomFiles.findAll({
       where: { soloClassRoomId: soloClassRoomId },
     });
-    console.log("soloclassfile", soloClassRoomFile);
+
     // Combine the data into a single JSON response.
     const response = {
       soloClassroomDetails,

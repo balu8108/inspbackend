@@ -27,7 +27,6 @@ module.exports = class GStreamer {
     this._createProcess();
   }
   _createProcess() {
-    console.log("gstreaemr rtpparameters", this._rtpParameters);
     let exe = null;
     if (PLATFORM === "windows") {
       exe = `SET GST_DEBUG=${GSTREAMER_DEBUG_LEVEL} && ${GSTREAMER_COMMAND} ${GSTREAMER_OPTIONS}`;

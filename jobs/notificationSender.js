@@ -9,13 +9,11 @@ const sendNotification = async (item) => {
     // If EMAIL+SMS then send both
     console.log(item.notificationType);
     if (item.notificationType === notificationType.EMAIL) {
-      console.log("Sending only email");
       // send entire notification db instance
       sendEmail(item);
     } else if (item.notificationType === notificationType.SMS) {
-      console.log("Sending only sms");
+      console.log("sending sms..");
     } else if (item.notificationType === notificationType.EMAIL_AND_SMS) {
-      console.log("Sending both email and sms");
       sendEmail(item);
     }
   } catch (err) {

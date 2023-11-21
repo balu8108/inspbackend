@@ -41,7 +41,6 @@ const sendEmail = async (notificationDBObject) => {
         notificationDBObject.notificationStatus = "FAILED";
         notificationDBObject.save();
       } else {
-        console.log("Email sent: " + info.response);
         notificationDBObject.notificationStatus = "SENT"; //This ensures atleast one of the notification is sent
         notificationDBObject.save();
       }

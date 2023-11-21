@@ -931,7 +931,6 @@ const getProcess = (recordInfo) => {
 
 const startRecord = async (peer, peerProducersList, router) => {
   try {
-    console.log("trying to start recording..");
     let recordInfo = {};
 
     for (const obj of peerProducersList) {

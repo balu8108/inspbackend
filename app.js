@@ -148,7 +148,6 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
     raiseHandHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.UPLOAD_FILE_TO_SERVER, (data, callback) => {
-    console.log("file handler triggering", socket);
     uploadFileHandler(data, callback, socket);
   });
   socket.on(SOCKET_EVENTS.PRODUCER_PAUSE, (data) => {
