@@ -13,6 +13,10 @@ const DB_HOST = config["host"];
 const DB_PORT = config["port"];
 const DB_USER_NAME = config["username"];
 
+console.log("database conneted", DB_NAME);
+console.log("database pass", DB_PASSWORD);
+console.log("data base host", DB_HOST);
+
 const sequelize = new Sequelize(DB_NAME, DB_USER_NAME, DB_PASSWORD, {
   host: DB_HOST,
   port: DB_PORT,
