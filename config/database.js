@@ -5,6 +5,8 @@ dotenv.config({ path: "config/.env" });
 const env = process.env.NODE_ENV || "development";
 const config = require("./config.json")[env];
 
+console.log("env in database.js", env);
+
 const DB_NAME = config["database"];
 const DB_PASSWORD = config["password"];
 const DB_HOST = config["host"];

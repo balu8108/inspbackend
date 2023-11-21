@@ -73,7 +73,7 @@ app.use(routesConstants.TOPIC_ASSIGNMENTS, myUploadRoutes);
 app.use(routesConstants.RECORDING, recordingRoutes);
 // Cron jobs function
 if (ENVIRON !== "local") {
-  scheduleJob();
+  // scheduleJob();
 }
 // scheduleJob();
 // Cron jobs function

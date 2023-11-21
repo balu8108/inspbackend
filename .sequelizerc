@@ -2,6 +2,7 @@ const path = require("path");
 const dotenv = require("dotenv");
 dotenv.config({ path: "config/.env" });
 const env = process.env.NODE_ENV || "development";
+console.log("env in sequelize rc", env);
 module.exports = {
   config: path.resolve("config", "config.json"),
   env: env,
