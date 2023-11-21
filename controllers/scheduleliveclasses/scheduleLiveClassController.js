@@ -147,6 +147,7 @@ const getLiveClassDetails = async (req, res) => {
     if (!roomId) {
       return res.status(400).json({ error: "Room Id is required" });
     }
+    console.log("liive classroom");
     const getLiveClassRoom = await LiveClassRoom.findOne({
       where: { roomId: roomId },
       include: [{ model: LiveClassRoomFile }, { model: LiveClassRoomDetail }],
