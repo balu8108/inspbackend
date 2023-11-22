@@ -3,6 +3,7 @@ const {
   LiveClassRoomRecording,
   LiveClassRoomFile,
   LiveClassRoomDetail,
+  LiveClassRoomQNANotes,
 } = require("../../models");
 const {
   isObjectExistInS3ByKey,
@@ -25,6 +26,7 @@ const getRecordingsWithDetails = async (req, res) => {
           { model: LiveClassRoomDetail },
           { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
           { model: LiveClassRoomFile },
+          { model: LiveClassRoomQNANotes },
         ],
       });
     }
@@ -45,6 +47,7 @@ const getRecordingsWithDetails = async (req, res) => {
           { model: LiveClassRoomDetail },
           { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
           { model: LiveClassRoomFile },
+          { model: LiveClassRoomQNANotes },
         ],
       });
     }
@@ -142,6 +145,7 @@ const viewRecording = async (req, res) => {
           { model: LiveClassRoomDetail },
           { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
           { model: LiveClassRoomFile },
+          { model: LiveClassRoomQNANotes },
         ],
       });
       if (responseData?.LiveClassRoomRecordings.length > 0) {
@@ -165,6 +169,7 @@ const viewRecording = async (req, res) => {
             { model: LiveClassRoomDetail },
             { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
             { model: LiveClassRoomFile },
+            { model: LiveClassRoomQNANotes },
           ],
         });
         const combinedData = {
