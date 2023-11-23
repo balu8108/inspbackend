@@ -173,7 +173,7 @@ exports.uploadAssignment = async (req, res) => {
 
     res.status(201).json({
       message: "Assignment and files uploaded successfully",
-      assignmentFiles,
+      assignment,
     });
   } catch (error) {
     console.error("Error uploading files:", error);
