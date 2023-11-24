@@ -50,7 +50,12 @@ const openFile = async (req, res) => {
     }
     if (
       docType &&
-      !(docType === "live" || docType === "solo" || docType === "assignment")
+      !(
+        docType === "live" ||
+        docType === "solo" ||
+        docType === "assignment" ||
+        docType === "qna"
+      )
     ) {
       return res
         .status(400)
@@ -60,10 +65,13 @@ const openFile = async (req, res) => {
     let file = null;
     if (docType === "live") {
       file = await LiveClassRoomFile.findOne({ where: { id: docId } });
+      console.log("file found!!", file);
     } else if (docType === "solo") {
       file = await SoloClassRoomFiles.findOne({ where: { id: docId } });
     } else if (docType === "assignment") {
       file = await AssignmentFiles.findOne({ where: { id: docId } });
+    } else if (docType === "qna") {
+      file = await LiveClassRoomQNANotes.findOne({ where: { id: docId } });
     }
 
     if (!file) {
