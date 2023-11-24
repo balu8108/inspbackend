@@ -164,7 +164,7 @@ exports.uploadAssignment = async (req, res) => {
           url,
           isDownloadable: true,
           isShareable: true,
-          assignmentId: assignment.id, // Assign the assignment ID to the file
+          assignmentId: assignment.id, 
         });
 
         return assignmentFile;
@@ -188,16 +188,16 @@ exports.getSubjectsAssignments = async (req, res) => {
     const subjectId = req.params.subjectId;
 
     if (subjectId === "ALL") {
-      // Handle the case when subjectId is 'ALL' (fetch all assignments)
+     
       const assignments = await Assignment.findAll({
-        include: AssignmentFiles, // Include AssignmentFiles model
+        include: AssignmentFiles, 
       });
       res.status(200).json(assignments);
     } else {
-      // Handle the case when subjectId is specific
+     
       const assignments = await Assignment.findAll({
         where: { subjectId },
-        include: AssignmentFiles, // Include AssignmentFiles model
+        include: AssignmentFiles, 
       });
       res.status(200).json(assignments);
     }
@@ -215,12 +215,10 @@ exports.getAssignmentsBySubjectName = async (req, res) => {
     // Find assignments by subjectName
     const assignments = await Assignment.findAll({
       where: { subjectName },
-      include: AssignmentFiles, // Include AssignmentFiles model
+      include: AssignmentFiles,
     });
 
-    // if (assignments.length === 0) {
-    //   return res.status(404).json({ message: 'No assignments found for the given subjectName' });
-    // }
+  
     if (assignments.length === 0) {
       return res
         .status(200)
