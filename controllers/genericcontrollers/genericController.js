@@ -65,7 +65,6 @@ const openFile = async (req, res) => {
     let file = null;
     if (docType === "live") {
       file = await LiveClassRoomFile.findOne({ where: { id: docId } });
-      console.log("file found!!", file);
     } else if (docType === "solo") {
       file = await SoloClassRoomFiles.findOne({ where: { id: docId } });
     } else if (docType === "assignment") {

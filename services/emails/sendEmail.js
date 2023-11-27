@@ -37,7 +37,6 @@ const sendEmail = async (notificationDBObject) => {
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        console.log(error);
         notificationDBObject.notificationStatus = "FAILED";
         notificationDBObject.save();
       } else {

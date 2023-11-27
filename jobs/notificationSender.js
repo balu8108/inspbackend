@@ -7,12 +7,11 @@ const sendNotification = async (item) => {
     // If Email then send only email
     // If SMS then send only SMS
     // If EMAIL+SMS then send both
-    console.log(item.notificationType);
+
     if (item.notificationType === notificationType.EMAIL) {
       // send entire notification db instance
       sendEmail(item);
     } else if (item.notificationType === notificationType.SMS) {
-      console.log("sending sms..");
     } else if (item.notificationType === notificationType.EMAIL_AND_SMS) {
       sendEmail(item);
     }

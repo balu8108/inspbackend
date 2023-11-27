@@ -1084,7 +1084,7 @@ const stopRecordingHandler = (socket) => {
       peers[socket.id] = { ...peer, recordProcess: null };
     }
   } catch (err) {
-    console.log("No recording proces to stop");
+    console.log("No recording proces to stop", err);
   }
 };
 const setIsAudioStreamEnabled = (data, socket, io) => {

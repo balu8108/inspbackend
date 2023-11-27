@@ -10,8 +10,6 @@ const isFeedbackProvided = async (peerDetails, roomId) => {
       where: { roomId: roomId },
       include: [LiveClassRoomDetail],
     });
-    console.log("peerdetials", peerDetails?.id);
-    console.log("topicid", liveClassRoom?.LiveClassRoomDetail?.topicId);
 
     const isFeedbackExists = await Rating.findOne({
       where: {
@@ -19,7 +17,7 @@ const isFeedbackProvided = async (peerDetails, roomId) => {
         topicId: liveClassRoom?.LiveClassRoomDetail?.topicId,
       },
     });
-    console.log("is feedback exist", isFeedbackExists);
+
     if (!isFeedbackExists) {
       return {
         success: true,

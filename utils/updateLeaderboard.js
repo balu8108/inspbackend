@@ -123,7 +123,7 @@ const updateLeaderboard = (classPk, roomId, peerDetails, response) => {
   }
 
   const roomLeaderBoard = leaderBoard[roomId];
-  console.log("leaderboards in roomleaerboar", roomLeaderBoard);
+
   const sortedLeaderBoard = Object.values(roomLeaderBoard).sort((a, b) => {
     if (b.correctAnswers !== a.correctAnswers) {
       return b.correctAnswers - a.correctAnswers;
