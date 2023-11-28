@@ -91,7 +91,6 @@ const checkIsAnswersCorrect = (roomId, response) => {
 const updateLeaderboard = (classPk, roomId, peerDetails, response) => {
   if (!leaderBoard[roomId]) {
     leaderBoard[roomId] = {};
-    console.log("creating new leaderbaord", leaderBoard[roomId]);
   }
   const isAnswersCorrect = checkIsAnswersCorrect(roomId, response);
   if (!leaderBoard[roomId][peerDetails.id]) {
