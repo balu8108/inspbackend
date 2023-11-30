@@ -4,6 +4,8 @@ const {
   LiveClassRoomFile,
   LiveClassRoomDetail,
   LiveClassRoomQNANotes,
+  SoloClassRoomRecording,
+  SoloClassRoom,
 } = require("../../models");
 const {
   isObjectExistInS3ByKey,
@@ -177,6 +179,23 @@ const viewRecording = async (req, res) => {
           activeRecordingToPlay: specificLiveRecording, // Add the activeRecording property
         };
 
+        responseData = combinedData;
+      }
+    } else if (type === "solo_specific") {
+      const specificSoloRecording = await SoloClassRoomRecording.findOne({
+        where: { id: id },
+      });
+      if (specificSoloRecording !== null) {
+        responseData = await SoloClassRoom.findOne({
+          where: { id: specificSoloRecording?.soloClassRoomId },
+          include: [
+            { model: SoloClassRoomRecording, order: [["createdAt", "ASC"]] },
+          ],
+        });
+        const combinedData = {
+          ...responseData.dataValues, 
+          activeRecordingToPlay: specificSoloRecording, 
+        };
         responseData = combinedData;
       }
     }
