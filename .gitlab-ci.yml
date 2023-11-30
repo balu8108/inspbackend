@@ -1,7 +1,7 @@
 stages:
+  - sonar_scan
   - deploy_dev
   - deploy_prod
-  - sonar_scan
 
 sonar_scan_job:
   stage: sonar_scan
