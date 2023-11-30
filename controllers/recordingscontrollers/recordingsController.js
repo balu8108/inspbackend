@@ -6,6 +6,7 @@ const {
   LiveClassRoomQNANotes,
   SoloClassRoomRecording,
   SoloClassRoom,
+  SoloClassRoomFiles,
 } = require("../../models");
 const {
   isObjectExistInS3ByKey,
@@ -190,11 +191,12 @@ const viewRecording = async (req, res) => {
           where: { id: specificSoloRecording?.soloClassRoomId },
           include: [
             { model: SoloClassRoomRecording, order: [["createdAt", "ASC"]] },
+            { model: SoloClassRoomFiles },
           ],
         });
         const combinedData = {
-          ...responseData.dataValues, 
-          activeRecordingToPlay: specificSoloRecording, 
+          ...responseData.dataValues,
+          activeRecordingToPlay: specificSoloRecording,
         };
         responseData = combinedData;
       }
