@@ -1,5 +1,6 @@
 const { URL } = require("url");
 const aws = require("aws-sdk");
+console.log("test");
 
 // These static files include to be added within files
 const {
