@@ -13,7 +13,7 @@ sonar_scan_job:
     - unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
     - export PATH=$SONAR_SCANNER_HOME/bin:$PATH
     - export SONAR_SCANNER_OPTS="-server"
-    - sonar-scanner -Dsonar.projectKey=inspbackend -Dsonar.sources=. -Dsonar.host.url=https://sonar.turnkey.work -Dsonar.login=sqp_664e89891a308335ae65e723dcd7f368f52765a8
+    - sonar-scanner -Dsonar.projectKey=inspbackend -Dsonar.sources=. -Dsonar.host.url=https://sonar.turnkey.work -Dsonar.login="sqp_664e89891a308335ae65e723dcd7f368f52765a8"
   only:
     - dev
     - master
