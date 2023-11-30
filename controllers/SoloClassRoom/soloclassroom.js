@@ -130,11 +130,11 @@ exports.getTopicDetails = async (req, res) => {
       include: [
         {
           model: SoloClassRoomFiles,
-          attributes: ["key", "url"],
+        
         },
         {
           model: SoloClassRoomRecording,
-          attributes: ["key", "url"],
+         
         },
       ],
     });
