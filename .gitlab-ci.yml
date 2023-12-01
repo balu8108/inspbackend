@@ -15,7 +15,6 @@ sonar_scan_job:
     - sonar-scanner -Dsonar.projectKey=inspbackend -Dsonar.sources=. -Dsonar.host.url=https://sonar.turnkey.work -Dsonar.login="${SONAR_TOKEN}"
   only:
     - dev
-    - master
 
 deploy_dev_job:
   stage: deploy_dev
