@@ -235,6 +235,15 @@ const playRecording = async (req, res) => {
         const tok = generateDRMJWTToken(getRecording?.drmKeyId);
         jwtToken = tok;
       }
+    } else if (type === "solo" || type === "solo_specific") {
+      // we need soloclassrecordings
+      const getSoloRecording = await SoloClassRoomRecording.findOne({
+        where: { id: recordId },
+      });
+      if (getSoloRecording?.drmKeyId) {
+        const tok = generateDRMJWTToken(getSoloRecording?.drmKeyId);
+        jwtToken = tok;
+      }
     }
     return res
       .status(200)
