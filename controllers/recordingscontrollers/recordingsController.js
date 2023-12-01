@@ -132,7 +132,9 @@ const viewRecording = async (req, res) => {
       (type !== "live" &&
         type !== "solo" &&
         type !== "live_specific" &&
-        type !== "solo_specific")
+        type !== "solo_specific" &&
+        type !== "live_topic" &&
+        type !== "solo_topic")
     ) {
       // if not correct query params then return error
       throw new Error("Invalid parameters or no recordings available");
@@ -154,7 +156,8 @@ const viewRecording = async (req, res) => {
       if (responseData?.LiveClassRoomRecordings.length > 0) {
         const combinedData = {
           ...responseData.dataValues, // Extract data from the Sequelize instance
-          activeRecordingToPlay: responseData?.LiveClassRoomRecordings[0], // Add the activeRecording property
+          activeRecordingToPlay:
+            responseData?.LiveClassRoomRecordings[0] ?? null, // Add the activeRecording property
         };
 
         responseData = combinedData;
@@ -200,6 +203,49 @@ const viewRecording = async (req, res) => {
         };
         responseData = combinedData;
       }
+    } else if (type === "live_topic") {
+      const getClassRoomsWithTopicId = await LiveClassRoomDetail.findAll({
+        where: { topicId: id },
+        attributes: ["classRoomId"], // Select only the classRoomId
+        raw: true, // Get raw data as an array of objects
+      });
+      const classRoomIds = getClassRoomsWithTopicId.map(
+        (detail) => detail.classRoomId
+      );
+
+      responseData = await LiveClassRoom.findAll({
+        where: { id: classRoomIds },
+        order: [["createdAt", "ASC"]],
+        include: [
+          { model: LiveClassRoomDetail },
+          { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
+          { model: LiveClassRoomFile },
+          { model: LiveClassRoomQNANotes },
+        ],
+      });
+
+      const combinedData = {
+        responseData,
+        activeRecordingToPlay:
+          responseData?.[0]?.LiveClassRoomRecordings?.[0] ?? null,
+      };
+      responseData = combinedData;
+    } else if (type === "solo_topic") {
+      responseData = await SoloClassRoom.findAll({
+        where: { topicId: id },
+        order: [["createdAt", "ASC"]],
+        include: [
+          { model: SoloClassRoomRecording, order: [["createdAt", "ASC"]] },
+          { model: SoloClassRoomFiles },
+        ],
+      });
+
+      const combinedData = {
+        responseData,
+        activeRecordingToPlay:
+          responseData?.[0]?.SoloClassRoomRecordings?.[0] ?? null,
+      };
+      responseData = combinedData;
     }
     return res.status(200).json({
       status: true,
@@ -220,13 +266,15 @@ const playRecording = async (req, res) => {
       (type !== "live" &&
         type !== "solo" &&
         type !== "live_specific" &&
-        type !== "solo_specific")
+        type !== "solo_specific" &&
+        type !== "live_topic" &&
+        type !== "solo_topic")
     ) {
       // if not correct query params then return error
       throw new Error("Invalid parameters or no recordings available");
     }
     let jwtToken = null;
-    if (type === "live" || type === "live_specific") {
+    if (type === "live" || type === "live_specific" || type === "live_topic") {
       // we need to search in LiveClassRecording table
       const getRecording = await LiveClassRoomRecording.findOne({
         where: { id: recordId },
@@ -235,7 +283,11 @@ const playRecording = async (req, res) => {
         const tok = generateDRMJWTToken(getRecording?.drmKeyId);
         jwtToken = tok;
       }
-    } else if (type === "solo" || type === "solo_specific") {
+    } else if (
+      type === "solo" ||
+      type === "solo_specific" ||
+      type === "solo_topic"
+    ) {
       // we need soloclassrecordings
       const getSoloRecording = await SoloClassRoomRecording.findOne({
         where: { id: recordId },
