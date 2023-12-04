@@ -52,15 +52,15 @@ const {
   pollTimeIncreaseHandler,
 } = require("./socketcontrollers");
 
-app.use(express.json({ limit: "100mb" }));
-app.use(bodyParser.json());
+app.use(express.json({ limit: "200mb" }));
+app.use(bodyParser.json({ limit: "200mb" }));
 app.use(
   bodyParser.urlencoded({
-    limit: "100mb",
+    limit: "200mb",
     extended: true,
   })
 );
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ limit: "200mb", extended: true }));
 app.use(upload()); // this is required for uploading multipart/formData
 app.use(cors());
 app.use(cookieParser());
