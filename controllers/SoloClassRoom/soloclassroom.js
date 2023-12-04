@@ -75,6 +75,7 @@ exports.uploadSoloClassRoomRecordings = async (req, res) => {
   try {
     const { files } = req;
     const { soloClassRoomId } = req.params;
+    console.log("record files", files);
 
     if (!files?.files) {
       return res.status(400).json({ message: "No files were uploaded." });
@@ -87,12 +88,14 @@ exports.uploadSoloClassRoomRecordings = async (req, res) => {
         ? files?.files
         : [files?.files];
     }
+    console.log("fies in array", addFilesInArray);
 
     // Upload files to S3 or your desired storage
     const filesUploading = await uploadFilesToS3(
       addFilesInArray,
       "soloclassroom-recordings"
     );
+    console.log("file uploaded?", filesUploading);
 
     // Create  records for each uploaded file
     const solorecordings = await Promise.all(
@@ -109,6 +112,7 @@ exports.uploadSoloClassRoomRecordings = async (req, res) => {
         return soloClassRoomFile;
       })
     );
+    console.log("solo recordings", solorecordings);
 
     res.status(201).json({
       message: " files uploaded successfully",
@@ -130,11 +134,9 @@ exports.getTopicDetails = async (req, res) => {
       include: [
         {
           model: SoloClassRoomFiles,
-        
         },
         {
           model: SoloClassRoomRecording,
-         
         },
       ],
     });
