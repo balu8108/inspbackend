@@ -5,6 +5,7 @@ const {
   imageToDoc,
   generateGetPresignedUrl,
   createFeedback,
+  createLiveClassNotes,
 } = require("./genericcontrollers/genericController");
 const {
   createLiveClass,
@@ -25,6 +26,7 @@ module.exports = {
   getAllSubjects,
   openFile,
   imageToDoc,
+  createLiveClassNotes,
   createLiveClass,
   getAllLiveClasses,
   getLiveClassDetails,

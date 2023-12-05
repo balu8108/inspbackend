@@ -10,6 +10,7 @@ const {
   imageToDoc,
   generateGetPresignedUrl,
   createFeedback,
+  createLiveClassNotes,
 } = require("../../controllers");
 const { isAuthenticated } = require("../../middlewares");
 const {
@@ -26,6 +27,7 @@ router.post(
   generateGetPresignedUrl
 );
 router.post(routesConstants.IMAGE_TO_DOC, imageToDoc);
+router.post(routesConstants.CREATE_LIVE_CLASS_NOTES, createLiveClassNotes);
 router.post(routesConstants.CREATE_FEEDBACK, isAuthenticated, createFeedback);
 router.get(routesConstants.LATEST_FEEDBACK, isAuthenticated, latestfeedback);
 router.get(routesConstants.LATEST_COMPLETEDCLASSROOM, getCompletedLiveClasses);

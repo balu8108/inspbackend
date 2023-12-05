@@ -26,6 +26,7 @@ const {
   formM3U8String,
   formMPDString,
 } = require("./stringFunctions");
+const { createOrUpdateLiveClassNotes } = require("./liveClassNotes");
 module.exports = {
   generateRandomCharacters,
   validateCreationOfLiveClass,
@@ -49,4 +50,5 @@ module.exports = {
   formM3U8String,
   formMPDString,
   generateDRMJWTToken,
+  createOrUpdateLiveClassNotes,
 };

@@ -8,6 +8,7 @@ const {
   SoloClassRoomRecording,
   SoloClassRoomFiles,
   AssignmentFiles,
+  LiveClassRoomNote,
 } = require("../../models");
 const {
   generatePresignedUrls,
@@ -17,6 +18,7 @@ const {
   formM3U8String,
   formMPDString,
   generateAWSS3LocationUrl,
+  createOrUpdateLiveClassNotes,
 } = require("../../utils");
 
 const { Op } = require("sequelize");
@@ -316,11 +318,61 @@ const updateRecordingData = async (req, res) => {
     return res.status(400).json({ success: false, error: err.message });
   }
 };
+const createLiveClassNotes = async (req, res) => {
+  try {
+    const { body, files } = req;
+
+    if (!body.roomId) {
+      return res.status(400).json({ error: "Room Id is required" });
+    }
+
+    const isRoomExist = await LiveClassRoom.findOne({
+      where: { roomId: body.roomId },
+    });
+    if (!isRoomExist) {
+      return res.status(400).json({ error: "No room found with this id" });
+    }
+
+    const folderPath = `liveclassnotes`; // in AWS S3
+    const fileName = `notes_roomId_${body.roomId}.pdf`;
+
+    console.log("body", body);
+    console.log("files", files);
+
+    const { success, result, key, url } = await createOrUpdateLiveClassNotes(
+      folderPath,
+      fileName,
+      files
+    );
+
+    if (success && key && url) {
+      const isNotesExistForThisRoom = await LiveClassRoomNote.findOne({
+        where: { classRoomId: isRoomExist.id },
+      });
+      if (!isNotesExistForThisRoom) {
+        await LiveClassRoomNote.create({
+          key: key,
+          url: url,
+          classRoomId: isRoomExist.id,
+        });
+      }
+
+      return res.status(200).json({ data: result });
+    } else {
+      return res
+        .status(400)
+        .json({ error: "Some error occured while adding qna notes" });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+};
 
 module.exports = {
   getAllSubjects,
   openFile,
   imageToDoc,
+  createLiveClassNotes,
   generateGetPresignedUrl,
   createFeedback,
   latestfeedback,
