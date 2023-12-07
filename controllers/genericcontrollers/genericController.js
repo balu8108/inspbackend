@@ -307,6 +307,7 @@ const updateRecordingData = async (req, res) => {
         const awsUrl = generateAWSS3LocationUrl(finalOutputKey);
         soloRecord.key = finalOutputKey;
         soloRecord.url = awsUrl;
+        soloRecord.drmKeyId = drmKeyId;
         soloRecord.save();
       }
     }
