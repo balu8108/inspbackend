@@ -128,7 +128,7 @@ exports.getTopicDetails = async (req, res) => {
   try {
     const { topicId } = req.params;
 
-    const assignments = await SoloClassRoom.findAll({
+    const soloClassroomDetails = await SoloClassRoom.findAll({
       where: { topicId },
       attributes: ["description", "agenda"],
       include: [
@@ -141,12 +141,14 @@ exports.getTopicDetails = async (req, res) => {
       ],
     });
 
-    res.status(200).json(assignments);
+    if (soloClassroomDetails.length === 0) {
+      res.status(201).json({ message: "No data available for this topic" });
+    } else {
+      res.status(200).json(soloClassroomDetails);
+    }
   } catch (error) {
-    console.error("Error fetching assignments:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while fetching assignments" });
+    console.error("Error fetching details:", error);
+    res.status(500).json({ error: "An error occurred while fetching details" });
   }
 };
 
