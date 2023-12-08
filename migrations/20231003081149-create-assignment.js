@@ -9,17 +9,16 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      subjectId:{
-        type:Sequelize.STRING,
+      subjectId: {
+        type: Sequelize.STRING,
       },
-      subjectName:{
-        type:Sequelize.STRING,
+      subjectName: {
+        type: Sequelize.STRING,
       },
-
 
       topicId: {
         type: Sequelize.STRING,
-        allowNull:false
+        allowNull: false,
       },
       topicName: {
         type: Sequelize.STRING,
@@ -30,8 +29,6 @@ module.exports = {
       description: {
         type: Sequelize.TEXT,
       },
-    
-
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

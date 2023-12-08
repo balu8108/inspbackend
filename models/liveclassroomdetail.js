@@ -20,8 +20,8 @@ module.exports = (sequelize, DataTypes) => {
       chapterName: DataTypes.STRING,
       topicId: DataTypes.STRING,
       topicName: DataTypes.STRING,
-      agenda: DataTypes.STRING,
-      description: DataTypes.STRING,
+      agenda: DataTypes.TEXT,
+      description: DataTypes.TEXT,
       classRoomId: DataTypes.INTEGER,
     },
     {

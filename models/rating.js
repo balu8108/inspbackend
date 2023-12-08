@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
       raterId: DataTypes.STRING,
       raterName: DataTypes.TEXT,
       rating: DataTypes.INTEGER,
-      feedback: DataTypes.STRING,
+      feedback: DataTypes.TEXT,
     },
     {
       sequelize,

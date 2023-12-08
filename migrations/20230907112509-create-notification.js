@@ -21,10 +21,10 @@ module.exports = {
         defaultValue: "PENDING",
       },
       notificationSMSText: {
-        type: Sequelize.STRING(1000),
+        type: Sequelize.TEXT,
       },
       notificationEmailText: {
-        type: Sequelize.STRING(2000),
+        type: Sequelize.TEXT,
       },
       notificationReceiverName: {
         type: Sequelize.STRING,
@@ -36,10 +36,10 @@ module.exports = {
         type: Sequelize.STRING,
       },
       notificationSubject: {
-        type: Sequelize.STRING(500),
+        type: Sequelize.TEXT,
       },
       notificationMetaInfo: {
-        type: Sequelize.STRING(5000),
+        type: Sequelize.TEXT,
       },
       createdAt: {
         allowNull: false,

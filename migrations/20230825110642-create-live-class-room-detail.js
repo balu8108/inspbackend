@@ -24,10 +24,10 @@ module.exports = {
         type: Sequelize.STRING(512),
       },
       agenda: {
-        type: Sequelize.STRING(1024),
+        type: Sequelize.TEXT,
       },
       description: {
-        type: Sequelize.STRING(2048),
+        type: Sequelize.TEXT,
       },
       classRoomId: {
         type: Sequelize.INTEGER,
