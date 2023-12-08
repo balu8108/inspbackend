@@ -175,9 +175,7 @@ exports.getSoloClassroomDetails = async (req, res) => {
     const { soloClassRoomId } = req.params;
 
     // Use Sequelize to query the 'soloclassrooms' table to retrieve topic, description, and agenda.
-    const soloClassroomDetails = await SoloClassRoom.findByPk(soloClassRoomId, {
-      attributes: ["topic", "description", "agenda"],
-    });
+    const soloClassroomDetails = await SoloClassRoom.findByPk(soloClassRoomId);
 
     if (!soloClassroomDetails) {
       return res.status(404).json({ error: "Solo classroom not found" });

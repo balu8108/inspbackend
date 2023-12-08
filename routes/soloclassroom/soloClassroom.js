@@ -1,7 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const { routesConstants } = require("../../constants");
-const { isAuthenticated, isTeacher } = require("../../middlewares");
+const {
+  isAuthenticated,
+  isTeacher,
+  checkPaidStatusOrTeacher,
+} = require("../../middlewares");
 
 const {
   createSoloClassRoom,
@@ -19,22 +23,33 @@ router.post(
   isTeacher,
   createSoloClassRoom
 );
-router.get(routesConstants.LATEST_CLASSROOM, getLatestSoloclassroom);
+router.get(
+  routesConstants.LATEST_CLASSROOM,
+  isAuthenticated,
+  checkPaidStatusOrTeacher,
+  getLatestSoloclassroom
+);
 router.post(
   `${routesConstants.SOLO_CLASSROOM_RECORDINGS}/:soloClassRoomId`,
+  isAuthenticated,
+  isTeacher,
   uploadSoloClassRoomRecordings
 );
 router.get(
   `${routesConstants.SOLO_TOPIC_DETAILS_FILES_RECORDINGS}/:topicId`,
+  isAuthenticated,
+  checkPaidStatusOrTeacher,
   getTopicDetails
 );
 router.get(
   routesConstants.SOLO_CLASSROOM_PRESIGNED_URL,
   generateGetSoloLecturePresignedUrl
-);
-router.get(`${routesConstants.SOLOCLASSROOM_FILES}/:id`, openSoloLetureFile);
+); // Not Using anywhere
+router.get(`${routesConstants.SOLOCLASSROOM_FILES}/:id`, openSoloLetureFile); // Not using anywhere
 router.get(
   `${routesConstants.SOLOCLASSROOM_DETAILS}/:soloClassRoomId`,
+  isAuthenticated,
+  checkPaidStatusOrTeacher,
   getSoloClassroomDetails
 );
 
