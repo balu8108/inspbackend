@@ -18,7 +18,7 @@ module.exports = {
         allowNull: false,
       },
       raterName: {
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
         allowNull: false,
       },
       rating: {
