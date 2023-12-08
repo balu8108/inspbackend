@@ -12,7 +12,11 @@ const {
   createFeedback,
   createLiveClassNotes,
 } = require("../../controllers");
-const { isAuthenticated } = require("../../middlewares");
+const {
+  isAuthenticated,
+  isTeacher,
+  checkPaidStatusOrTeacher,
+} = require("../../middlewares");
 const {
   latestfeedback,
   getCompletedLiveClasses,
@@ -21,18 +25,45 @@ const {
 } = require("../../controllers/genericcontrollers/genericController");
 
 router.get(routesConstants.GET_ALL_SUBJECTS, getAllSubjects);
-router.get(`${routesConstants.OPEN_FILE}`, openFile);
+router.get(
+  `${routesConstants.OPEN_FILE}`,
+  isAuthenticated,
+  checkPaidStatusOrTeacher,
+  openFile
+);
 router.post(
   routesConstants.GENERATE_GET_PRESIGNED_URL,
   generateGetPresignedUrl
+); // Test api for generating presigned url with s3 key not used in prod or dev
+router.post(
+  routesConstants.IMAGE_TO_DOC,
+  isAuthenticated,
+  isTeacher,
+  imageToDoc
 );
-router.post(routesConstants.IMAGE_TO_DOC, imageToDoc);
-router.post(routesConstants.CREATE_LIVE_CLASS_NOTES, createLiveClassNotes);
-router.post(routesConstants.CREATE_FEEDBACK, isAuthenticated, createFeedback);
-router.get(routesConstants.LATEST_FEEDBACK, isAuthenticated, latestfeedback);
-router.get(routesConstants.LATEST_COMPLETEDCLASSROOM, getCompletedLiveClasses);
+router.post(
+  routesConstants.CREATE_LIVE_CLASS_NOTES,
+  isAuthenticated,
+  isTeacher,
+  createLiveClassNotes
+);
+router.post(
+  routesConstants.CREATE_FEEDBACK,
+  isAuthenticated,
+  checkPaidStatusOrTeacher,
+  createFeedback
+);
+router.get(routesConstants.LATEST_FEEDBACK, latestfeedback);
+router.get(
+  routesConstants.LATEST_COMPLETEDCLASSROOM,
+  isAuthenticated,
+  checkPaidStatusOrTeacher,
+  getCompletedLiveClasses
+);
 router.get(
   `${routesConstants.TOPIC_FEEDBACK_RATING_DETAILS}/:topicId`,
+  isAuthenticated,
+  checkPaidStatusOrTeacher,
   getTopicDetails
 );
 

@@ -244,7 +244,6 @@ const getTopicDetails = async (req, res) => {
     const topicId = req.params.topicId;
     const topicDetails = await Rating.findAll({
       where: { topicId },
-      attributes: ["raterName", "feedback", "rating"],
     });
     res.status(200).json({ topicId, topicDetails });
   } catch (error) {
