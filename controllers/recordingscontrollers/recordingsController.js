@@ -4,6 +4,7 @@ const {
   LiveClassRoomFile,
   LiveClassRoomDetail,
   LiveClassRoomQNANotes,
+  LiveClassRoomNote,
   SoloClassRoomRecording,
   SoloClassRoom,
   SoloClassRoomFiles,
@@ -30,6 +31,7 @@ const getRecordingsWithDetails = async (req, res) => {
           { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
           { model: LiveClassRoomFile },
           { model: LiveClassRoomQNANotes },
+          { model: LiveClassRoomNote },
         ],
       });
     }
@@ -51,6 +53,7 @@ const getRecordingsWithDetails = async (req, res) => {
           { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
           { model: LiveClassRoomFile },
           { model: LiveClassRoomQNANotes },
+          { model: LiveClassRoomNote },
         ],
       });
     }
@@ -151,6 +154,7 @@ const viewRecording = async (req, res) => {
           { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
           { model: LiveClassRoomFile },
           { model: LiveClassRoomQNANotes },
+          { model: LiveClassRoomNote },
         ],
       });
       if (responseData?.LiveClassRoomRecordings.length > 0) {
@@ -176,6 +180,7 @@ const viewRecording = async (req, res) => {
             { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
             { model: LiveClassRoomFile },
             { model: LiveClassRoomQNANotes },
+            { model: LiveClassRoomNote },
           ],
         });
         const combinedData = {
@@ -221,6 +226,7 @@ const viewRecording = async (req, res) => {
           { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
           { model: LiveClassRoomFile },
           { model: LiveClassRoomQNANotes },
+          { model: LiveClassRoomNote },
         ],
       });
 
