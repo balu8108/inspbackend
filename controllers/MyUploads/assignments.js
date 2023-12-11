@@ -164,7 +164,7 @@ exports.uploadAssignment = async (req, res) => {
           url,
           isDownloadable: true,
           isShareable: true,
-          assignmentId: assignment.id, 
+          assignmentId: assignment.id,
         });
 
         return assignmentFile;
@@ -188,16 +188,14 @@ exports.getSubjectsAssignments = async (req, res) => {
     const subjectId = req.params.subjectId;
 
     if (subjectId === "ALL") {
-     
       const assignments = await Assignment.findAll({
-        include: AssignmentFiles, 
+        include: AssignmentFiles,
       });
       res.status(200).json(assignments);
     } else {
-     
       const assignments = await Assignment.findAll({
         where: { subjectId },
-        include: AssignmentFiles, 
+        include: AssignmentFiles,
       });
       res.status(200).json(assignments);
     }
@@ -218,7 +216,6 @@ exports.getAssignmentsBySubjectName = async (req, res) => {
       include: AssignmentFiles,
     });
 
-  
     if (assignments.length === 0) {
       return res
         .status(200)
