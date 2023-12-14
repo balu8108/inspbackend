@@ -162,8 +162,8 @@ exports.uploadAssignment = async (req, res) => {
         const assignmentFile = await AssignmentFiles.create({
           key,
           url,
-          isDownloadable: true,
-          isShareable: true,
+          isDownloadable: false,
+          isShareable: false,
           assignmentId: assignment.id,
         });
 
