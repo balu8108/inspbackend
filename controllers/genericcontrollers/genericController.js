@@ -56,12 +56,13 @@ const openFile = async (req, res) => {
         docType === "live" ||
         docType === "solo" ||
         docType === "assignment" ||
-        docType === "qna"
+        docType === "qna" ||
+        docType === "note"
       )
     ) {
       return res
         .status(400)
-        .json({ error: "File type can be only live,solo,assignment" });
+        .json({ error: "File type can be only live,solo,assignment,qna,note" });
     }
     // All files uploaded to S3 so we need to generate presigned urls
     let file = null;
@@ -73,6 +74,8 @@ const openFile = async (req, res) => {
       file = await AssignmentFiles.findOne({ where: { id: docId } });
     } else if (docType === "qna") {
       file = await LiveClassRoomQNANotes.findOne({ where: { id: docId } });
+    } else if (docType === "note") {
+      file = await LiveClassRoomNote.findOne({ where: { id: docId } });
     }
 
     if (!file) {
@@ -335,9 +338,6 @@ const createLiveClassNotes = async (req, res) => {
 
     const folderPath = `liveclassnotes`; // in AWS S3
     const fileName = `notes_roomId_${body.roomId}.pdf`;
-
-    console.log("body", body);
-    console.log("files", files);
 
     const { success, result, key, url } = await createOrUpdateLiveClassNotes(
       folderPath,
