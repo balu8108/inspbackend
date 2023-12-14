@@ -64,8 +64,7 @@ exports.createSoloClassRoom = async (req, res) => {
       soloClassRoomId,
     });
   } catch (error) {
-    console.error("Error uploading files:", error);
-    res.status(500).json({ error: "An error occurred while uploading files" });
+    return res.status(500).json({ error: error.message });
   }
 };
 
