@@ -128,7 +128,10 @@ const getRecordingsByTopicOnly = async (req, res) => {
 };
 const viewRecording = async (req, res) => {
   try {
-    const { type, id } = req.query;
+    console.log("req query", req.query);
+    const { type, id, topicId } = req.query;
+
+    // extra query parameter -> topicId is only required if type is live_specific or solo_specific
     if (
       !type ||
       !id ||
@@ -167,14 +170,26 @@ const viewRecording = async (req, res) => {
         responseData = combinedData;
       }
     } else if (type === "live_specific") {
+      if (!topicId) {
+        throw new Error("Topic id required to view this recordings");
+      }
       // in live specific user clicks a particular video from library now it will give the id of the liveclassrecording
       // first we retreive the class id for that particular recording
       const specificLiveRecording = await LiveClassRoomRecording.findOne({
         where: { id: id },
       });
       if (specificLiveRecording !== null) {
-        responseData = await LiveClassRoom.findOne({
-          where: { id: specificLiveRecording?.classRoomId },
+        const getClassRoomsWithTopicId = await LiveClassRoomDetail.findAll({
+          where: { topicId: topicId },
+          attributes: ["classRoomId"], // Select only the classRoomId
+          raw: true, // Get raw data as an array of objects
+        });
+        const classRoomIds = getClassRoomsWithTopicId.map(
+          (detail) => detail.classRoomId
+        );
+
+        responseData = await LiveClassRoom.findAll({
+          where: { id: classRoomIds },
           include: [
             { model: LiveClassRoomDetail },
             { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
@@ -184,26 +199,29 @@ const viewRecording = async (req, res) => {
           ],
         });
         const combinedData = {
-          ...responseData.dataValues, // Extract data from the Sequelize instance
+          responseData, // Extract data from the Sequelize instance
           activeRecordingToPlay: specificLiveRecording, // Add the activeRecording property
         };
 
         responseData = combinedData;
       }
     } else if (type === "solo_specific") {
+      if (!topicId) {
+        throw new Error("Topic id required to view this recordings");
+      }
       const specificSoloRecording = await SoloClassRoomRecording.findOne({
         where: { id: id },
       });
       if (specificSoloRecording !== null) {
-        responseData = await SoloClassRoom.findOne({
-          where: { id: specificSoloRecording?.soloClassRoomId },
+        responseData = await SoloClassRoom.findAll({
+          where: { topicId: topicId },
           include: [
             { model: SoloClassRoomRecording, order: [["createdAt", "ASC"]] },
             { model: SoloClassRoomFiles },
           ],
         });
         const combinedData = {
-          ...responseData.dataValues,
+          responseData,
           activeRecordingToPlay: specificSoloRecording,
         };
         responseData = combinedData;

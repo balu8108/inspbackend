@@ -111,7 +111,6 @@ exports.uploadSoloClassRoomRecordings = async (req, res) => {
         return soloClassRoomFile;
       })
     );
-    console.log("solo recordings", solorecordings);
 
     res.status(201).json({
       message: " files uploaded successfully",
@@ -129,7 +128,6 @@ exports.getTopicDetails = async (req, res) => {
 
     const soloClassroomDetails = await SoloClassRoom.findAll({
       where: { topicId },
-      attributes: ["description", "agenda"],
       include: [
         {
           model: SoloClassRoomFiles,
