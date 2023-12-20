@@ -50,8 +50,8 @@ exports.createSoloClassRoom = async (req, res) => {
         const sololectureFile = await SoloClassRoomFiles.create({
           key: key,
           url: url,
-          isDownloadable: true,
-          isShareable: true,
+          isDownloadable: false,
+          isShareable: false,
           soloClassRoomId: soloclassroomlecture.id,
         });
 
