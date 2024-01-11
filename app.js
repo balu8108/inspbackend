@@ -50,6 +50,7 @@ const {
   muteMicCommandByMentorHandler,
   questionMsgSentByStudentHandler,
   pollTimeIncreaseHandler,
+  replaceTrackHandler,
 } = require("./socketcontrollers");
 
 app.use(express.json({ limit: "200mb" }));
@@ -155,6 +156,9 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   });
   socket.on(SOCKET_EVENTS.PRODUCER_RESUME, (data) => {
     producerResumeHandler(data, socket);
+  });
+  socket.on(SOCKET_EVENTS.REPLACE_TRACK, (data) => {
+    replaceTrackHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.START_RECORDING, (data) => {
     startRecordingHandler(data, socket);

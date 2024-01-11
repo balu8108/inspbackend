@@ -20,6 +20,8 @@ const SOCKET_EVENTS = Object.freeze({
   PRODUCERPAUSE: "producerpause",
   PRODUCERRESUME: "producerresume",
   PRODUCER_CLOSED: "producer-closed",
+  REPLACE_TRACK: "replace_track",
+  REPLACED_TRACK: "replaced_track",
   CHAT_MSG_TO_SERVER: "chat_msg_to_server",
   CHAT_MSG_FROM_SERVER: "chat_msg_from_server",
   QUESTION_POSTED: "question_posted",

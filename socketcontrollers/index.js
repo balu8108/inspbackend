@@ -519,6 +519,7 @@ const consumeHandler = async (data, callback, socket, worker) => {
         producerId: remoteProducerId,
         rtpCapabilities,
         paused: true,
+        appData: appData,
       });
 
       consumer.on(SOCKET_EVENTS.PRODUCERPAUSE, () => {
@@ -1209,6 +1210,18 @@ const pollTimeIncreaseHandler = (data, socket) => {
   }
 };
 
+const replaceTrackHandler = (data, io, socket) => {
+  try {
+    console.log("data", data);
+    console.log("consumers", consumers);
+    for (const consumer of consumers) {
+      io.to(consumer.socketId).emit(SOCKET_EVENTS.REPLACED_TRACK, data);
+    }
+  } catch (err) {
+    console.log("error in replace track");
+  }
+};
+
 module.exports = {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -1239,4 +1252,5 @@ module.exports = {
   muteMicCommandByMentorHandler,
   questionMsgSentByStudentHandler,
   pollTimeIncreaseHandler,
+  replaceTrackHandler,
 };
