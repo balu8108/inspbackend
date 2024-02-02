@@ -4,11 +4,13 @@ const {
   MEDIA_SOUP_ANNOUNCED_IP,
 } = require("../envvar");
 
+// announced ip is your local ip address as we are testing with react native so we need ip address
 module.exports = Object.freeze({
   plainRtpTransport: {
     listenIp: {
       ip: MEDIA_SOUP_LISTEN_IP,
-      announcedIp: ENVIRON !== "local" ? MEDIA_SOUP_ANNOUNCED_IP : "127.0.0.1",
+      announcedIp:
+        ENVIRON !== "local" ? MEDIA_SOUP_ANNOUNCED_IP : "192.168.1.4",
     }, // TODO: Change announcedIp to your external IP or domain name
     rtcpMux: false,
     comedia: false,
@@ -18,7 +20,7 @@ module.exports = Object.freeze({
       {
         ip: MEDIA_SOUP_LISTEN_IP,
         announcedIp:
-          ENVIRON !== "local" ? MEDIA_SOUP_ANNOUNCED_IP : "127.0.0.1",
+          ENVIRON !== "local" ? MEDIA_SOUP_ANNOUNCED_IP : "192.168.1.4",
       },
     ],
     enableUdp: true,
