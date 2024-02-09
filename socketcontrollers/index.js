@@ -63,13 +63,24 @@ const processLeaderBoardData = (roomId, leaderBoardData) => {
         },
       };
     }
+
     if (isObjectValid(leaderBoardObjects)) {
       leaderBoard[roomId] = leaderBoardObjects;
     }
+    // console.log("main leader board object", leaderBoard);
 
-    return leaderBoard.hasOwnProperty(roomId)
-      ? Object.values(leaderBoard[roomId])
-      : [];
+    const sortedLeaderBoard = Object.values(leaderBoardObjects).sort((a, b) => {
+      // Sort by correct answers in descending order
+      if (b.correctAnswers !== a.correctAnswers) {
+        return b.correctAnswers - a.correctAnswers;
+      }
+      // If correct answers are equal, sort by combined response time in ascending order
+      return a.combinedResponseTime - b.combinedResponseTime;
+    });
+    return sortedLeaderBoard;
+    // return leaderBoard.hasOwnProperty(roomId)
+    //   ? Object.values(leaderBoard[roomId])
+    //   : [];
   } catch (err) {
     console.log("Error in processing leaderboard data", err);
     return;
@@ -150,17 +161,18 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
         }
       }
 
-      // Get leaderboard for teacher if the authDtaa if of teacher
-      if (authData?.user_type === 1) {
-        const leaderBoardData = await LeaderBoard.findAll({
-          where: { classRoomId: liveClass?.id },
-          order: [
-            ["correctAnswers", "DESC"],
-            ["combinedResponseTime", "ASC"],
-          ],
-        });
-        leaderBoardArray = processLeaderBoardData(roomId, leaderBoardData); // process leaderboard data
-      }
+      // Get leaderboard for teacher if the authData if of teacher
+
+      const leaderBoardData = await LeaderBoard.findAll({
+        where: { classRoomId: liveClass?.id },
+        order: [
+          ["correctAnswers", "DESC"],
+          ["combinedResponseTime", "ASC"],
+        ],
+      });
+      console.log("leader", leaderBoardData);
+      leaderBoardArray = processLeaderBoardData(roomId, leaderBoardData); // process leaderboard data
+      console.log("leader board array", leaderBoardArray);
 
       let newPeerDetails = {
         socketId: socketId,
@@ -1057,11 +1069,16 @@ const studentTestAnswerResponseHandler = (data, socket, io) => {
 
     const getAllTeachers = rooms[roomId].mentors;
 
-    getAllTeachers.forEach(async (peer) => {
-      // send leader board to specific teacher
-      io.to(peer.socketId).emit(SOCKET_EVENTS.LEADERBOARD_FROM_SERVER, {
-        leaderBoard: updatedLeaderboard.slice(0, 10),
-      });
+    // getAllTeachers.forEach(async (peer) => {
+    //   // send leader board to specific teacher
+    //   io.to(peer.socketId).emit(SOCKET_EVENTS.LEADERBOARD_FROM_SERVER, {
+    //     leaderBoard: updatedLeaderboard.slice(0, 10),
+    //   });
+    // });
+
+    // send leaderboard feed to all the connected clients in the room students and mentor both
+    io.in(roomId).emit(SOCKET_EVENTS.LEADERBOARD_FROM_SERVER, {
+      leaderBoard: updatedLeaderboard.slice(0, 10),
     });
   } catch (err) {
     console.log("Error in studentTestAnswerResponseHandler", err);
