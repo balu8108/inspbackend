@@ -10,7 +10,7 @@ module.exports = Object.freeze({
     listenIp: {
       ip: MEDIA_SOUP_LISTEN_IP,
       announcedIp:
-        ENVIRON !== "local" ? MEDIA_SOUP_ANNOUNCED_IP : "192.168.1.4",
+        ENVIRON !== "local" ? MEDIA_SOUP_ANNOUNCED_IP : "192.168.1.8",
     }, // TODO: Change announcedIp to your external IP or domain name
     rtcpMux: false,
     comedia: false,
@@ -20,7 +20,7 @@ module.exports = Object.freeze({
       {
         ip: MEDIA_SOUP_LISTEN_IP,
         announcedIp:
-          ENVIRON !== "local" ? MEDIA_SOUP_ANNOUNCED_IP : "192.168.1.4",
+          ENVIRON !== "local" ? MEDIA_SOUP_ANNOUNCED_IP : "192.168.1.8",
       },
     ],
     enableUdp: true,

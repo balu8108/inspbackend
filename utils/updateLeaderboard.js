@@ -16,9 +16,9 @@ const createOrUpdateLeaderBoard = async (classPk, roomId, leaderBoardData) => {
       });
     } else {
       await LeaderBoard.create({
-        peerId: leaderBoardData.peerDetails.id,
-        peerName: leaderBoardData.peerDetails.name,
-        peerEmail: leaderBoardData.peerDetails?.email || "test@gmail.com",
+        peerId: leaderBoardData?.peerDetails?.id,
+        peerName: leaderBoardData?.peerDetails?.name,
+        peerEmail: leaderBoardData?.peerDetails?.email || "test@gmail.com",
         correctAnswers: leaderBoardData.correctAnswers,
         combinedResponseTime: leaderBoardData.combinedResponseTime,
         classRoomId: classPk,

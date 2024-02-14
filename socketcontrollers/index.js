@@ -91,9 +91,8 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
   try {
     // check if create room have this id or not
     let router1;
-    let peers = [];
+    let prevPeers = [];
     let mentors = [];
-
     let leaderBoardArray = [];
     if ("roomId" in data) {
       // means room exist then add this peer to given room
@@ -147,6 +146,8 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           return {
             roomId: false,
             router1: false,
+            newPeerDetails: null,
+            liveClass: null,
             errMsg: "You have already joined the class!!",
           };
         }
@@ -154,7 +155,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
         if (peerDetails.user_type === 1) {
           liveClass.classStatus = classStatus.ONGOING;
           await liveClass.save();
-          LiveClassLog.create({
+          await LiveClassLog.create({
             classRoomId: liveClass.id,
             logInfo: liveClassLogInfo.TEACHER_JOINED,
           });
@@ -170,10 +171,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           ["combinedResponseTime", "ASC"],
         ],
       });
-      console.log("leader", leaderBoardData);
       leaderBoardArray = processLeaderBoardData(roomId, leaderBoardData); // process leaderboard data
-      console.log("leader board array", leaderBoardArray);
-
       let newPeerDetails = {
         socketId: socketId,
         id:
@@ -184,6 +182,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           ENVIRON !== "local"
             ? authData.name
             : authData.name + Math.floor(Math.random() * (10000 - 1 + 1)) + 1,
+        email: authData?.email,
         isTeacher: authData?.user_type === 1,
         isAudioBlocked:
           authData?.user_type === 1 ? false : liveClass?.muteAllStudents, // At the moment we used blocked and enabled differently need optimzation later on
@@ -202,7 +201,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
       // In below mentors key we are taking an array as we can have multiple mentors in a class
       if (roomId in rooms) {
         router1 = rooms[roomId].router;
-        peers = rooms[roomId].peers || [];
+        prevPeers = rooms[roomId].peers || [];
         mentors = rooms[roomId].mentors || [];
 
         rooms[roomId] = {
@@ -210,7 +209,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           mentors: newPeerDetails.isTeacher
             ? [newPeerDetails, ...mentors]
             : [...mentors],
-          peers: [newPeerDetails, ...peers],
+          peers: [newPeerDetails, ...prevPeers],
         };
 
         return {
@@ -231,7 +230,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           mentors: newPeerDetails.isTeacher
             ? [newPeerDetails, ...mentors]
             : [...mentors],
-          peers: [newPeerDetails, ...peers],
+          peers: [newPeerDetails, ...prevPeers],
         };
 
         return {
@@ -269,8 +268,9 @@ const joinRoomPreviewHandler = (data, callback, socket, io) => {
         socket.join(roomId);
         callback({ success: true, peers: [] });
       }
+    } else {
+      callback({ success: false }); // No room id supplied
     }
-    callback({ success: false }); // No room id supplied
   } catch (err) {
     console.log("Error in join room Preview Handler", err);
   }
@@ -319,11 +319,11 @@ const joinRoomHandler = async (data, callback, socket, io, worker) => {
   }
 };
 
-const createWebRtcTransport = async (router) => {
+const createWebRtcTransportCreator = async (router) => {
   try {
     const webRtcOptions = config.webRtcTransport;
 
-    let transport = await router.createWebRtcTransport(webRtcOptions);
+    const transport = await router.createWebRtcTransport(webRtcOptions);
     transport.on(SOCKET_EVENTS.DTLS_STATE_CHANGE, (dtlsState) => {
       if (dtlsState === "closed") {
         transport.close();
@@ -341,10 +341,12 @@ const createWebRtcTransport = async (router) => {
 
 const addTransport = (transport, roomId, consumer, socket) => {
   try {
+    console.log("transports before adding", transports);
     transports = [
       ...transports,
       { socketId: socket.id, transport, roomId, consumer },
     ];
+    console.log("transports after adding", transports);
     peers[socket.id] = {
       ...peers[socket.id],
       transports: [...peers[socket.id].transports, transport.id],
@@ -366,7 +368,7 @@ const createWebRtcTransportHandler = async (
     const roomId = peers[socket.id].roomId;
     const router = rooms[roomId].router;
 
-    const transport = await createWebRtcTransport(router);
+    const transport = await createWebRtcTransportCreator(router);
     if (transport) {
       const dtlsData = {
         params: {
@@ -390,6 +392,7 @@ const getTransport = (socketId) => {
     const [producerTransport] = transports.filter(
       (transport) => transport.socketId === socketId && !transport.consumer
     );
+    console.log("getting producer transport", producerTransport);
 
     return producerTransport.transport;
   } catch (err) {
@@ -519,7 +522,7 @@ const consumeHandler = async (data, callback, socket, worker) => {
     const { roomId } = peers[socket.id];
     const router = rooms[roomId].router;
 
-    let consumerTransport = transports.find(
+    const consumerTransport = transports.find(
       (transport) =>
         transport.consumer &&
         transport.transport.id === serverConsumerTransportId
@@ -599,16 +602,37 @@ const consumerResumeHandler = async (data, socket, worker) => {
   }
 };
 
-const removeItems = (items, socketId, type) => {
+const removeItems = (itemName, socketId, type) => {
   try {
-    items.forEach((item) => {
-      if (item.socketId === socketId) {
-        item[type].close();
-      }
-    });
-    items = items.filter((item) => item.socketId !== socketId);
-
-    return items;
+    if (itemName === "producers") {
+      producers.forEach((item) => {
+        if (item?.socketId === socketId) {
+          item[type].close();
+        }
+      });
+      producers = producers.filter((item) => item.socketId !== socketId);
+    } else if (itemName === "consumers") {
+      consumers.forEach((item) => {
+        if (item?.socketId === socketId) {
+          item[type].close();
+        }
+      });
+      consumers = consumers.filter((item) => item.socketId !== socketId);
+    } else if (itemName === "transports") {
+      transports.forEach((item) => {
+        if (item?.socketId === socketId) {
+          item[type].close();
+        }
+      });
+      transports = transports.filter((item) => item.socketId !== socketId);
+    }
+    // items.forEach((item) => {
+    //   if (item?.socketId === socketId) {
+    //     item[type].close();
+    //   }
+    // });
+    // items = items.filter((item) => item.socketId !== socketId);
+    // return items;
   } catch (err) {
     console.log("Error in removeItems", err);
   }
@@ -629,9 +653,12 @@ const chatMsgHandler = (data, socket) => {
 
 const disconnectHandler = async (socket, worker, io) => {
   try {
-    consumers = removeItems(consumers, socket.id, "consumer");
-    producers = removeItems(producers, socket.id, "producer");
-    transports = removeItems(transports, socket.id, "transport");
+    removeItems("consumers", socket.id, "consumer");
+    console.log("consumers after disconnect", consumers);
+    removeItems("producers", socket.id, "producer");
+    console.log("prodcuers after disconnect", producers);
+    removeItems("transports", socket.id, "transport");
+    console.log("transports", transports);
     if (socket.id in peers) {
       const { roomId } = peers[socket.id];
       const leavingPeer = peers[socket.id];
@@ -673,9 +700,9 @@ const disconnectHandler = async (socket, worker, io) => {
 
 const leaveRoomHandler = async (callback, socket, worker, io) => {
   try {
-    consumers = removeItems(consumers, socket.id, "consumer");
-    producers = removeItems(producers, socket.id, "producer");
-    transports = removeItems(transports, socket.id, "transport");
+    removeItems("consumers", socket.id, "consumer");
+    removeItems("producers", socket.id, "producer");
+    removeItems("transports", socket.id, "transport");
 
     if (socket.id in peers) {
       const { roomId } = peers[socket.id];
