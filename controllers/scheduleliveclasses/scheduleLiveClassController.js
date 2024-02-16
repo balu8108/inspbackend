@@ -193,28 +193,46 @@ const getUpcomingClass = async (req, res) => {
 
 const getLectureNo = async (req, res) => {
 
-  const { subjectName, classType, chapterName, topicName } = req.body;
-
-  if (!subjectName || !classType || !chapterName || !topicName) {
-    return res.status(400).json({ error: "please send is required" });
-  }
-
   try {
-    const liveClassRooms = await LiveClassRoom.findAll({
-      where: {
-        subjectName: subjectName,
-        classType: classType
-      },
-      include: [{
-        model: LiveClassRoomDetail,
-        where: {
-          chapterName: chapterName,
-          topicName: topicName
-        },
-      }]
-    });
 
-    const numberOfLecture = liveClassRooms.length;
+    const { subjectName, classType, chapterName, topicName } = req.body;
+
+    if (!subjectName || !classType || !chapterName || !topicName) {
+      return res.status(400).json({ error: "please send is required" });
+    }
+
+    let numberOfLecture = 0;
+    if (classType == "REGULARCLASS") {
+
+      const liveClassRooms = await LiveClassRoom.findAll({
+        where: {
+          subjectName: subjectName,
+          classType: classType
+        },
+        include: [{
+          model: LiveClassRoomDetail,
+          where: {
+            chapterName: chapterName,
+            topicName: topicName
+          },
+        }]
+      });
+      numberOfLecture = liveClassRooms.length;
+
+    } else if (classType == "CRASHCOURSE") {
+
+      const liveClassRooms = await LiveClassRoom.findAll({
+        where: {
+          subjectName: subjectName,
+          classType: classType
+        },
+        include: [{
+          model: LiveClassRoomDetail
+        }]
+      });
+      numberOfLecture = liveClassRooms.length;
+    }
+
     return res.status(200).json({ data: numberOfLecture });
   } catch (err) {
     return res.status(400).json({ error: err.message });
