@@ -90,6 +90,7 @@ const processLeaderBoardData = (roomId, leaderBoardData) => {
 const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
   try {
     // check if create room have this id or not
+
     let router1;
     let prevPeers = [];
     let mentors = [];
@@ -276,8 +277,15 @@ const joinRoomPreviewHandler = (data, callback, socket, io) => {
   }
 };
 
-const joinRoomHandler = async (data, callback, socket, io, worker) => {
+const joinRoomHandler = async (
+  data,
+  callback,
+  socket,
+  io,
+  mediaSoupworkers
+) => {
   try {
+    const worker = mediaSoupworkers.values().next().value;
     const { authData } = socket;
     const {
       roomId,
@@ -361,7 +369,7 @@ const createWebRtcTransportHandler = async (
   callback,
   socket,
   io,
-  worker
+  mediaSoupworkers
 ) => {
   try {
     const { consumer } = data;
@@ -400,7 +408,7 @@ const getTransport = (socketId) => {
   }
 };
 
-const connectWebRTCTransportSendHandler = (data, socket, worker) => {
+const connectWebRTCTransportSendHandler = (data, socket, mediaSoupworkers) => {
   // this is for connecting the producer transport
   try {
     const { dtlsParameters } = data;
@@ -423,7 +431,12 @@ const addProducer = (producer, roomId, socket) => {
   }
 };
 
-const transportProduceHandler = async (data, callback, socket, worker) => {
+const transportProduceHandler = async (
+  data,
+  callback,
+  socket,
+  mediaSoupworkers
+) => {
   try {
     const { kind, rtpParameters, appData } = data;
 
@@ -459,7 +472,7 @@ const transportProduceHandler = async (data, callback, socket, worker) => {
   }
 };
 
-const getProducersHandler = (callback, socket, worker) => {
+const getProducersHandler = (callback, socket, mediaSoupworkers) => {
   try {
     // send back all the producers list to the user of the room to which this user belongs
     const { roomId } = peers[socket.id];
@@ -483,7 +496,11 @@ const getProducersHandler = (callback, socket, worker) => {
   }
 };
 
-const connectWebRTCTransportRecvHandler = async (data, socket, worker) => {
+const connectWebRTCTransportRecvHandler = async (
+  data,
+  socket,
+  mediaSoupworkers
+) => {
   try {
     const { dtlsParameters, serverConsumerTransportId } = data;
     // find the transport and check if that transport is consumer type
@@ -510,7 +527,7 @@ const addConsumer = (consumer, roomId, socket) => {
   }
 };
 
-const consumeHandler = async (data, callback, socket, worker) => {
+const consumeHandler = async (data, callback, socket, mediaSoupworkers) => {
   const {
     rtpCapabilities,
     remoteProducerId,
@@ -590,7 +607,7 @@ const consumeHandler = async (data, callback, socket, worker) => {
   }
 };
 
-const consumerResumeHandler = async (data, socket, worker) => {
+const consumerResumeHandler = async (data, socket, mediaSoupworkers) => {
   try {
     const { serverConsumerId } = data;
     const { consumer } = consumers.find(
@@ -651,7 +668,7 @@ const chatMsgHandler = (data, socket) => {
   }
 };
 
-const disconnectHandler = async (socket, worker, io) => {
+const disconnectHandler = async (socket, mediaSoupworkers, io) => {
   try {
     removeItems("consumers", socket.id, "consumer");
     console.log("consumers after disconnect", consumers);
@@ -680,6 +697,10 @@ const disconnectHandler = async (socket, worker, io) => {
       };
 
       if (rooms[roomId].peers.length === 0) {
+        const { router } = rooms[roomId];
+        if (router) {
+          router.close();
+        }
         delete rooms[roomId];
         delete leaderBoard[roomId];
         socket.leave(roomId);
@@ -698,7 +719,7 @@ const disconnectHandler = async (socket, worker, io) => {
   }
 };
 
-const leaveRoomHandler = async (callback, socket, worker, io) => {
+const leaveRoomHandler = async (callback, socket, mediaSoupworkers, io) => {
   try {
     removeItems("consumers", socket.id, "consumer");
     removeItems("producers", socket.id, "producer");
@@ -733,6 +754,10 @@ const leaveRoomHandler = async (callback, socket, worker, io) => {
       });
 
       if (rooms[roomId].peers.length === 0) {
+        const { router } = rooms[roomId];
+        if (router) {
+          router.close();
+        }
         delete rooms[roomId];
         socket.leave(roomId);
         io.to(roomId).emit(SOCKET_EVENTS.PEER_LEAVED, {
@@ -749,7 +774,7 @@ const leaveRoomHandler = async (callback, socket, worker, io) => {
     console.log("Error in leave Handler", err);
   }
 };
-const endMeetHandler = async (socket, worker, io) => {
+const endMeetHandler = async (socket, mediaSoupworkers, io) => {
   // End meet by mentor
   try {
     const { roomId } = peers[socket.id];

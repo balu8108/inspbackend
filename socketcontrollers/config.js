@@ -3,7 +3,7 @@ const {
   MEDIA_SOUP_LISTEN_IP,
   MEDIA_SOUP_ANNOUNCED_IP,
 } = require("../envvar");
-
+const os = require("os");
 // announced ip is your local ip address as we are testing with react native so we need ip address
 module.exports = Object.freeze({
   plainRtpTransport: {
@@ -26,5 +26,12 @@ module.exports = Object.freeze({
     enableUdp: true,
     enableTcp: true,
     preferUdp: true,
+  },
+  numWorkers: Object.keys(os.cpus()).length,
+  workerConfig: {
+    logLevel: "debug",
+    logTags: ["rtp", "srtp", "rtcp"],
+    rtcMinPort: 40000,
+    rtcMaxPort: 49999,
   },
 });

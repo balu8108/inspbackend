@@ -15,6 +15,7 @@ const authenticationRoutes = require("./routes/authentication/authenticationRout
 const soloClassroomRoutes = require("./routes/soloclassroom/soloClassroom");
 const myUploadRoutes = require("./routes/myuploads/assignment");
 const recordingRoutes = require("./routes/recordings/recordings");
+const config = require("./socketcontrollers/config");
 const { ENVIRON } = require("./envvar");
 const {
   isSocketUserAuthenticated,
@@ -79,17 +80,111 @@ if (ENVIRON !== "local") {
 // scheduleJob();
 // Cron jobs function
 
-let worker;
+// let worker;
 
-(async () => {
-  worker = await mediasoup.createWorker({
-    logLevel: "warn",
-    rtcMinPort: 10000,
-    rtcMaxPort: 10100,
-  });
+const mediaSoupWorkers = new Map();
 
-  console.log("worker created", worker.pid);
-})();
+async function runMediasoupWorkers() {
+  try {
+    mediasoup.observer.on("newworker", (worker) => {
+      worker.appData.routers = new Map();
+      worker.appData.transports = new Map();
+      worker.appData.producers = new Map();
+      worker.appData.consumers = new Map();
+      worker.observer.on("close", () => {
+        // not needed as we have 'died' listiner below
+        console.log("worker closed = ", worker.pid);
+      });
+
+      worker.observer.on("newrouter", (router) => {
+        console.log("new router created with id", router.id);
+
+        router.appData.transports = new Map();
+        router.appData.producers = new Map();
+        router.appData.consumers = new Map();
+        router.appData.worker = worker;
+        worker.appData.routers.set(router.id, router);
+
+        router.observer.on("close", () => {
+          console.log("Router closed with id", router.id);
+          worker.appData.routers.delete(router.id);
+        });
+        router.observer.on("newtransport", (transport) => {
+          console.log("transport created", transport.id);
+          transport.appData.producers = new Map();
+          transport.appData.consumers = new Map();
+          transport.appData.router = router;
+          router.appData.transports.set(transport.id, transport);
+
+          transport.observer.on("close", () => {
+            console.log("transport closed id = ", transport.id);
+            router.appData.transports.delete(transport.id);
+          });
+
+          transport.observer.on("newproducer", (producer) => {
+            console.log("New Producer created", producer.id);
+            producer.appData.transport = transport;
+            transport.appData.producers.set(producer.id, producer);
+            router.appData.producers.set(producer.id, producer);
+            worker.appData.producers.set(producer.id, producer);
+
+            producer.observer.on("close", () => {
+              console.log("Producer closed id = ", producer.id);
+              transport.appData.producers.delete(producer.id);
+              router.appData.producers.delete(producer.id);
+              worker.appData.producers.delete(producer.id);
+            });
+          });
+
+          transport.observer.on("newconsumer", (consumer) => {
+            console.log("new Consumer created", consumer.id);
+            consumer.appData.transport = transport;
+            transport.appData.consumers.set(consumer.id, consumer);
+            router.appData.consumers.set(consumer.id, consumer);
+            worker.appData.consumers.set(consumer.id, consumer);
+
+            consumer.observer.on("close", () => {
+              console.log("consumer closed id = ", consumer.id);
+              transport.appData.consumers.delete(consumer.id);
+              router.appData.consumers.delete(consumer.id);
+              worker.appData.consumers.delete(consumer.id);
+            });
+          });
+        });
+      });
+    });
+    const { numWorkers, workerConfig } = config;
+
+    const { logLevel, logTags, rtcMinPort, rtcMaxPort } = workerConfig;
+    const portInterval = Math.floor((rtcMaxPort - rtcMinPort) / numWorkers);
+
+    for (let i = 0; i < numWorkers; i++) {
+      const worker = await mediasoup.createWorker({
+        logLevel,
+        logTags,
+        rtcMinPort: rtcMinPort + i * portInterval,
+        rtcMaxPort:
+          i === numWorkers - 1
+            ? rtcMaxPort
+            : rtcMinPort + (i + 1) * portInterval - 1,
+      });
+
+      worker.on("died", () => {
+        console.log("Worker died with id", worker.id);
+      });
+
+      mediaSoupWorkers.set(worker.pid, worker);
+      console.log(`Worker ${i + 1} successfully created with id ${worker.pid}`);
+    }
+
+    // const newWorker = await mediasoup.createWorker(workerConfig);
+    // mediaSoupWorkers.set(newWorker.pid, newWorker);
+  } catch (err) {
+    console.log("Some error in creating mediasoup worker", err);
+  }
+}
+
+runMediasoupWorkers();
 
 const httpServer = http.createServer(app);
 const io = socketIo(httpServer, {
@@ -110,28 +205,28 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
     joinRoomPreviewHandler(data, callback, socket, io);
   });
   socket.on(SOCKET_EVENTS.JOIN_ROOM, (data, callback) => {
-    joinRoomHandler(data, callback, socket, io, worker);
+    joinRoomHandler(data, callback, socket, io, mediaSoupWorkers);
   });
   socket.on(SOCKET_EVENTS.CREATE_WEB_RTC_TRANSPORT, (data, callback) => {
-    createWebRtcTransportHandler(data, callback, socket, io, worker);
+    createWebRtcTransportHandler(data, callback, socket, io, mediaSoupWorkers);
   });
   socket.on(SOCKET_EVENTS.TRANSPORT_SEND_CONNECT, (data) => {
-    connectWebRTCTransportSendHandler(data, socket, worker);
+    connectWebRTCTransportSendHandler(data, socket, mediaSoupWorkers);
   });
   socket.on(SOCKET_EVENTS.TRANSPORT_PRODUCE, (data, callback) => {
-    transportProduceHandler(data, callback, socket, worker);
+    transportProduceHandler(data, callback, socket, mediaSoupWorkers);
   });
   socket.on(SOCKET_EVENTS.GET_PRODUCERS, (callback) => {
-    getProducersHandler(callback, socket, worker);
+    getProducersHandler(callback, socket, mediaSoupWorkers);
   });
   socket.on(SOCKET_EVENTS.TRANSPORT_RECV_CONNECT, (data) => {
-    connectWebRTCTransportRecvHandler(data, socket, worker);
+    connectWebRTCTransportRecvHandler(data, socket, mediaSoupWorkers);
   });
   socket.on(SOCKET_EVENTS.CONSUME, (data, callback) => {
-    consumeHandler(data, callback, socket, worker);
+    consumeHandler(data, callback, socket, mediaSoupWorkers);
   });
   socket.on(SOCKET_EVENTS.CONSUMER_RESUME, (data) => {
-    consumerResumeHandler(data, socket, worker);
+    consumerResumeHandler(data, socket, mediaSoupWorkers);
   });
   socket.on(SOCKET_EVENTS.CHAT_MSG_TO_SERVER, (data) => {
     chatMsgHandler(data, socket);
@@ -185,18 +280,18 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
     questionMsgSentByStudentHandler(data, callback, socket, io);
   });
   socket.on(SOCKET_EVENTS.LEAVE_ROOM, (callback) => {
-    leaveRoomHandler(callback, socket, worker, io);
+    leaveRoomHandler(callback, socket, mediaSoupWorkers, io);
     console.log("Client leaved the room", socket.id);
   });
   socket.on(SOCKET_EVENTS.END_MEET_TO_SERVER, () => {
-    endMeetHandler(socket, worker, io);
+    endMeetHandler(socket, mediaSoupWorkers, io);
     console.log("Client ended the meet", socket.id);
   });
   socket.on(SOCKET_EVENTS.POLL_TIME_INCREASE_TO_SERVER, (data) => {
     pollTimeIncreaseHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.DISCONNECT, () => {
-    disconnectHandler(socket, worker, io);
+    disconnectHandler(socket, mediaSoupWorkers, io);
     console.log("disconnected client with socket id", socket.id);
   });
 });
