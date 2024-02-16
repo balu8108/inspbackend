@@ -23,10 +23,11 @@ module.exports = (sequelize, DataTypes) => {
       agenda: DataTypes.TEXT,
       description: DataTypes.TEXT,
       classRoomId: DataTypes.INTEGER,
+      lectureNo: DataTypes.INTEGER,
     },
     {
       sequelize,
-      modelName: "LiveClassRoomDetail",
+      modelName: "LiveClassRoomDetail",  
     }
   );
   return LiveClassRoomDetail;

@@ -12,6 +12,7 @@ const {
   getAllLiveClasses,
   getLiveClassDetails,
   getUpcomingClass,
+  getLectureNo
 } = require("./scheduleliveclasses/scheduleLiveClassController");
 const {
   getRecordingsWithDetails,
@@ -38,4 +39,5 @@ module.exports = {
   getRecordingsByTopicOnly,
   viewRecording,
   playRecording,
+  getLectureNo
 };
