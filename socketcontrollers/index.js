@@ -90,7 +90,7 @@ const processLeaderBoardData = (roomId, leaderBoardData) => {
 const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
   try {
     // check if create room have this id or not
-
+    console.log("Worker in create", worker);
     let router1;
     let prevPeers = [];
     let mentors = [];
@@ -224,6 +224,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
         // TODO Check in db and then create room if it exists otherwise don't create and send false,false
         // Right now we will create using uuid
         // let generateRoomId = uuidv4();
+
         router1 = await worker.createRouter({ mediaCodecs });
 
         rooms[roomId] = {

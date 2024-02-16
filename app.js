@@ -54,6 +54,11 @@ const {
   replaceTrackHandler,
 } = require("./socketcontrollers");
 
+const {
+  joinRoomPreviewSocketHandler,
+  joinRoomSocketHandler,
+} = require("./socketcontrollers/socketFunctions");
+
 app.use(express.json({ limit: "200mb" }));
 app.use(bodyParser.json({ limit: "200mb" }));
 app.use(
@@ -202,9 +207,11 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   console.log("connected client with socket id", socket.id);
 
   socket.on(SOCKET_EVENTS.JOIN_ROOM_PREVIEW, (data, callback) => {
+    // joinRoomPreviewSocketHandler(data, callback, socket, io); // class based architecture change
     joinRoomPreviewHandler(data, callback, socket, io);
   });
   socket.on(SOCKET_EVENTS.JOIN_ROOM, (data, callback) => {
+    // joinRoomSocketHandler(data, callback, socket, io, mediaSoupWorkers);
     joinRoomHandler(data, callback, socket, io, mediaSoupWorkers);
   });
   socket.on(SOCKET_EVENTS.CREATE_WEB_RTC_TRANSPORT, (data, callback) => {
