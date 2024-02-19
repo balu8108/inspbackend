@@ -23,7 +23,8 @@ const {
 } = require("./recordingscontrollers/recordingsController");
 
 const {
-  getAllCrashCourseLecture
+  getAllCrashCourseLecture,
+  getLectureById
 } = require("./crashcoursecontroller/crashCourserController");
 
 module.exports = {
@@ -44,5 +45,6 @@ module.exports = {
   viewRecording,
   playRecording,
   getLectureNo,
-  getAllCrashCourseLecture
+  getAllCrashCourseLecture,
+  getLectureById
 };
