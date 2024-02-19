@@ -510,6 +510,7 @@ const connectWebRTCTransportRecvHandler = async (
         transportData.consumer &&
         transportData.transport.id == serverConsumerTransportId
     ).transport;
+    console.log("consumer got it", consumerTransport);
     await consumerTransport.connect({ dtlsParameters });
   } catch (err) {
     console.log("Error in connectWebRTCTransportRecvHandler", err);
