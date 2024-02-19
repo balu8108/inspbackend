@@ -84,6 +84,7 @@ const createOrJoinRoomFunction = async (
           roomId: null,
           peer: null,
           routerId: null,
+          leaderBoardArray: [],
           liveClass: null,
           rtpCapabilities: null,
           errMsg: "No Class with this room id",
@@ -108,6 +109,7 @@ const createOrJoinRoomFunction = async (
             roomId: null,
             peer: null,
             routerId: null,
+            leaderBoardArray: [],
             liveClass: null,
             rtpCapabilities: null,
             errMsg: "You are blocked from this class",
@@ -124,6 +126,7 @@ const createOrJoinRoomFunction = async (
             roomId: null,
             peer: null,
             routerId: null,
+            leaderBoardArray: [],
             liveClass: null,
             rtpCapabilities: null,
             errMsg: "You have already joined the class!!",
@@ -140,6 +143,15 @@ const createOrJoinRoomFunction = async (
       }
 
       // TODO - ADD Leaderboard later
+
+      const leaderBoardData = await LeaderBoard.findAll({
+        where: { classRoomId: liveClass?.id },
+        order: [
+          ["correctAnswers", "DESC"],
+          ["combinedResponseTime", "ASC"],
+        ],
+      });
+
       let newPeerDetails = {
         socketId: socketId,
         id:
@@ -176,26 +188,29 @@ const createOrJoinRoomFunction = async (
           console.log("room deleted", allRooms);
         });
         // Now add this new peer to room
-        const { peer, routerId, rtpCapabilities } =
-          await room._joinRoomPeerHandler(newPeerDetails);
+        console.log("leaer board", leaderBoardData);
+        const { peer, routerId, leaderBoardArray, rtpCapabilities } =
+          await room._joinRoomPeerHandler(newPeerDetails, leaderBoardData);
         return {
           success: true,
           roomId,
           peer,
           routerId,
+          leaderBoardArray: leaderBoardArray.slice(0, 10),
           liveClass,
           rtpCapabilities,
         };
       } else {
         // Already existed so join room, add this new peer to room
 
-        const { peer, routerId, rtpCapabilities } =
-          await room._joinRoomPeerHandler(newPeerDetails);
+        const { peer, routerId, leaderBoardArray, rtpCapabilities } =
+          await room._joinRoomPeerHandler(newPeerDetails, leaderBoardData);
         return {
           success: true,
           roomId,
           peer,
           routerId,
+          leaderBoardArray: leaderBoardArray.slice(0, 10),
           liveClass,
           rtpCapabilities,
         };
@@ -206,6 +221,7 @@ const createOrJoinRoomFunction = async (
         roomId: null,
         peer: null,
         routerId: null,
+        leaderBoardArray: [],
         liveClass: null,
         rtpCapabilities: null,
         errMsg: "No Room id supplied",
@@ -229,6 +245,7 @@ const joinRoomSocketHandler = async (
       roomId,
       peer,
       routerId,
+      leaderBoardArray,
       liveClass,
       rtpCapabilities,
       errMsg,
@@ -238,7 +255,6 @@ const joinRoomSocketHandler = async (
       authData,
       socket.id
     );
-    console.log("rtp capabilites", rtpCapabilities);
     if (success === false) {
       callback({ success: false, errMsg }); // No room id/something not supplied
     } else {
@@ -252,11 +268,11 @@ const joinRoomSocketHandler = async (
         consumers: [],
         peerDetails: peer,
       });
-      console.log("peering calling back", peer);
+
       callback({
         success: true,
         selfDetails: peer,
-        leaderBoardData: [], // Later on send leaderBoardData
+        leaderBoardData: leaderBoardArray, // Later on send leaderBoardData
         roomId,
         rtpCapabilities,
       });
@@ -266,7 +282,7 @@ const joinRoomSocketHandler = async (
       });
 
       const allPeersInThisRoom = allRooms.has(roomId)
-        ? allRooms.get(roomId)._getAllPeersInRoom()
+        ? allRooms.get(roomId)._getAllPeersInRoomStartWithPeer(peer)
         : [];
       socket.emit(SOCKET_EVENTS.ROOM_UPDATE, { peers: allPeersInThisRoom });
     }
@@ -683,22 +699,364 @@ const endMeetSocketHandler = async (socket, mediaSoupworkers, io) => {
   }
 };
 
-const startRecordingSocketHandler = (data, socket) => {
+const startRecordingSocketHandler = async (data, socket) => {
   try {
     console.log("start recording ");
     const socketId = socket.id;
     const { producerScreenShare, producerAudioShare } = data;
     if (allPeers.has(socketId)) {
       const roomId = allPeers.get(socketId)?.roomId;
+      const classPk = allPeers.get(socketId)?.classPk;
+      const routerId = allPeers.get(socketId)?.routerId;
       const room = allRooms.get(roomId);
-      if (roomId && room) {
-        room._startRecording(socketId, producerScreenShare, producerAudioShare);
+      if (roomId && routerId && room) {
+        const recordData = await room._startRecording(
+          socketId,
+          routerId,
+          producerScreenShare,
+          producerAudioShare
+        );
+        if (recordData) {
+          await LiveClassRoomRecording.create({
+            key: recordData?.fileKeyName,
+            url: recordData?.url,
+            classRoomId: classPk,
+          });
+        }
       }
     }
   } catch (err) {
     console.log("Error in start recording handler", err);
   }
 };
+
+const chatMsgSocketHandler = (data, socket) => {
+  try {
+    const socketId = socket.id;
+    if (allPeers.has(socketId)) {
+      const roomId = allPeers.get(socketId)?.roomId;
+      const peerDetails = allPeers.get(socketId)?.peerDetails;
+      const { msg } = data;
+      // No need for room we can directly pass it from here
+      socket.to(roomId).emit(SOCKET_EVENTS.CHAT_MSG_FROM_SERVER, {
+        msg: msg,
+        peerDetails: peerDetails,
+      }); // broadcast message to all
+    }
+  } catch (err) {
+    console.log("Error in chat message", err);
+  }
+};
+
+const questionMsgSentByStudentSocketHandler = (data, callback, socket, io) => {
+  try {
+    const socketId = socket.id;
+    const { questionMsg } = data;
+    if (allPeers.has(socketId)) {
+      const roomId = allPeers.get(socketId)?.roomId;
+      const peerDetails = allPeers.get(socketId)?.peerDetails;
+      const room = allRooms.get(roomId);
+      if (roomId && room) {
+        const mentors = room._getRoomMentors();
+        console.log("mentors in room", mentors);
+        callback({ success: true, data: { questionMsg, peerDetails } });
+        if (mentors.length > 0) {
+          mentors.forEach((mentor) => {
+            socket
+              .to(mentor?.peerDetails?.socketId)
+              .emit(SOCKET_EVENTS.QUESTION_MSG_SENT_FROM_SERVER, {
+                questionMsg,
+                peerDetails,
+              });
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.log("Error in sending questionto mentor", err);
+  }
+};
+
+const kickOutFromClassSocketHandler = async (data, socket, io) => {
+  try {
+    const socketId = socket.id;
+    const { peerSocketId, peerId } = data;
+    if (allPeers.has(socketId)) {
+      const classPk = allPeers.get(socketId)?.classPk;
+      if (classPk && peerSocketId && peerId) {
+        // TODO write in db that this user is kicked out from class
+        await LiveClassBlockedPeer.create({
+          blockedPersonId: peerId,
+          classRoomId: classPk,
+          isBlocked: true,
+        });
+        io.to(peerSocketId).emit(SOCKET_EVENTS.KICK_OUT_FROM_CLASS_FROM_SERVER);
+      }
+    }
+  } catch (err) {
+    console.log("Error in kick out", err);
+  }
+};
+
+const questionsSocketHandler = async (data, callback, socket) => {
+  try {
+    const socketId = socket.id;
+    const qId = uuidv4();
+    console.log("question triggerd");
+    if (allPeers.has(socketId)) {
+      const roomId = allPeers.get(socketId)?.roomId;
+      const classPk = allPeers.get(socketId)?.classPk;
+      const room = allRooms.get(roomId);
+      if (roomId && classPk && room) {
+        const questionData = room._addTestQuestion(socketId, qId, data);
+        console.log("questions data", questionData);
+        // Seed question log to db
+        await LiveClassTestQuestionLog.create({
+          logInfo: liveClassTestQuestionLogInfo.NEW_QUESTION_ADDED,
+          questionNo: questionData.questionNo,
+          questionId: questionData.questionId,
+          questionType: questionData.type,
+          classRoomId: classPk,
+        });
+        callback(questionData);
+
+        // there can be polls mcq and qna
+        socket.to(roomId).emit(SOCKET_EVENTS.QUESTION_SENT_FROM_SERVER, {
+          data: questionData,
+        });
+      }
+    }
+  } catch (err) {
+    console.log("Error in questions handler", err);
+  }
+};
+
+const stopProducingSocketHandler = (data, socket) => {
+  try {
+    const { producerId, producerAppData } = data;
+    const socketId = socket.id;
+    if (allPeers.has(socketId)) {
+      const roomId = allPeers.get(socketId)?.roomId;
+      const room = allRooms.get(roomId);
+      if (roomId && room) {
+        const isStopped = room._stopProducing(socketId, producerId);
+        if (isStopped) {
+          socket.to(roomId).emit(SOCKET_EVENTS.SOME_PRODUCER_CLOSED, {
+            producerId,
+            producerAppData,
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.log("Error in stop producing", err);
+  }
+};
+
+const uploadFileSocketHandler = async (data, callback, socket) => {
+  try {
+    const socketId = socket.id;
+    if (allPeers.has(socketId)) {
+      const roomId = allPeers.get(socketId)?.roomId;
+
+      if (roomId) {
+        const getRoom = await LiveClassRoom.findOne({
+          where: { roomId: data?.roomId },
+        });
+        if (!getRoom) {
+          throw new Error("Something went wrong");
+        }
+        const fileUploads = await uploadFilesToS3(
+          data?.files,
+          `files/roomId_${data?.roomId}`
+        );
+        let filesResArray = [];
+        if (fileUploads) {
+          for (const file of fileUploads) {
+            const newFileToDB = await LiveClassRoomFile.create({
+              key: file.key,
+              url: file.url,
+              classRoomId: getRoom.id,
+            });
+
+            filesResArray.push(newFileToDB);
+          }
+        } else {
+          throw new Error("Unable to upload files");
+        }
+
+        callback({
+          success: true,
+          data: {
+            roomType: data?.roomType,
+            roomId: data?.roomId,
+            files: filesResArray,
+          },
+        });
+
+        socket.to(data?.roomId).emit(SOCKET_EVENTS.UPLOAD_FILE_FROM_SERVER, {
+          success: true,
+          data: {
+            roomType: data?.roomType,
+            roomId: data?.roomId,
+            files: filesResArray,
+          },
+        });
+      }
+    }
+  } catch (err) {}
+};
+
+const setIsAudioStreamSocketEnabled = (data, socket, io) => {
+  try {
+    const socketId = socket.id;
+    if (allPeers.has(socketId)) {
+      const roomId = allPeers.get(socketId)?.roomId;
+      const peerDetails = allPeers.get(socketId)?.peerDetails;
+      console.log("audio enabling stream data", data, peerDetails);
+      if (roomId && peerDetails) {
+        io.in(roomId).emit(SOCKET_EVENTS.IS_AUDIO_STREAM_ENABLED_FROM_SERVER, {
+          ...data,
+          peerId: peerDetails?.id,
+        });
+      }
+    }
+  } catch (err) {
+    console.log("Error in audio stream enabled", err);
+  }
+};
+
+const blockOrUnblockMicSocketHandler = (data, socket, io) => {
+  try {
+    const { value, peerSocketId, peerId } = data;
+    const socketId = socket.id;
+    if (allPeers.has(peerSocketId)) {
+      const roomId = allPeers.get(peerSocketId)?.roomId;
+      const room = allRooms.get(roomId);
+      if (roomId && room) {
+        const peer = room._updateMicBlockOrUnblock(peerSocketId, value);
+        if (peer) {
+          // Update allPeers
+          const aPeer = allPeers.get(peerSocketId);
+          aPeer.peerDetails = peer.peerDetails;
+          // inform the targetted peer about block or unblock of his mic
+          io.to(peerSocketId).emit(
+            SOCKET_EVENTS.BLOCK_OR_UNBLOCK_MIC_FROM_SERVER,
+            peer.peerDetails
+          );
+          // inform all the peers along with blocked peer, that this peer has mic blocked by mentor
+          io.to(roomId).emit(
+            SOCKET_EVENTS.PEER_MIC_BLOCKED_OR_UNBLOCKED_FROM_SERVER,
+            peer.peerDetails
+          );
+        }
+      }
+    }
+  } catch (err) {
+    console.log("Error in block or unblock", err);
+  }
+};
+
+const muteMicCommandByMentorSocketHandler = (data, socket, io) => {
+  try {
+    const { value, peerSocketId } = data;
+    if (allPeers.has(peerSocketId)) {
+      const roomId = allPeers.get(peerSocketId)?.roomId;
+      const room = allRooms.get(roomId);
+      if (roomId && room) {
+        const peer = room._muteMicCommandByMentor(peerSocketId, value);
+        if (peer) {
+          const aPeer = allPeers.get(peerSocketId);
+          aPeer.peerDetails = peer.peerDetails;
+          console.log("all peer after mute mic by mentor", allPeers);
+          console.log("peer details", peer.peerDetails);
+          io.to(peerSocketId).emit(
+            SOCKET_EVENTS.MUTE_MIC_COMMAND_BY_MENTOR_FROM_SERVER,
+            peer.peerDetails
+          );
+        }
+      }
+    }
+  } catch (err) {
+    console.log("Error in mute mic command by mentor", err);
+  }
+};
+
+const studentTestAnswerResponseSocketHandler = (data, socket, io) => {
+  try {
+    const socketId = socket.id;
+    if (allPeers.has(socketId)) {
+      const roomId = allPeers.get(socketId)?.roomId;
+      const classPk = allPeers.get(socketId)?.classPk;
+      const room = allRooms.get(roomId);
+      if (roomId && room && classPk) {
+        const updatedLeaderBoard = room._updateLeaderBoard(
+          socketId,
+          classPk,
+          data
+        );
+        if (updatedLeaderBoard) {
+          io.in(roomId).emit(SOCKET_EVENTS.LEADERBOARD_FROM_SERVER, {
+            leaderBoard: updatedLeaderBoard.slice(0, 10),
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.log("Error in student test answer repsonse", err);
+  }
+};
+
+const pollTimeIncreaseSocketHandler = (data, socket) => {
+  try {
+    const socketId = socket.id;
+    const { questionId, timeIncreaseBy } = data;
+    if (allPeers.has(socketId)) {
+      const roomId = allPeers.get(socketId)?.roomId;
+      const room = allRooms.get(roomId);
+      if (roomId && room) {
+        room._increasePollTime(questionId, timeIncreaseBy);
+        socket
+          .to(roomId)
+          .emit(SOCKET_EVENTS.POLL_TIME_INCREASE_FROM_SERVER, data);
+      }
+    }
+  } catch (err) {}
+};
+
+const stopRecordingSocketHandler = (socket) => {
+  try {
+    const socketId = socket.id;
+    if (allPeers.has(socketId)) {
+      const roomId = allPeers.get(socketId)?.roomId;
+      const room = allRooms.get(roomId);
+      if (roomId && room) {
+        room._stopRecording(socketId);
+      }
+    }
+  } catch (err) {
+    console.log("Error in stop recording handler", err);
+  }
+};
+
+const replaceTrackSocketHandler = (data, io, socket) => {
+  try {
+    const socketId = socket.id;
+    if (allPeers.has(socketId)) {
+      const roomId = allPeers.get(socketId)?.roomId;
+      const room = allRooms.get(roomId);
+      if (roomId && room) {
+        const getSocketIDs = room._getSocketIDsOfConsumers();
+        for (sid of getSocketIDs) {
+          io.to(sId).emit(SOCKET_EVENTS.REPLACED_TRACK, data);
+        }
+      }
+    }
+  } catch (err) {
+    console.log("Error in RManager in replacing track handler", err);
+  }
+};
+
 module.exports = {
   joinRoomPreviewSocketHandler,
   joinRoomSocketHandler,
@@ -715,4 +1073,17 @@ module.exports = {
   leaveRoomSocketHandler,
   endMeetSocketHandler,
   startRecordingSocketHandler,
+  chatMsgSocketHandler,
+  questionMsgSentByStudentSocketHandler,
+  kickOutFromClassSocketHandler,
+  questionsSocketHandler,
+  stopProducingSocketHandler,
+  uploadFileSocketHandler,
+  setIsAudioStreamSocketEnabled,
+  blockOrUnblockMicSocketHandler,
+  muteMicCommandByMentorSocketHandler,
+  studentTestAnswerResponseSocketHandler,
+  pollTimeIncreaseSocketHandler,
+  stopRecordingSocketHandler,
+  replaceTrackSocketHandler,
 };

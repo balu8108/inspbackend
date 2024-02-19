@@ -70,6 +70,19 @@ const {
   leaveRoomSocketHandler,
   endMeetSocketHandler,
   startRecordingSocketHandler,
+  chatMsgSocketHandler,
+  questionMsgSentByStudentSocketHandler,
+  kickOutFromClassSocketHandler,
+  questionsSocketHandler,
+  stopProducingSocketHandler,
+  uploadFileSocketHandler,
+  setIsAudioStreamSocketEnabled,
+  blockOrUnblockMicSocketHandler,
+  muteMicCommandByMentorSocketHandler,
+  pollTimeIncreaseSocketHandler,
+  stopRecordingSocketHandler,
+  studentTestAnswerResponseSocketHandler,
+  replaceTrackSocketHandler,
 } = require("./socketcontrollers/socketFunctions");
 
 app.use(express.json({ limit: "200mb" }));
@@ -266,22 +279,27 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
     // consumerResumeHandler(data, socket, mediaSoupWorkers); // Depreceted architecture
   });
   socket.on(SOCKET_EVENTS.CHAT_MSG_TO_SERVER, (data) => {
-    chatMsgHandler(data, socket);
+    chatMsgSocketHandler(data, socket);
+    // chatMsgHandler(data, socket); // Deprecated architecture
   });
   socket.on(SOCKET_EVENTS.QUESTION_SENT_TO_SERVER, (data, callback) => {
-    questionsHandler(data, callback, socket);
+    questionsSocketHandler(data, callback, socket);
+    // questionsHandler(data, callback, socket); // Deprecated Architecture
   });
   socket.on(SOCKET_EVENTS.ANSWER_SENT_TO_SERVER, (data) => {
-    studentTestAnswerResponseHandler(data, socket, io);
+    studentTestAnswerResponseSocketHandler(data, socket, io);
+    // studentTestAnswerResponseHandler(data, socket, io); // Deprecated Architecture
   });
   socket.on(SOCKET_EVENTS.STOP_PRODUCING, (data) => {
-    stopProducingHandler(data, socket);
+    stopProducingSocketHandler(data, socket);
+    // stopProducingHandler(data, socket); // Deprecated architecture
   });
   socket.on(SOCKET_EVENTS.RAISE_HAND_TO_SERVER, (data) => {
     raiseHandHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.UPLOAD_FILE_TO_SERVER, (data, callback) => {
-    uploadFileHandler(data, callback, socket);
+    uploadFileSocketHandler(data, callback, socket);
+    // uploadFileHandler(data, callback, socket); // Deprecated architecture
   });
   socket.on(SOCKET_EVENTS.PRODUCER_PAUSE, (data) => {
     producerPauseSocketHandler(data, socket);
@@ -292,32 +310,39 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
     // producerResumeHandler(data, socket); // deprecated  architecture
   });
   socket.on(SOCKET_EVENTS.REPLACE_TRACK, (data) => {
-    replaceTrackHandler(data, socket);
+    replaceTrackSocketHandler(data, socket);
+    // replaceTrackHandler(data, socket); // deprecated  architecture
   });
   socket.on(SOCKET_EVENTS.START_RECORDING, (data) => {
     startRecordingSocketHandler(data, socket);
     // startRecordingHandler(data, socket); // deprecated architecture
   });
   socket.on(SOCKET_EVENTS.STOP_RECORDING, () => {
-    stopRecordingHandler(socket);
+    stopRecordingSocketHandler(socket);
+    // stopRecordingHandler(socket);
   });
   socket.on(SOCKET_EVENTS.MIRO_BOARD_DATA_TO_SERVER, (data) => {
     miroBoardDataHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.IS_AUDIO_STREAM_ENABLED_TO_SERVER, (data) => {
-    setIsAudioStreamEnabled(data, socket, io);
+    setIsAudioStreamSocketEnabled(data, socket, io);
+    // setIsAudioStreamEnabled(data, socket, io); // Deprecated architecture
   });
   socket.on(SOCKET_EVENTS.BLOCK_OR_UNBLOCK_MIC_TO_SERVER, (data) => {
-    blockOrUnblockMicHandler(data, socket, io);
+    blockOrUnblockMicSocketHandler(data, socket, io);
+    // blockOrUnblockMicHandler(data, socket, io);   // Deprecated architecture
   });
   socket.on(SOCKET_EVENTS.MUTE_MIC_COMMAND_BY_MENTOR_TO_SERVER, (data) => {
-    muteMicCommandByMentorHandler(data, socket, io);
+    muteMicCommandByMentorSocketHandler(data, socket, io);
+    // muteMicCommandByMentorHandler(data, socket, io);  // Deprecated architecture
   });
   socket.on(SOCKET_EVENTS.KICK_OUT_FROM_CLASS_TO_SERVER, (data) => {
-    kickOutFromClassHandler(data, socket, io);
+    kickOutFromClassSocketHandler(data, socket, io);
+    // kickOutFromClassHandler(data, socket, io); // Deprecated architecture
   });
   socket.on(SOCKET_EVENTS.QUESTION_MSG_SENT_TO_SERVER, (data, callback) => {
-    questionMsgSentByStudentHandler(data, callback, socket, io);
+    questionMsgSentByStudentSocketHandler(data, callback, socket, io);
+    // questionMsgSentByStudentHandler(data, callback, socket, io); // Deprecated architecture
   });
   socket.on(SOCKET_EVENTS.LEAVE_ROOM, (callback) => {
     leaveRoomSocketHandler(callback, socket, mediaSoupWorkers, io);
@@ -330,7 +355,8 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
     console.log("Client ended the meet", socket.id);
   });
   socket.on(SOCKET_EVENTS.POLL_TIME_INCREASE_TO_SERVER, (data) => {
-    pollTimeIncreaseHandler(data, socket);
+    pollTimeIncreaseSocketHandler(data, socket);
+    // pollTimeIncreaseHandler(data, socket); // Deprecated architecture
   });
   socket.on(SOCKET_EVENTS.DISCONNECT, () => {
     disconnectSocketHandler(socket, mediaSoupWorkers, io);
