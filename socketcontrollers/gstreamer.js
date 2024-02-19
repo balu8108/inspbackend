@@ -66,11 +66,11 @@ module.exports = class GStreamer {
     });
 
     this._process.stderr.on("data", (data) => {
-      // console.log("gstreamer::process::stderr::data [data:%o]", data);
+      console.log("gstreamer::process::stderr::data [data:%o]", data);
     });
 
     this._process.stdout.on("data", (data) => {
-      // console.log("gstreamer::process::stdout::data [data:%o]", data);
+      console.log("gstreamer::process::stdout::data [data:%o]", data);
     });
   }
 
