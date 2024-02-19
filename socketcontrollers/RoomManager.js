@@ -624,6 +624,11 @@ class RoomManager extends EventEmitter {
       this._removeItems("transports", socketId);
       if (socketId in this._peers) {
         const leavingPeer = this._peers[socketId];
+
+        if (leavingPeer.recordProcess !== null) {
+          leavingPeer.recordProcess.kill();
+          leavingPeer.recordProcess = null;
+        }
         this._removePeer(socketId);
         const peerCountInRoom = this._checkPeerCountInRoom();
         // TODO check peer count if 0 then close all router of this room
