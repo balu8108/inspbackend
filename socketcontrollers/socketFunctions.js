@@ -185,10 +185,9 @@ const createOrJoinRoomFunction = async (
         allRooms.set(roomId, room);
         room.on("close", () => {
           allRooms.delete(roomId);
-          console.log("room deleted", allRooms);
         });
         // Now add this new peer to room
-        console.log("leaer board", leaderBoardData);
+
         const { peer, routerId, leaderBoardArray, rtpCapabilities } =
           await room._joinRoomPeerHandler(newPeerDetails, leaderBoardData);
         return {
@@ -354,7 +353,7 @@ const getProducersSocketHandler = async (
       const room = allRooms.get(roomId);
       if (roomId && room) {
         const producerList = await room._getProducerList(socketId);
-        console.log("producer list returned ", producerList);
+
         callback(producerList);
       }
     }
@@ -492,7 +491,6 @@ const connectWebRTCTransportRecvSocketHandler = async (
   mediaSoupworkers
 ) => {
   try {
-    console.log("connect recv");
     const { dtlsParameters, serverConsumerTransportId } = data;
     const socketId = socket.id;
     if (allPeers.has(socketId)) {
@@ -623,7 +621,6 @@ const disconnectSocketHandler = async (socket, mediaSoupworkers, io) => {
           // Delete room as well
           allRooms.delete(roomId);
         }
-        console.log("rooms after delete", allRooms);
 
         io.to(roomId).emit(SOCKET_EVENTS.PEER_LEAVED, {
           peerLeaved: leavingPeer.peerDetails,
@@ -664,7 +661,6 @@ const leaveRoomSocketHandler = async (
           // Delete room as well
           allRooms.delete(roomId);
         }
-        console.log("rooms after leaving", allRooms);
 
         io.to(roomId).emit(SOCKET_EVENTS.PEER_LEAVED, {
           peerLeaved: leavingPeer.peerDetails,
@@ -681,7 +677,7 @@ const endMeetSocketHandler = async (socket, mediaSoupworkers, io) => {
     const socketId = socket.id;
     if (allPeers.has(socketId)) {
       const roomId = allPeers.get(socketId)?.roomId;
-      console.log("roomId ", roomId);
+
       if (roomId) {
         io.in(roomId).emit(SOCKET_EVENTS.END_MEET_FROM_SERVER); // It will instruct the peers to disconnect
 
@@ -758,7 +754,6 @@ const questionMsgSentByStudentSocketHandler = (data, callback, socket, io) => {
       const room = allRooms.get(roomId);
       if (roomId && room) {
         const mentors = room._getRoomMentors();
-        console.log("mentors in room", mentors);
         callback({ success: true, data: { questionMsg, peerDetails } });
         if (mentors.length > 0) {
           mentors.forEach((mentor) => {
@@ -809,7 +804,7 @@ const questionsSocketHandler = async (data, callback, socket) => {
       const room = allRooms.get(roomId);
       if (roomId && classPk && room) {
         const questionData = room._addTestQuestion(socketId, qId, data);
-        console.log("questions data", questionData);
+
         // Seed question log to db
         await LiveClassTestQuestionLog.create({
           logInfo: liveClassTestQuestionLogInfo.NEW_QUESTION_ADDED,
@@ -913,7 +908,7 @@ const setIsAudioStreamSocketEnabled = (data, socket, io) => {
     if (allPeers.has(socketId)) {
       const roomId = allPeers.get(socketId)?.roomId;
       const peerDetails = allPeers.get(socketId)?.peerDetails;
-      console.log("audio enabling stream data", data, peerDetails);
+
       if (roomId && peerDetails) {
         io.in(roomId).emit(SOCKET_EVENTS.IS_AUDIO_STREAM_ENABLED_FROM_SERVER, {
           ...data,
@@ -968,8 +963,6 @@ const muteMicCommandByMentorSocketHandler = (data, socket, io) => {
         if (peer) {
           const aPeer = allPeers.get(peerSocketId);
           aPeer.peerDetails = peer.peerDetails;
-          console.log("all peer after mute mic by mentor", allPeers);
-          console.log("peer details", peer.peerDetails);
           io.to(peerSocketId).emit(
             SOCKET_EVENTS.MUTE_MIC_COMMAND_BY_MENTOR_FROM_SERVER,
             peer.peerDetails
