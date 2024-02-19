@@ -22,6 +22,10 @@ const {
   playRecording,
 } = require("./recordingscontrollers/recordingsController");
 
+const {
+  getAllCrashCourseLecture
+} = require("./crashcoursecontroller/crashCourserController");
+
 module.exports = {
   loginHandler,
   getAllSubjects,
@@ -39,5 +43,6 @@ module.exports = {
   getRecordingsByTopicOnly,
   viewRecording,
   playRecording,
-  getLectureNo
+  getLectureNo,
+  getAllCrashCourseLecture
 };
