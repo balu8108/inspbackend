@@ -23,7 +23,7 @@ const RECORD_PROCESS_NAME = "GStreamer";
 
 const config = require("./config");
 
-const ROUTER_SCALE_SIZE = 2;
+const ROUTER_SCALE_SIZE = 50;
 class RoomManager extends EventEmitter {
   constructor({ roomId, mediaSoupRouters, mediaSoupWorkers }) {
     super();
