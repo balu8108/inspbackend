@@ -154,10 +154,7 @@ const createOrJoinRoomFunction = async (
 
       let newPeerDetails = {
         socketId: socketId,
-        id:
-          ENVIRON !== "local"
-            ? authData.id
-            : authData.id + Math.floor(Math.random() * (10000 - 1 + 1)) + 1,
+        id: authData.id,
         name:
           ENVIRON !== "local"
             ? authData.name
@@ -239,6 +236,10 @@ const joinRoomSocketHandler = async (
 ) => {
   try {
     const { authData } = socket;
+    if (!authData) {
+      callback({ success: false, errMsg: "Something went wrong" });
+      return;
+    }
     const {
       success,
       roomId,
@@ -257,7 +258,7 @@ const joinRoomSocketHandler = async (
     if (success === false) {
       callback({ success: false, errMsg }); // No room id/something not supplied
     } else {
-      allPeers.set(socket.id, {
+      allPeers.set(peer.id, {
         socket,
         roomId,
         routerId,
@@ -290,10 +291,10 @@ const joinRoomSocketHandler = async (
   }
 };
 
-const addTransportIdInAllPeers = (socketId, transport) => {
+const addTransportIdInAllPeers = (authId, socketId, transport) => {
   try {
-    if (allPeers.has(socketId)) {
-      const peer = allPeers.get(socketId);
+    if (allPeers.has(authId)) {
+      const peer = allPeers.get(authId);
       peer.transports.push(transport.id);
     }
   } catch (err) {
@@ -310,14 +311,16 @@ const createWebRtcTransportSocketHandler = async (
 ) => {
   try {
     const { consumer } = data;
+    const { authData } = socket;
     const socketId = socket.id;
-    if (allPeers.has(socketId)) {
+    if (authData && allPeers.has(authData.id)) {
       // Peer found
-      const roomId = allPeers.get(socketId)?.roomId;
-      const routerId = allPeers.get(socketId)?.routerId;
+      const roomId = allPeers.get(authData.id)?.roomId;
+      const routerId = allPeers.get(authData.id)?.routerId;
       if (roomId && routerId) {
         const room = allRooms.get(roomId);
         const transport = await room._createWebRtcTransportCreator(
+          authData.id,
           routerId,
           socketId,
           consumer
@@ -332,7 +335,7 @@ const createWebRtcTransportSocketHandler = async (
             },
           };
           callback(dtlsData);
-          addTransportIdInAllPeers(socketId, transport); // May be not required later on
+          addTransportIdInAllPeers(authData.id, socketId, transport); // May be not required later on
         }
       }
     }
@@ -348,12 +351,12 @@ const getProducersSocketHandler = async (
 ) => {
   try {
     const socketId = socket.id;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
+    const { authData } = socket;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
       const room = allRooms.get(roomId);
       if (roomId && room) {
-        const producerList = await room._getProducerList(socketId);
-
+        const producerList = await room._getProducerList(authData.id, socketId);
         callback(producerList);
       }
     }
@@ -368,15 +371,16 @@ const connectWebRTCTransportSendSocketHandler = (
   mediaSoupworkers
 ) => {
   try {
-    console.log("connnecting send socket");
+    const { authData } = socket;
     const { dtlsParameters } = data;
     const socketId = socket.id;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
-      const peerTransportIds = allPeers.get(socketId)?.transports;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
+      const peerTransportIds = allPeers.get(authData.id)?.transports;
       const room = allRooms.get(roomId);
       if (roomId && room) {
         room._connectWebRtcSendTransport(
+          authData.id,
           socketId,
           dtlsParameters,
           peerTransportIds
@@ -388,21 +392,22 @@ const connectWebRTCTransportSendSocketHandler = (
   }
 };
 
-const addProducerIdInAllPeers = (socketId, producer) => {
+const addProducerIdInAllPeers = (authId, socketId, producer) => {
   try {
-    if (allPeers.has(socketId)) {
-      const peer = allPeers.get(socketId);
+    if (allPeers.has(authId)) {
+      const peer = allPeers.get(authId);
       peer.producers.push(producer.id);
+      console.log("all peer after adding producer", allPeers);
     }
   } catch (err) {
     console.log("Error in adding producer", err);
   }
 };
 
-const addConsumerIdInAllPeers = (socketId, consumer) => {
+const addConsumerIdInAllPeers = (authId, socketId, consumer) => {
   try {
-    if (allPeers.has(socketId)) {
-      const peer = allPeers.get(socketId);
+    if (allPeers.has(authId)) {
+      const peer = allPeers.get(authId);
       peer.consumers.push(consumer.id);
     }
   } catch (err) {
@@ -417,15 +422,17 @@ const transportProduceSocketHandler = async (
   mediaSoupworkers
 ) => {
   try {
+    const { authData } = socket;
     const { kind, rtpParameters, appData } = data;
     const socketId = socket.id;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
-      const routerId = allPeers.get(socketId)?.routerId;
-      const peerTransportIds = allPeers.get(socketId)?.transports;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
+      const routerId = allPeers.get(authData.id)?.routerId;
+      const peerTransportIds = allPeers.get(authData.id)?.transports;
       const room = allRooms.get(roomId);
       if (roomId && room && routerId) {
         const producer = await room._transportProduce(
+          authData.id,
           socketId,
           routerId,
           peerTransportIds,
@@ -434,7 +441,7 @@ const transportProduceSocketHandler = async (
           appData
         );
         // Adding Producer id in allPeers list
-        addProducerIdInAllPeers(socketId, producer);
+        addProducerIdInAllPeers(authData.id, socketId, producer);
         socket.to(roomId).emit(SOCKET_EVENTS.NEW_PRODUCER, {
           producerId: producer.id,
           appData: appData,
@@ -453,10 +460,11 @@ const transportProduceSocketHandler = async (
 
 const producerPauseSocketHandler = (data, socket) => {
   try {
+    const { authData } = socket;
     const socketId = socket.id;
     const { appData, producerId } = data;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
       const room = allRooms.get(roomId);
       if (roomId && room) {
         room._pausingProducer(producerId);
@@ -470,10 +478,11 @@ const producerPauseSocketHandler = (data, socket) => {
 
 const producerResumeSocketHandler = (data, socket) => {
   try {
+    const { authData } = socket;
     const socketId = socket.id;
     const { appData, producerId } = data;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
       const room = allRooms.get(roomId);
       if (roomId && room) {
         room._resumingProducer(producerId);
@@ -491,14 +500,16 @@ const connectWebRTCTransportRecvSocketHandler = async (
   mediaSoupworkers
 ) => {
   try {
+    const { authData } = socket;
     const { dtlsParameters, serverConsumerTransportId } = data;
     const socketId = socket.id;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
-      const peerTransportIds = allPeers.get(socketId)?.transports;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
+      const peerTransportIds = allPeers.get(authData.id)?.transports;
       const room = allRooms.get(roomId);
       if (roomId && room) {
         await room._connectWebRtcRecvTransport(
+          authData.id,
           socketId,
           dtlsParameters,
           serverConsumerTransportId,
@@ -518,6 +529,7 @@ const consumeSocketHandler = async (
   mediaSoupworkers
 ) => {
   try {
+    const { authData } = socket;
     const socketId = socket.id;
     const {
       rtpCapabilities,
@@ -526,13 +538,14 @@ const consumeSocketHandler = async (
       appData,
     } = data;
 
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
-      const routerId = allPeers.get(socketId)?.routerId;
-      const peerTransportIds = allPeers.get(socketId)?.transports;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
+      const routerId = allPeers.get(authData.id)?.routerId;
+      const peerTransportIds = allPeers.get(authData.id)?.transports;
       const room = allRooms.get(roomId);
       if (roomId && routerId && room) {
         const consumer = await room._transportConsumer(
+          authData.id,
           socketId,
           routerId,
           peerTransportIds,
@@ -543,7 +556,7 @@ const consumeSocketHandler = async (
         );
         // Adding Producer id in allPeers list
         if (consumer) {
-          addConsumerIdInAllPeers(socketId, consumer);
+          addConsumerIdInAllPeers(authData.id, socketId, consumer);
           console.log("all peers after adding consumer", allPeers);
 
           consumer.on(SOCKET_EVENTS.PRODUCERPAUSE, () => {
@@ -590,10 +603,11 @@ const consumeSocketHandler = async (
 
 const consumerResumeSocketHandler = async (data, socket, mediaSoupworkers) => {
   try {
+    const { authData } = socket;
     const socketId = socket.id;
     const { serverConsumerId } = data;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
       const room = allRooms.get(roomId);
       if (roomId && room) {
         await room._resumingConsumer(serverConsumerId);
@@ -606,16 +620,18 @@ const consumerResumeSocketHandler = async (data, socket, mediaSoupworkers) => {
 
 const disconnectSocketHandler = async (socket, mediaSoupworkers, io) => {
   try {
+    const { authData } = socket;
     const socketId = socket.id;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
       const room = allRooms.get(roomId);
       if (roomId && room) {
         const { peerCountInRoom, leavingPeer } =
-          room._disconnectingOrLeavingPeer(socketId);
+          room._disconnectingOrLeavingPeer(authData.id, socketId);
         // Remove this leaving peer from allPeers global list
         //TODO: stop recording processs
-        allPeers.delete(socketId);
+        // allPeers.delete(socketId);
+        allPeers.delete(authData.id);
         socket.leave(roomId);
         if (peerCountInRoom === 0) {
           // Delete room as well
@@ -639,16 +655,18 @@ const leaveRoomSocketHandler = async (
   io
 ) => {
   try {
+    const { authData } = socket;
     const socketId = socket.id;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
       const room = allRooms.get(roomId);
       if (roomId && room) {
         const { peerCountInRoom, leavingPeer } =
-          room._disconnectingOrLeavingPeer(socketId);
+          room._disconnectingOrLeavingPeer(authData.id, socketId);
         // Remove this leaving peer from allPeers global list
         //TODO: stop recording processs
-        allPeers.delete(socketId);
+        // allPeers.delete(socketId);
+        allPeers.delete(authData.id);
 
         const { success, isFeedback, feedBackTopicId } =
           await isFeedbackProvided(leavingPeer.peerDetails, roomId);
@@ -674,9 +692,10 @@ const leaveRoomSocketHandler = async (
 
 const endMeetSocketHandler = async (socket, mediaSoupworkers, io) => {
   try {
+    const { authData } = socket;
     const socketId = socket.id;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
 
       if (roomId) {
         io.in(roomId).emit(SOCKET_EVENTS.END_MEET_FROM_SERVER); // It will instruct the peers to disconnect
@@ -697,16 +716,17 @@ const endMeetSocketHandler = async (socket, mediaSoupworkers, io) => {
 
 const startRecordingSocketHandler = async (data, socket) => {
   try {
-    console.log("start recording ");
+    const { authData } = socket;
     const socketId = socket.id;
     const { producerScreenShare, producerAudioShare } = data;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
-      const classPk = allPeers.get(socketId)?.classPk;
-      const routerId = allPeers.get(socketId)?.routerId;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
+      const classPk = allPeers.get(authData.id)?.classPk;
+      const routerId = allPeers.get(authData.id)?.routerId;
       const room = allRooms.get(roomId);
       if (roomId && routerId && room) {
         const recordData = await room._startRecording(
+          authData.id,
           socketId,
           routerId,
           producerScreenShare,
@@ -728,10 +748,11 @@ const startRecordingSocketHandler = async (data, socket) => {
 
 const chatMsgSocketHandler = (data, socket) => {
   try {
+    const { authData } = socket;
     const socketId = socket.id;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
-      const peerDetails = allPeers.get(socketId)?.peerDetails;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
+      const peerDetails = allPeers.get(authData.id)?.peerDetails;
       const { msg } = data;
       // No need for room we can directly pass it from here
       socket.to(roomId).emit(SOCKET_EVENTS.CHAT_MSG_FROM_SERVER, {
@@ -746,11 +767,12 @@ const chatMsgSocketHandler = (data, socket) => {
 
 const questionMsgSentByStudentSocketHandler = (data, callback, socket, io) => {
   try {
+    const { authData } = socket;
     const socketId = socket.id;
     const { questionMsg } = data;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
-      const peerDetails = allPeers.get(socketId)?.peerDetails;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
+      const peerDetails = allPeers.get(authData.id)?.peerDetails;
       const room = allRooms.get(roomId);
       if (roomId && room) {
         const mentors = room._getRoomMentors();
@@ -774,10 +796,12 @@ const questionMsgSentByStudentSocketHandler = (data, callback, socket, io) => {
 
 const kickOutFromClassSocketHandler = async (data, socket, io) => {
   try {
+    const { authData } = socket;
     const socketId = socket.id;
     const { peerSocketId, peerId } = data;
-    if (allPeers.has(socketId)) {
-      const classPk = allPeers.get(socketId)?.classPk;
+    console.log("peer id of kicking out", peerId);
+    if (authData && allPeers.has(authData.id)) {
+      const classPk = allPeers.get(authData.id)?.classPk;
       if (classPk && peerSocketId && peerId) {
         // TODO write in db that this user is kicked out from class
         await LiveClassBlockedPeer.create({
@@ -795,15 +819,21 @@ const kickOutFromClassSocketHandler = async (data, socket, io) => {
 
 const questionsSocketHandler = async (data, callback, socket) => {
   try {
+    const { authData } = socket;
     const socketId = socket.id;
     const qId = uuidv4();
     console.log("question triggerd");
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
-      const classPk = allPeers.get(socketId)?.classPk;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
+      const classPk = allPeers.get(authData.id)?.classPk;
       const room = allRooms.get(roomId);
       if (roomId && classPk && room) {
-        const questionData = room._addTestQuestion(socketId, qId, data);
+        const questionData = room._addTestQuestion(
+          authData.id,
+          socketId,
+          qId,
+          data
+        );
 
         // Seed question log to db
         await LiveClassTestQuestionLog.create({
@@ -828,13 +858,18 @@ const questionsSocketHandler = async (data, callback, socket) => {
 
 const stopProducingSocketHandler = (data, socket) => {
   try {
+    const { authData } = socket;
     const { producerId, producerAppData } = data;
     const socketId = socket.id;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
       const room = allRooms.get(roomId);
       if (roomId && room) {
-        const isStopped = room._stopProducing(socketId, producerId);
+        const isStopped = room._stopProducing(
+          authData.id,
+          socketId,
+          producerId
+        );
         if (isStopped) {
           socket.to(roomId).emit(SOCKET_EVENTS.SOME_PRODUCER_CLOSED, {
             producerId,
@@ -850,9 +885,10 @@ const stopProducingSocketHandler = (data, socket) => {
 
 const uploadFileSocketHandler = async (data, callback, socket) => {
   try {
+    const { authData } = socket;
     const socketId = socket.id;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
 
       if (roomId) {
         const getRoom = await LiveClassRoom.findOne({
@@ -904,10 +940,11 @@ const uploadFileSocketHandler = async (data, callback, socket) => {
 
 const setIsAudioStreamSocketEnabled = (data, socket, io) => {
   try {
+    const { authData } = socket;
     const socketId = socket.id;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
-      const peerDetails = allPeers.get(socketId)?.peerDetails;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
+      const peerDetails = allPeers.get(authData.id)?.peerDetails;
 
       if (roomId && peerDetails) {
         io.in(roomId).emit(SOCKET_EVENTS.IS_AUDIO_STREAM_ENABLED_FROM_SERVER, {
@@ -925,14 +962,14 @@ const blockOrUnblockMicSocketHandler = (data, socket, io) => {
   try {
     const { value, peerSocketId, peerId } = data;
     const socketId = socket.id;
-    if (allPeers.has(peerSocketId)) {
-      const roomId = allPeers.get(peerSocketId)?.roomId;
+    if (peerId && allPeers.has(peerId)) {
+      const roomId = allPeers.get(peerId)?.roomId;
       const room = allRooms.get(roomId);
       if (roomId && room) {
-        const peer = room._updateMicBlockOrUnblock(peerSocketId, value);
+        const peer = room._updateMicBlockOrUnblock(peerId, peerSocketId, value);
         if (peer) {
           // Update allPeers
-          const aPeer = allPeers.get(peerSocketId);
+          const aPeer = allPeers.get(peerId);
           aPeer.peerDetails = peer.peerDetails;
           // inform the targetted peer about block or unblock of his mic
           io.to(peerSocketId).emit(
@@ -954,14 +991,14 @@ const blockOrUnblockMicSocketHandler = (data, socket, io) => {
 
 const muteMicCommandByMentorSocketHandler = (data, socket, io) => {
   try {
-    const { value, peerSocketId } = data;
-    if (allPeers.has(peerSocketId)) {
-      const roomId = allPeers.get(peerSocketId)?.roomId;
+    const { value, peerSocketId, peerId } = data;
+    if (peerId && allPeers.has(peerId)) {
+      const roomId = allPeers.get(peerId)?.roomId;
       const room = allRooms.get(roomId);
       if (roomId && room) {
-        const peer = room._muteMicCommandByMentor(peerSocketId, value);
+        const peer = room._muteMicCommandByMentor(peerId, peerSocketId, value);
         if (peer) {
-          const aPeer = allPeers.get(peerSocketId);
+          const aPeer = allPeers.get(peerId);
           aPeer.peerDetails = peer.peerDetails;
           io.to(peerSocketId).emit(
             SOCKET_EVENTS.MUTE_MIC_COMMAND_BY_MENTOR_FROM_SERVER,
@@ -977,13 +1014,15 @@ const muteMicCommandByMentorSocketHandler = (data, socket, io) => {
 
 const studentTestAnswerResponseSocketHandler = (data, socket, io) => {
   try {
+    const { authData } = socket;
     const socketId = socket.id;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
-      const classPk = allPeers.get(socketId)?.classPk;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
+      const classPk = allPeers.get(authData.id)?.classPk;
       const room = allRooms.get(roomId);
       if (roomId && room && classPk) {
         const updatedLeaderBoard = room._updateLeaderBoard(
+          authData.id,
           socketId,
           classPk,
           data
@@ -1002,10 +1041,11 @@ const studentTestAnswerResponseSocketHandler = (data, socket, io) => {
 
 const pollTimeIncreaseSocketHandler = (data, socket) => {
   try {
+    const { authData } = socket;
     const socketId = socket.id;
     const { questionId, timeIncreaseBy } = data;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
       const room = allRooms.get(roomId);
       if (roomId && room) {
         room._increasePollTime(questionId, timeIncreaseBy);
@@ -1019,12 +1059,13 @@ const pollTimeIncreaseSocketHandler = (data, socket) => {
 
 const stopRecordingSocketHandler = (socket) => {
   try {
+    const { authData } = socket;
     const socketId = socket.id;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
       const room = allRooms.get(roomId);
       if (roomId && room) {
-        room._stopRecording(socketId);
+        room._stopRecording(authData.id, socketId);
       }
     }
   } catch (err) {
@@ -1034,9 +1075,10 @@ const stopRecordingSocketHandler = (socket) => {
 
 const replaceTrackSocketHandler = (data, io, socket) => {
   try {
+    const { authData } = socket;
     const socketId = socket.id;
-    if (allPeers.has(socketId)) {
-      const roomId = allPeers.get(socketId)?.roomId;
+    if (authData && allPeers.has(authData.id)) {
+      const roomId = allPeers.get(authData.id)?.roomId;
       const room = allRooms.get(roomId);
       if (roomId && room) {
         const getSocketIDs = room._getSocketIDsOfConsumers();

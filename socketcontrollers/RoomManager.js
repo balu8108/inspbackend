@@ -150,7 +150,8 @@ class RoomManager extends EventEmitter {
   }
 
   _isPeerAlreadyExisted(peerDetails) {
-    return peerDetails.socketId in this._peers;
+    // Getting auth data in peerDetails.id
+    return peerDetails.id in this._peers;
   }
 
   _getAllPeersInRoom() {
@@ -292,14 +293,14 @@ class RoomManager extends EventEmitter {
       );
 
       const routerId = await this._getRouterId(); // get best router to assign this newPeer
-      this._peers[newPeerDetails?.socketId] = {
+      this._peers[newPeerDetails?.id] = {
         routerId,
         peerDetails: newPeerDetails,
       };
 
       if (newPeerDetails?.isTeacher) {
         // Add it to mentor object as well
-        this._mentors[newPeerDetails?.socketId] = {
+        this._mentors[newPeerDetails?.id] = {
           routerId,
           peerDetails: newPeerDetails,
         };
@@ -317,14 +318,20 @@ class RoomManager extends EventEmitter {
     }
   }
 
-  async _createWebRtcTransportCreator(routerId, socketId, consumer) {
+  async _createWebRtcTransportCreator(authId, routerId, socketId, consumer) {
     try {
       const roomId = this._roomId;
       if (this._mediaSoupRouters.has(routerId)) {
         const webRtcOptions = config.webRtcTransport;
         const router = this._mediaSoupRouters.get(routerId);
         const transport = await router.createWebRtcTransport(webRtcOptions);
-        const transportWithMeta = { socketId, transport, roomId, consumer }; // Extra info required
+        const transportWithMeta = {
+          userId: authId,
+          socketId,
+          transport,
+          roomId,
+          consumer,
+        }; // Extra info required
         transport.on(SOCKET_EVENTS.DTLS_STATE_CHANGE, (dtlsState) => {
           if (dtlsState === "closed") {
             transport.close();
@@ -346,15 +353,12 @@ class RoomManager extends EventEmitter {
     }
   }
 
-  async _getProducerList(socketId) {
+  async _getProducerList(authId, socketId) {
     try {
       const producerInRoom = this._getProducersInRoom();
       const producerList = [];
       producerInRoom.forEach((producer) => {
-        if (
-          producer.roomId === this._roomId &&
-          producer.socketId !== socketId
-        ) {
+        if (producer.roomId === this._roomId && producer.userId !== authId) {
           let obj = {
             producerId: producer.producer.id,
             appData: producer.producer.appData,
@@ -368,17 +372,15 @@ class RoomManager extends EventEmitter {
     }
   }
 
-  _getProducerTransport(socketId, peerTransportIds) {
+  _getProducerTransport(authId, socketId, peerTransportIds) {
     // Returns the producer transport and connects it with dtlsParamaters
     try {
       if (peerTransportIds.length > 0) {
         for (const id of peerTransportIds) {
           if (id in this._transports) {
-            console.log("id", id);
             const transportWithMeta = this._transports[id];
-
             if (
-              transportWithMeta?.socketId === socketId &&
+              transportWithMeta?.userId === authId &&
               !transportWithMeta?.consumer
             ) {
               return transportWithMeta?.transport;
@@ -390,7 +392,12 @@ class RoomManager extends EventEmitter {
       console.log("Error in RManager get producer Transport", err);
     }
   }
-  _getConsumerTransport(socketId, serverConsumerTransportId, peerTransportIds) {
+  _getConsumerTransport(
+    authId,
+    socketId,
+    serverConsumerTransportId,
+    peerTransportIds
+  ) {
     try {
       if (peerTransportIds.length > 0) {
         for (const id of peerTransportIds) {
@@ -399,7 +406,7 @@ class RoomManager extends EventEmitter {
             const transportWithMeta = this._transports[id];
 
             if (
-              transportWithMeta?.socketId === socketId &&
+              transportWithMeta?.userId === authId &&
               transportWithMeta?.transport?.id === serverConsumerTransportId &&
               transportWithMeta?.consumer
             ) {
@@ -413,9 +420,15 @@ class RoomManager extends EventEmitter {
     }
   }
 
-  _connectWebRtcSendTransport(socketId, dtlsParameters, peerTransportIds) {
+  _connectWebRtcSendTransport(
+    authId,
+    socketId,
+    dtlsParameters,
+    peerTransportIds
+  ) {
     try {
       const producerTransport = this._getProducerTransport(
+        authId,
         socketId,
         peerTransportIds
       );
@@ -429,6 +442,7 @@ class RoomManager extends EventEmitter {
   }
 
   async _connectWebRtcRecvTransport(
+    authId,
     socketId,
     dtlsParameters,
     serverConsumerTransportId,
@@ -436,6 +450,7 @@ class RoomManager extends EventEmitter {
   ) {
     try {
       const consumerTransport = this._getConsumerTransport(
+        authId,
         socketId,
         serverConsumerTransportId,
         peerTransportIds
@@ -450,6 +465,7 @@ class RoomManager extends EventEmitter {
   }
 
   async _transportProduce(
+    authId,
     socketId,
     routerId,
     peerTransportIds,
@@ -461,6 +477,7 @@ class RoomManager extends EventEmitter {
       const roomId = this._roomId;
       const router = this._mediaSoupRouters.get(routerId);
       const producerTransport = this._getProducerTransport(
+        authId,
         socketId,
         peerTransportIds
       );
@@ -470,7 +487,7 @@ class RoomManager extends EventEmitter {
         appData,
       });
 
-      const producerWithMeta = { socketId, producer, roomId }; // Extra meta info required;
+      const producerWithMeta = { userId: authId, socketId, producer, roomId }; // Extra meta info required;
 
       this._producers[producer.id] = producerWithMeta;
       // TODO: Adding close producer
@@ -493,6 +510,7 @@ class RoomManager extends EventEmitter {
   }
 
   async _transportConsumer(
+    authId,
     socketId,
     routerId,
     peerTransportIds,
@@ -505,6 +523,7 @@ class RoomManager extends EventEmitter {
       const roomId = this._roomId;
       const router = this._mediaSoupRouters.get(routerId);
       const consumerTransport = this._getConsumerTransport(
+        authId,
         socketId,
         serverConsumerTransportId,
         peerTransportIds
@@ -519,7 +538,13 @@ class RoomManager extends EventEmitter {
           paused: true,
           appData: appData,
         });
-        this._consumers[consumer.id] = { socketId, consumer, roomId };
+        this._consumers[consumer.id] = {
+          userId: authId,
+          socketId,
+          consumer,
+          roomId,
+        };
+        console.log("this consumer", this._consumers);
 
         return consumer;
       }
@@ -564,13 +589,12 @@ class RoomManager extends EventEmitter {
       console.log("Error in RManager in resuming consumer", err);
     }
   }
-  _removeItems(type, socketId) {
+  _removeItems(authId, type, socketId) {
     try {
       if (type === "consumers") {
         for (let key in this._consumers) {
           const item = this._consumers[key];
-
-          if (item.socketId === socketId) {
+          if (item.userId === authId) {
             item?.consumer?.close(); // closing
             delete this._consumers[key];
           }
@@ -578,7 +602,7 @@ class RoomManager extends EventEmitter {
       } else if (type === "producers") {
         for (let key in this._producers) {
           const item = this._producers[key];
-          if (item.socketId === socketId) {
+          if (item.userId === authId) {
             item?.producer?.close(); // closing
             delete this._producers[key];
           }
@@ -586,7 +610,7 @@ class RoomManager extends EventEmitter {
       } else if (type === "transports") {
         for (let key in this._transports) {
           const item = this._transports[key];
-          if (item.socketId === socketId) {
+          if (item.userId === authId) {
             item?.transport?.close(); // closing
             delete this._transports[key];
           }
@@ -596,12 +620,12 @@ class RoomManager extends EventEmitter {
       console.log("Error in RManager in remvoing items", err);
     }
   }
-  _removePeer(socketId) {
+  _removePeer(authId, socketId) {
     // check if removing peer is mentor
-    if (this._mentors[socketId]) {
-      delete this._mentors[socketId];
+    if (authId in this._mentors) {
+      delete this._mentors[authId];
     }
-    delete this._peers[socketId];
+    delete this._peers[authId];
   }
 
   _removeAllRoutersOfRoom() {
@@ -617,19 +641,21 @@ class RoomManager extends EventEmitter {
   _removeLeaderBoardOfRoom() {
     delete this._leaderBoard[this._roomId];
   }
-  _disconnectingOrLeavingPeer(socketId) {
+  _disconnectingOrLeavingPeer(authId, socketId) {
     try {
-      this._removeItems("consumers", socketId);
-      this._removeItems("producers", socketId);
-      this._removeItems("transports", socketId);
-      if (socketId in this._peers) {
-        const leavingPeer = this._peers[socketId];
+      this._removeItems("consumers", authId, socketId);
+      this._removeItems("producers", authId, socketId);
+      this._removeItems("transports", authId, socketId);
+      console.log("Removed socket id");
+      if (authId in this._peers) {
+        const leavingPeer = this._peers[authId];
+        console.log("Leaving peer", leavingPeer);
 
-        if (leavingPeer.recordProcess !== null) {
+        if (leavingPeer?.recordProcess) {
           leavingPeer.recordProcess.kill();
           leavingPeer.recordProcess = null;
         }
-        this._removePeer(socketId);
+        this._removePeer(authId, socketId);
         const peerCountInRoom = this._checkPeerCountInRoom();
         // TODO check peer count if 0 then close all router of this room
         if (peerCountInRoom === 0) {
@@ -656,6 +682,7 @@ class RoomManager extends EventEmitter {
   };
 
   _publishProducerRTPStream = async (
+    authId,
     roomId,
     socketId,
     peer,
@@ -700,6 +727,7 @@ class RoomManager extends EventEmitter {
       });
       // adding to consumers
       this._consumers[rtpConsumer?.id] = {
+        userId: authId,
         socketId,
         consumer: rtpConsumer,
         roomId,
@@ -719,12 +747,20 @@ class RoomManager extends EventEmitter {
       console.log("Error in RManager in Publish Producer RTP", err);
     }
   };
-  _startRecord = async (roomId, socketId, peer, peerProducersList, router) => {
+  _startRecord = async (
+    authId,
+    roomId,
+    socketId,
+    peer,
+    peerProducersList,
+    router
+  ) => {
     try {
       let recordInfo = {};
       for (const obj of peerProducersList) {
         recordInfo["producerId"] = obj.producer.id;
         recordInfo[obj.producer.kind] = await this._publishProducerRTPStream(
+          authId,
           roomId,
           socketId,
           peer,
@@ -751,7 +787,7 @@ class RoomManager extends EventEmitter {
           for (const key in this._consumers) {
             const consumer = this._consumers[key];
 
-            if (consumer.socketId === socketId) {
+            if (consumer.userId === authId) {
               await consumer.consumer.resume();
 
               await consumer.consumer.requestKeyFrame();
@@ -767,15 +803,16 @@ class RoomManager extends EventEmitter {
   };
 
   async _startRecording(
+    authId,
     socketId,
     routerId,
     producerScreenShare,
     producerAudioShare
   ) {
     try {
-      if (socketId in this._peers && this._mediaSoupRouters.has(routerId)) {
+      if (authId in this._peers && this._mediaSoupRouters.has(routerId)) {
         const roomId = this._roomId;
-        const peer = this._peers[socketId];
+        const peer = this._peers[authId];
         const router = this._mediaSoupRouters.get(routerId);
 
         if (peer?.recordProcess) {
@@ -792,6 +829,7 @@ class RoomManager extends EventEmitter {
 
         if (peerProducersList.length > 0) {
           const recordData = await this._startRecord(
+            authId,
             roomId,
             socketId,
             peer,
@@ -807,7 +845,7 @@ class RoomManager extends EventEmitter {
     }
   }
 
-  _addTestQuestion(socketId, qId, data) {
+  _addTestQuestion(authId, socketId, qId, data) {
     try {
       const questionData = { ...data, questionId: qId };
       this._testQuestions[qId] = questionData;
@@ -817,12 +855,13 @@ class RoomManager extends EventEmitter {
     }
   }
 
-  _stopProducing(socketId, producerId) {
+  _stopProducing(authId, socketId, producerId) {
     try {
       if (producerId in this._producers) {
         // close this producer
         const producer = this._producers[producerId];
         producer.producer.close();
+        // TODO after close remove it from this._producers object and also from allPeers
         return true;
       }
       return false;
@@ -831,10 +870,10 @@ class RoomManager extends EventEmitter {
     }
   }
 
-  _updateMicBlockOrUnblock(peerSocketId, value) {
+  _updateMicBlockOrUnblock(peerId, peerSocketId, value) {
     try {
-      if (peerSocketId in this._peers) {
-        const peer = this._peers[peerSocketId];
+      if (peerId in this._peers) {
+        const peer = this._peers[peerId];
         if (peer && peer?.peerDetails) {
           peer.peerDetails.isAudioBlocked = value;
           if (value === true) {
@@ -849,10 +888,10 @@ class RoomManager extends EventEmitter {
     }
   }
 
-  _muteMicCommandByMentor(peerSocketId, value) {
+  _muteMicCommandByMentor(peerId, peerSocketId, value) {
     try {
-      if (peerSocketId in this._peers) {
-        const peer = this._peers[peerSocketId];
+      if (peerId in this._peers) {
+        const peer = this._peers[peerId];
         if (peer && peer?.peerDetails) {
           if (value === false) {
             // mostly mute command given by a mentor to student
@@ -878,11 +917,11 @@ class RoomManager extends EventEmitter {
     }
   }
 
-  _stopRecording(socketId) {
+  _stopRecording(authId, socketId) {
     try {
-      if (socketId in this._peers) {
-        const peer = this._peers[socketId];
-        if (peer.recordProcess !== null) {
+      if (authId in this._peers) {
+        const peer = this._peers[authId];
+        if (peer?.recordProcess) {
           peer.recordProcess.kill();
           peer.recordProcess = null;
         }
@@ -896,7 +935,10 @@ class RoomManager extends EventEmitter {
   _createOrUpdateLeaderBoard = async (classPk, roomId, leaderBoardData) => {
     try {
       const findStudentInLeaderBoard = await LeaderBoard.findOne({
-        where: { classRoomId: classPk, peerId: leaderBoardData.peerDetails.id },
+        where: {
+          classRoomId: classPk,
+          peerId: leaderBoardData?.peerDetails?.id,
+        },
       });
       if (findStudentInLeaderBoard) {
         // update there scorecard for this class or test
@@ -977,10 +1019,10 @@ class RoomManager extends EventEmitter {
     }
   }
 
-  _updateLeaderBoard(socketId, classPk, response) {
+  _updateLeaderBoard(authId, socketId, classPk, response) {
     try {
       const roomId = this._roomId;
-      const peerDetails = this._peers[socketId]?.peerDetails;
+      const peerDetails = this._peers[authId]?.peerDetails;
       if (peerDetails) {
         if (!this._leaderBoard[roomId]) {
           this._leaderBoard[roomId] = {};
