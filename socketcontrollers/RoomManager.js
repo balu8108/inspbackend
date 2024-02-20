@@ -266,7 +266,6 @@ class RoomManager extends EventEmitter {
       if (isObjectValid(leaderBoardObjects)) {
         this._leaderBoard[roomId] = leaderBoardObjects;
       }
-      // console.log("main leader board object", leaderBoard);
 
       const sortedLeaderBoard = Object.values(leaderBoardObjects).sort(
         (a, b) => {
@@ -306,7 +305,6 @@ class RoomManager extends EventEmitter {
         };
       }
 
-      console.log("this.peers druign join", this._peers);
       const rtpCapabilities = this._getRouterCapabilities(routerId);
       return {
         peer: newPeerDetails,
@@ -327,7 +325,6 @@ class RoomManager extends EventEmitter {
         const router = this._mediaSoupRouters.get(routerId);
         const transport = await router.createWebRtcTransport(webRtcOptions);
         const transportWithMeta = { socketId, transport, roomId, consumer }; // Extra info required
-        console.log("this transports in creating", this._transports);
         transport.on(SOCKET_EVENTS.DTLS_STATE_CHANGE, (dtlsState) => {
           if (dtlsState === "closed") {
             transport.close();
@@ -341,7 +338,6 @@ class RoomManager extends EventEmitter {
           // TODO: Require removal of transport from the room
         });
         this._transports[transport?.id] = transportWithMeta;
-        console.log("this transport", this._transports);
 
         return transport; // No need to return extra info just normal transport is fine
       }
@@ -444,7 +440,7 @@ class RoomManager extends EventEmitter {
         serverConsumerTransportId,
         peerTransportIds
       );
-      console.log("got the consumer Transport", consumerTransport);
+
       if (consumerTransport) {
         await consumerTransport.connect({ dtlsParameters });
       }
@@ -628,6 +624,11 @@ class RoomManager extends EventEmitter {
       this._removeItems("transports", socketId);
       if (socketId in this._peers) {
         const leavingPeer = this._peers[socketId];
+
+        if (leavingPeer.recordProcess !== null) {
+          leavingPeer.recordProcess.kill();
+          leavingPeer.recordProcess = null;
+        }
         this._removePeer(socketId);
         const peerCountInRoom = this._checkPeerCountInRoom();
         // TODO check peer count if 0 then close all router of this room
