@@ -6,6 +6,7 @@ const {
   getAllLiveClasses,
   getLiveClassDetails,
   getUpcomingClass,
+  getLectureNo
 } = require("../../controllers");
 const {
   isAuthenticated,
@@ -37,4 +38,11 @@ router.get(
   checkPaidStatusOrTeacher,
   getUpcomingClass
 );
+
+router.post(
+  `${routesConstants.GET_LECTURE_NO}`,
+  isAuthenticated,
+  getLectureNo
+)
+
 module.exports = router;

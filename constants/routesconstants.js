@@ -41,6 +41,10 @@ const routesConstants = Object.freeze({
   UPDATE_RECORDING_DATA: "/update-recording-data",
   VIEW_RECORDING: "/view-recording",
   PLAY_RECORDING: "/play-recording",
+  GET_LECTURE_NO:"/get-lecture-no",
+  CRASH_COURSE:"/crash-course",
+  GET_ALL_CRASH_COURSE_LECTURE: "/get-all-lecture",
+  GET_LECTURE_BY_ID: "/get-lecture-by-id/:roomId",
 });
 
 module.exports = routesConstants;

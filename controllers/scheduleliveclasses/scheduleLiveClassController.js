@@ -29,6 +29,7 @@ const createLiveClassRoom = async (randomCharacters, body, plainAuthData) => {
       mentorMobile: plainAuthData.mobile || "1234567890",
       subjectId: JSON.parse(body.subject).value,
       subjectName: JSON.parse(body.subject).label,
+      classType: JSON.parse(body.classType).value,
       classStatus: classStatus.SCHEDULED,
     });
     return { success: true, result: newLiveClass };
@@ -120,6 +121,7 @@ const createLiveClass = async (req, res) => {
           agenda: body.agenda,
           description: body.description,
           classRoomId: id,
+          lectureNo: body.lectureNo
         });
 
         result.liveClassRoomDetail = liveClassRoomDetail; // create parent child relationship however not necessary
@@ -189,9 +191,59 @@ const getUpcomingClass = async (req, res) => {
   }
 };
 
+const getLectureNo = async (req, res) => {
+
+  try {
+
+    const { subjectName, classType, chapterName, topicName } = req.body;
+
+    if (!subjectName || !classType || !chapterName || !topicName) {
+      return res.status(400).json({ error: "please send is required" });
+    }
+
+    let numberOfLecture = 0;
+    if (classType == "REGULARCLASS") {
+
+      const liveClassRooms = await LiveClassRoom.findAll({
+        where: {
+          subjectName: subjectName,
+          classType: classType
+        },
+        include: [{
+          model: LiveClassRoomDetail,
+          where: {
+            chapterName: chapterName,
+            topicName: topicName
+          },
+        }]
+      });
+      numberOfLecture = liveClassRooms.length;
+
+    } else if (classType == "CRASHCOURSE") {
+
+      const liveClassRooms = await LiveClassRoom.findAll({
+        where: {
+          subjectName: subjectName,
+          classType: classType
+        },
+        include: [{
+          model: LiveClassRoomDetail
+        }]
+      });
+      numberOfLecture = liveClassRooms.length;
+    }
+
+    return res.status(200).json({ data: numberOfLecture });
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+
+}
+
 module.exports = {
   createLiveClass,
   getAllLiveClasses,
   getLiveClassDetails,
   getUpcomingClass,
+  getLectureNo
 };
