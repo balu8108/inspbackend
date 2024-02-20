@@ -21,6 +21,7 @@ const {
   viewRecording,
   playRecording,
 } = require("./recordingscontrollers/recordingsController");
+const { getAllLectureByTopicName } = require("./regularclasses/regularclasses");
 
 const {
   getAllCrashCourseLecture,
@@ -46,5 +47,6 @@ module.exports = {
   playRecording,
   getLectureNo,
   getAllCrashCourseLecture,
-  getLectureById
+  getLectureById,
+  getAllLectureByTopicName
 };
