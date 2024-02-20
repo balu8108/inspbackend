@@ -8,10 +8,9 @@ const {
 const createOrUpdatePdfFile = async (pdfFile, folderPath, fileName, files) => {
   try {
     const imageFile = await pdfFile.embedJpg(files.screenshot.data);
-    console.log("image file", imageFile);
 
     const jpgDims = imageFile.scale(0.3);
-    console.log("jpg dims", jpgDims);
+
     const page = pdfFile.addPage();
 
     const offsetSpace = 20;

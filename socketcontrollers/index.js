@@ -1283,7 +1283,6 @@ const pollTimeIncreaseHandler = (data, socket) => {
 
 const replaceTrackHandler = (data, io, socket) => {
   try {
-    console.log("data", data);
     for (const consumer of consumers) {
       if (consumer?.roomId == data?.roomId) {
         io.to(consumer.socketId).emit(SOCKET_EVENTS.REPLACED_TRACK, data);

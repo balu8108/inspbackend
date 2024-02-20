@@ -397,7 +397,6 @@ const addProducerIdInAllPeers = (authId, socketId, producer) => {
     if (allPeers.has(authId)) {
       const peer = allPeers.get(authId);
       peer.producers.push(producer.id);
-      console.log("all peer after adding producer", allPeers);
     }
   } catch (err) {
     console.log("Error in adding producer", err);
@@ -557,7 +556,6 @@ const consumeSocketHandler = async (
         // Adding Producer id in allPeers list
         if (consumer) {
           addConsumerIdInAllPeers(authData.id, socketId, consumer);
-          console.log("all peers after adding consumer", allPeers);
 
           consumer.on(SOCKET_EVENTS.PRODUCERPAUSE, () => {
             console.log("Producer paused hence consumer paused");

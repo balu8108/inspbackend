@@ -230,7 +230,7 @@ class RoomManager extends EventEmitter {
       );
 
       // later on will do pipeToRouter
-      console.log("router id assigned", routerId);
+
       await this._pipeProducersToRouter(routerId);
 
       return routerId;
@@ -544,7 +544,6 @@ class RoomManager extends EventEmitter {
           consumer,
           roomId,
         };
-        console.log("this consumer", this._consumers);
 
         return consumer;
       }
@@ -649,7 +648,6 @@ class RoomManager extends EventEmitter {
       console.log("Removed socket id");
       if (authId in this._peers) {
         const leavingPeer = this._peers[authId];
-        console.log("Leaving peer", leavingPeer);
 
         if (leavingPeer?.recordProcess) {
           leavingPeer.recordProcess.kill();
