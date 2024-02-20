@@ -27,10 +27,11 @@ const getAllCrashCourseLecture = async (req, res) => {
     }
 }
 
+
 const getLectureById = async (req, res) => {
     try {
         const { roomId } = req.params;
-        
+
         if(!roomId) return res.status(400).json({ error: "Room id is required" });
 
         const liveClassRoom = await LiveClassRoom.findOne({
