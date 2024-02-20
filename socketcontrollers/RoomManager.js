@@ -23,7 +23,7 @@ const RECORD_PROCESS_NAME = "GStreamer";
 
 const config = require("./config");
 
-const ROUTER_SCALE_SIZE = 50;
+const ROUTER_SCALE_SIZE = 2;
 class RoomManager extends EventEmitter {
   constructor({ roomId, mediaSoupRouters, mediaSoupWorkers }) {
     super();
@@ -588,7 +588,7 @@ class RoomManager extends EventEmitter {
       console.log("Error in RManager in resuming consumer", err);
     }
   }
-  _removeItems(authId, type, socketId) {
+  _removeItems(type, authId, socketId) {
     try {
       if (type === "consumers") {
         for (let key in this._consumers) {
@@ -642,6 +642,18 @@ class RoomManager extends EventEmitter {
   }
   _disconnectingOrLeavingPeer(authId, socketId) {
     try {
+      if (authId in this._peers) {
+        // check if both socketId and authId matched
+        const leavePeer = this._peers[authId];
+        if (
+          leavePeer &&
+          leavePeer?.peerDetails &&
+          leavePeer?.peerDetails?.socketId !== socketId
+        ) {
+          // Means this user may have tried login from other device but couldn't login and now on disconnecting we want to ensure that it won't trigger the removal of already joined from other device peer
+          return;
+        }
+      }
       this._removeItems("consumers", authId, socketId);
       this._removeItems("producers", authId, socketId);
       this._removeItems("transports", authId, socketId);
