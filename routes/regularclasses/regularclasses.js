@@ -10,14 +10,9 @@ const { getAllLectureByTopicName, getLectureById } = require("../../controllers"
 
 router.get(
     routesConstants.GET_LECTURE_BY_TOPIC_NAME,
-    //   isAuthenticated,
-    //   checkPaidStatusOrTeacher,
+      isAuthenticated,
+      checkPaidStatusOrTeacher,
     getAllLectureByTopicName
 )
-// router.get(
-//   routesConstants.GET_LECTURE_BY_ID,
-//   isAuthenticated,
-//   checkPaidStatusOrTeacher,
-//   getLectureById
-// )
+
 module.exports = router;
