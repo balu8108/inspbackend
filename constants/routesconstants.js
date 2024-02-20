@@ -45,6 +45,8 @@ const routesConstants = Object.freeze({
   CRASH_COURSE:"/crash-course",
   GET_ALL_CRASH_COURSE_LECTURE: "/get-all-lecture",
   GET_LECTURE_BY_ID: "/get-lecture-by-id/:roomId",
+  GET_LECTURE_BY_TOPIC_NAME:'/get-lecture-by-topic-name/:topicDetails',
+  REGULAR_CLASSES:"/regular-classes",
 });
 
 module.exports = routesConstants;

@@ -17,6 +17,7 @@ const myUploadRoutes = require("./routes/myuploads/assignment");
 const recordingRoutes = require("./routes/recordings/recordings");
 const crashCourseRoutes = require("./routes/crashcourse/crashCourseRoutes");
 const config = require("./socketcontrollers/config");
+const regularClassesRoutes = require("./routes/regularclasses/regularclasses");
 const { ENVIRON } = require("./envvar");
 const {
   isSocketUserAuthenticated,
@@ -106,6 +107,7 @@ app.use(routesConstants.SOLO, soloClassroomRoutes);
 app.use(routesConstants.TOPIC_ASSIGNMENTS, myUploadRoutes);
 app.use(routesConstants.RECORDING, recordingRoutes);
 app.use(routesConstants.CRASH_COURSE, crashCourseRoutes);
+app.use(routesConstants.REGULAR_CLASSES,regularClassesRoutes)
 // Cron jobs function
 if (ENVIRON !== "local") {
   scheduleJob();
