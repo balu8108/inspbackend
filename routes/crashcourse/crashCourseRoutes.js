@@ -16,8 +16,8 @@ router.get(
 )
 router.get(
   routesConstants.GET_LECTURE_BY_ID,
-  // isAuthenticated,
-  // checkPaidStatusOrTeacher,
+  isAuthenticated,
+  checkPaidStatusOrTeacher,
   getLectureById
 )
 module.exports = router;
