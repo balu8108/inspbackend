@@ -245,6 +245,9 @@ class RoomManager extends EventEmitter {
   _getRoomMentors() {
     return Object.values(this._mentors);
   }
+  _isMentorsInRoom() {
+    return Object.values(this._mentors).length > 0;
+  }
 
   _processLeaderBoardData = (roomId, leaderBoardData) => {
     try {
