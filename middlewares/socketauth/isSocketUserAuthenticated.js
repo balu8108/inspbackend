@@ -1,5 +1,7 @@
 const { externalApiEndpoints } = require("../../constants");
-const { INSP_EXTERNAL_WEBSITE_SECRET_KEY } = require("../../envvar");
+const { INSP_EXTERNAL_WEBSITE_SECRET_KEY, ENVIRON } = require("../../envvar");
+const generateRandomCharacters = require("../../utils/generateRandomCharacters");
+
 const isSocketUserAuthenticated = async (socket, next) => {
   try {
     const secret_token = socket.handshake.auth.secret_token;
@@ -18,7 +20,11 @@ const isSocketUserAuthenticated = async (socket, next) => {
 
     const response = await fetch(externalApiEndpoints.login, requestOptions);
     const data = await response.json();
-
+    // const result = data.result;
+    // const randomCharacters = generateRandomCharacters(10);
+    // const formattedResult = { ...result, id: randomCharacters };
+    // This is for allowing same user to login multiple times for Testing purpose
+    // ENVIRON !== "production" ? formattedResult :
     if (data.status) {
       socket.authData = data.result;
       next();
