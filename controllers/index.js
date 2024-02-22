@@ -26,6 +26,11 @@ const {
   getAllCrashCourseLecture,
   getLectureById
 } = require("./crashcoursecontroller/crashCourserController");
+const {
+  createStudentFeedback,
+  getAllStudentFeedback,
+  deleteFeedbackById
+} = require("./studentfeedback/studentFeedbackController");
 
 module.exports = {
   loginHandler,
@@ -46,5 +51,8 @@ module.exports = {
   playRecording,
   getLectureNo,
   getAllCrashCourseLecture,
-  getLectureById
+  getLectureById,
+  createStudentFeedback,
+  getAllStudentFeedback,
+  deleteFeedbackById
 };
