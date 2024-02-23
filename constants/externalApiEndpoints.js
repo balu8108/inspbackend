@@ -1,5 +1,6 @@
 const externalApiEndpoints = {
   login: "https://inspedu.in/webservices/apis/login",
+  loginWithIp: "https://inspedu.in/webservices/apis/student_token",
   chapters: "https://inspedu.in/webservices/apis/chapters",
   topics: "https://inspedu.in/webservices/apis/topics",
   subTopics: "https://inspedu.in/webservices/apis/sub_topics",

@@ -34,6 +34,7 @@ const routesConstants = Object.freeze({
   GET_ASSIGNMENT_BY_SUBJECTNAME: "/get-assignment-by-subject-name",
   AUTH: "/auth",
   LOGIN: "/login",
+  LOGIN_WITH_IP: "/login_with_ip",
   RECORDING: "/recording",
   ALL_LIVE_RECORDINGS: "/all-live-recordings",
   GET_SINGLE_RECORDING: "/get-single-recording",
@@ -41,8 +42,8 @@ const routesConstants = Object.freeze({
   UPDATE_RECORDING_DATA: "/update-recording-data",
   VIEW_RECORDING: "/view-recording",
   PLAY_RECORDING: "/play-recording",
-  GET_LECTURE_NO:"/get-lecture-no",
-  CRASH_COURSE:"/crash-course",
+  GET_LECTURE_NO: "/get-lecture-no",
+  CRASH_COURSE: "/crash-course",
   GET_ALL_CRASH_COURSE_LECTURE: "/get-all-lecture",
   GET_LECTURE_BY_ID: "/get-lecture-by-id/:roomId",
 });
