@@ -1,6 +1,7 @@
 const {
   loginHandler,
   loginWithIpHandler,
+  loginWithUidHandler,
 } = require("./authentication/authController");
 const {
   getAllSubjects,
@@ -59,4 +60,5 @@ module.exports = {
   createStudentFeedback,
   getAllStudentFeedback,
   deleteFeedbackById,
+  loginWithUidHandler,
 };
