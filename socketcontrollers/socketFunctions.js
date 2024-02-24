@@ -751,11 +751,13 @@ const chatMsgSocketHandler = (data, socket) => {
     if (authData && allPeers.has(authData.id)) {
       const roomId = allPeers.get(authData.id)?.roomId;
       const peerDetails = allPeers.get(authData.id)?.peerDetails;
+      const peerDetailsWithUUID = { ...peerDetails, id: uuidv4() };
+
       const { msg } = data;
       // No need for room we can directly pass it from here
       socket.to(roomId).emit(SOCKET_EVENTS.CHAT_MSG_FROM_SERVER, {
         msg: msg,
-        peerDetails: peerDetails,
+        peerDetails: peerDetailsWithUUID,
       }); // broadcast message to all
     }
   } catch (err) {
