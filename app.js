@@ -21,6 +21,7 @@ const recordingRoutes = require("./routes/recordings/recordings");
 const crashCourseRoutes = require("./routes/crashcourse/crashCourseRoutes");
 const studentFeedbackRoutes = require("./routes/studentfeedback/studentFeedackRoutes");
 const config = require("./socketcontrollers/config");
+const runSubscribers = require("./socketcontrollers/subscriberController");
 const { ENVIRON, REDIS_HOST } = require("./envvar");
 const {
   isSocketUserAuthenticated,
@@ -265,6 +266,9 @@ subClient.on("error", (err) => {
 io.use(isSocketUserAuthenticated);
 io.use(socketPaidStatusOrTeacher);
 
+(async () => {
+  runSubscribers(io);
+})();
 io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   console.log("connected client with socket id", socket.id);
 
