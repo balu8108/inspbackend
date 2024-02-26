@@ -37,7 +37,7 @@ const RECORD_PROCESS_NAME = "GStreamer";
 
 // const redisClient = require("./subscriberController");
 // Create a Redis client
-const redisClient = redis.createClient();
+const redisClient = redis.createClient({ url: REDIS_HOST });
 
 (async () => {
   await redisClient.connect();
@@ -799,6 +799,7 @@ const questionMsgSentByStudentSocketHandler = (data, callback, socket, io) => {
       if (roomId && room) {
         const mentors = room._getRoomMentors();
         callback({ success: true, data: { questionMsg, peerDetails } });
+
         if (mentors.length > 0) {
           mentors.forEach((mentor) => {
             socket
@@ -808,6 +809,25 @@ const questionMsgSentByStudentSocketHandler = (data, callback, socket, io) => {
                 peerDetails,
               });
           });
+        } else {
+          // MISSED MEANS NO MENTOR IN THIS SERVER PUBLISH TO REDIS
+          console.log("publishing no mentor found in this server");
+          redisClient.publish(
+            "PEER_ACTIVITY",
+            JSON.stringify({
+              action: "questionMsgToMentor",
+              data: { questionMsg, roomId, peerDetails },
+            }),
+            (err, reply) => {
+              if (err) {
+                // Handle the error
+                console.error("Error publishing message:", err);
+              } else {
+                // Message published successfully
+                console.log("Message published successfully");
+              }
+            }
+          );
         }
       }
     }
@@ -821,7 +841,7 @@ const kickOutFromClassSocketHandler = async (data, socket, io) => {
     const { authData } = socket;
     const socketId = socket.id;
     const { peerSocketId, peerId } = data;
-    console.log("peer id of kicking out", peerId);
+
     if (authData && allPeers.has(authData.id)) {
       const classPk = allPeers.get(authData.id)?.classPk;
       if (classPk && peerSocketId && peerId) {
@@ -833,6 +853,24 @@ const kickOutFromClassSocketHandler = async (data, socket, io) => {
         });
         io.to(peerSocketId).emit(SOCKET_EVENTS.KICK_OUT_FROM_CLASS_FROM_SERVER);
       }
+    } else {
+      // MISSED IN THIS SERVER, PUBLISH IN REDIS
+      redisClient.publish(
+        "PEER_ACTIVITY",
+        JSON.stringify({
+          action: "kickOutFromClass",
+          data: { data, authData },
+        }),
+        (err, reply) => {
+          if (err) {
+            // Handle the error
+            console.error("Error publishing message:", err);
+          } else {
+            // Message published successfully
+            console.log("Message published successfully");
+          }
+        }
+      );
     }
   } catch (err) {
     console.log("Error in kick out", err);
@@ -1033,6 +1071,7 @@ const blockOrUnblockMicSocketHandler = (data, socket, io) => {
 const muteMicCommandByMentorSocketHandler = (data, socket, io) => {
   try {
     const { value, peerSocketId, peerId } = data;
+
     if (peerId && allPeers.has(peerId)) {
       const roomId = allPeers.get(peerId)?.roomId;
       const room = allRooms.get(roomId);
@@ -1047,6 +1086,23 @@ const muteMicCommandByMentorSocketHandler = (data, socket, io) => {
           );
         }
       }
+    } else {
+      // MISSED PUBLISH TO REDIS
+      console.log("publishing mute unmute mic");
+      redisClient.publish(
+        "PEER_ACTIVITY",
+        JSON.stringify({ action: "muteUnmuteMic", data }),
+        (err, reply) => {
+          if (err) {
+            // Handle the error
+            console.error("Error publishing message:", err);
+          } else {
+            // Message published successfully
+            console.log("Message published successfully");
+          }
+        }
+      );
+      console.log("published mute unmute mic");
     }
   } catch (err) {
     console.log("Error in mute mic command by mentor", err);
