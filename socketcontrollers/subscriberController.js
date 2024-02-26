@@ -120,6 +120,17 @@ async function runSubscribers(io) {
       } catch (err) {
         console.log("Error in question msg to mentor", err);
       }
+    } else if (action === "updatePollQuestion") {
+      try {
+        const { authData, roomId, socketId, qId, data: questionData } = data;
+        const room = allRooms.get(roomId);
+        if (room) {
+          room._addTestQuestion(authData.id, socketId, qId, questionData);
+          console.log("All server updated");
+        }
+      } catch (err) {
+        console.log("Error in adding question to list ");
+      }
     }
   });
 }

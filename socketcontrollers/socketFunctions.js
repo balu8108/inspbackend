@@ -137,11 +137,17 @@ const createOrJoinRoomFunction = async (
 
         // CHECK IN REDIS THAT IF THIS PEER IS CONNECTED WITH ANY SERVER
 
-        const existedRoom = allRooms.get(roomId);
-        const isPeerExists = existedRoom
-          ? existedRoom._isPeerAlreadyExisted(peerDetails)
-          : false;
+        const allPeersInThisRoome = await redisClient.hGetAll(
+          `room:${roomId}:peers`
+        );
 
+        // const existedRoom = allRooms.get(roomId);
+        // const isPeerExists = existedRoom
+        //   ? existedRoom._isPeerAlreadyExisted(peerDetails)
+        //   : false;
+
+        const existedRoom = await redisClient.hGetAll(`room:${roomId}:peers`);
+        const isPeerExists = authData.id in existedRoom || false;
         if (isPeerExists) {
           return {
             success: false,
@@ -893,6 +899,23 @@ const questionsSocketHandler = async (data, callback, socket) => {
           socketId,
           qId,
           data
+        );
+        // REDIS UPDATE TO ALLOW OTHER PEERS IN OTHER INSTANCE
+        redisClient.publish(
+          "PEER_ACTIVITY",
+          JSON.stringify({
+            action: "updatePollQuestion",
+            data: { authData, roomId, socketId, qId, data },
+          }),
+          (err, reply) => {
+            if (err) {
+              // Handle the error
+              console.error("Error publishing message:", err);
+            } else {
+              // Message published successfully
+              console.log("Message published successfully");
+            }
+          }
         );
 
         // Seed question log to db
