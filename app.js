@@ -229,7 +229,7 @@ async function runMediasoupWorkers() {
 runMediasoupWorkers();
 
 const httpServer = http.createServer(app);
-const io = new Server(httpServer,{
+const io = new Server(httpServer, {
   maxHttpBufferSize: 1e8, // 100 MB,
   cors: {
     origin: "*",
@@ -245,22 +245,21 @@ Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
   //io.listen(3000);
 });
 
-pubClient.on('connect', () => {
-  console.log('pubClient connected');
+pubClient.on("connect", () => {
+  console.log("pubClient connected");
 });
-subClient.on('connect', () => {
-  console.log('subClient connected');
+subClient.on("connect", () => {
+  console.log("subClient connected");
 });
 
-pubClient.on('error', (err) => {
-  console.error('pubClient error:', err);
+pubClient.on("error", (err) => {
+  console.error("pubClient error:", err);
 });
 
 // Error handling for subClient
-subClient.on('error', (err) => {
-  console.error('subClient error:', err);
+subClient.on("error", (err) => {
+  console.error("subClient error:", err);
 });
-
 
 io.use(isSocketUserAuthenticated);
 io.use(socketPaidStatusOrTeacher);
