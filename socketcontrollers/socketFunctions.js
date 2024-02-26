@@ -137,9 +137,9 @@ const createOrJoinRoomFunction = async (
 
         // CHECK IN REDIS THAT IF THIS PEER IS CONNECTED WITH ANY SERVER
 
-        const allPeersInThisRoome = await redisClient.hGetAll(
-          `room:${roomId}:peers`
-        );
+        // const allPeersInThisRoome = await redisClient.hGetAll(
+        //   `room:${roomId}:peers`
+        // );
 
         // const existedRoom = allRooms.get(roomId);
         // const isPeerExists = existedRoom
@@ -309,10 +309,18 @@ const joinRoomSocketHandler = async (
         peer: peer,
       });
 
-      const allPeersInThisRoom = allRooms.has(roomId)
-        ? allRooms.get(roomId)._getAllPeersInRoomStartWithPeer(peer)
-        : [];
-      socket.emit(SOCKET_EVENTS.ROOM_UPDATE, { peers: allPeersInThisRoom });
+      // const allPeersInThisRoom = allRooms.has(roomId)
+      //   ? allRooms.get(roomId)._getAllPeersInRoomStartWithPeer(peer)
+      //   : [];
+      // FROM REDIS WE NEED TO GET INITIAL ROOM PEERS DATA INSTEAD OF LOCAL ROOM
+      const allPeersInThisRoom = await redisClient.hGetAll(
+        `room:${roomId}:peers`
+      );
+
+      const allPeersInThisRoomInfo = Object.values(allPeersInThisRoom)
+        .map(JSON.parse)
+        .map((peer) => peer.peerDetails);
+      socket.emit(SOCKET_EVENTS.ROOM_UPDATE, { peers: allPeersInThisRoomInfo });
     }
   } catch (err) {
     console.log("Error in join room hander", err);
