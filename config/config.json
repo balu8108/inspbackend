@@ -1,0 +1,26 @@
+{
+  "development": {
+    "username": "admin",
+    "password": "insp1234",
+    "database": "insp_development",
+    "host": "dev-db.cydrhtaiped9.ap-south-1.rds.amazonaws.com",
+    "port": 3306,
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "admin",
+    "password": "insp1234",
+    "database": "insp_test",
+    "host": "dev-db.cydrhtaiped9.ap-south-1.rds.amazonaws.com",
+    "port": 3306,
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "admin",
+    "password": "insp1234",
+    "database": "insp_production",
+    "host": "dev-db.cydrhtaiped9.ap-south-1.rds.amazonaws.com",
+    "port": 3306,
+    "dialect": "mysql"
+  }
+}
