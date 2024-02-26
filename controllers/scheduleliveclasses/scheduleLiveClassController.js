@@ -75,9 +75,11 @@ const uploadFilesAndCreateEntries = async (
 
 const getAllLiveClasses = async (req, res) => {
   try {
+    console.log("getting live classes");
     const liveClassesData = await LiveClassRoom.findAll({
       include: [{ model: LiveClassRoomDetail }, { model: LiveClassRoomFile }],
     });
+    console.log("live", liveClassesData);
     res.status(200).json({ data: liveClassesData });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -121,7 +123,7 @@ const createLiveClass = async (req, res) => {
           agenda: body.agenda,
           description: body.description,
           classRoomId: id,
-          lectureNo: body.lectureNo
+          lectureNo: body.lectureNo,
         });
 
         result.liveClassRoomDetail = liveClassRoomDetail; // create parent child relationship however not necessary
@@ -192,9 +194,7 @@ const getUpcomingClass = async (req, res) => {
 };
 
 const getLectureNo = async (req, res) => {
-
   try {
-
     const { subjectName, classType, chapterName, topicName } = req.body;
 
     if (!subjectName || !classType || !chapterName || !topicName) {
@@ -203,32 +203,33 @@ const getLectureNo = async (req, res) => {
 
     let numberOfLecture = 0;
     if (classType == "REGULARCLASS") {
-
       const liveClassRooms = await LiveClassRoom.findAll({
         where: {
           subjectName: subjectName,
-          classType: classType
+          classType: classType,
         },
-        include: [{
-          model: LiveClassRoomDetail,
-          where: {
-            chapterName: chapterName,
-            topicName: topicName
+        include: [
+          {
+            model: LiveClassRoomDetail,
+            where: {
+              chapterName: chapterName,
+              topicName: topicName,
+            },
           },
-        }]
+        ],
       });
       numberOfLecture = liveClassRooms.length;
-
     } else if (classType == "CRASHCOURSE") {
-
       const liveClassRooms = await LiveClassRoom.findAll({
         where: {
           subjectName: subjectName,
-          classType: classType
+          classType: classType,
         },
-        include: [{
-          model: LiveClassRoomDetail
-        }]
+        include: [
+          {
+            model: LiveClassRoomDetail,
+          },
+        ],
       });
       numberOfLecture = liveClassRooms.length;
     }
@@ -237,13 +238,12 @@ const getLectureNo = async (req, res) => {
   } catch (err) {
     return res.status(400).json({ error: err.message });
   }
-
-}
+};
 
 module.exports = {
   createLiveClass,
   getAllLiveClasses,
   getLiveClassDetails,
   getUpcomingClass,
-  getLectureNo
+  getLectureNo,
 };
