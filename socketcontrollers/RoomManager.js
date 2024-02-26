@@ -644,8 +644,23 @@ class RoomManager extends EventEmitter {
     // check if removing peer is mentor
     if (authId in this._mentors) {
       delete this._mentors[authId];
+      redisClient.hDel(`room:${this._roomId}:mentors`, authId, (err, reply) => {
+        if (err) {
+          console.error("Error:", err);
+        } else {
+          console.log("Deleted field:", reply);
+        }
+      });
     }
     delete this._peers[authId];
+    // FROM REDIS REMOVE THE PEER
+    redisClient.hDel(`room:${this._roomId}:peers`, authId, (err, reply) => {
+      if (err) {
+        console.error("Error:", err);
+      } else {
+        console.log("Deleted field:", reply);
+      }
+    });
   }
 
   _removeAllRoutersOfRoom() {

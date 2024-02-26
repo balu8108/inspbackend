@@ -22,6 +22,7 @@ const crashCourseRoutes = require("./routes/crashcourse/crashCourseRoutes");
 const studentFeedbackRoutes = require("./routes/studentfeedback/studentFeedackRoutes");
 const config = require("./socketcontrollers/config");
 const { ENVIRON, REDIS_HOST } = require("./envvar");
+const AWS = require("aws-sdk");
 const {
   isSocketUserAuthenticated,
   socketPaidStatusOrTeacher,
@@ -89,7 +90,7 @@ const {
   studentTestAnswerResponseSocketHandler,
   replaceTrackSocketHandler,
 } = require("./socketcontrollers/socketFunctions");
-
+AWS.config.update({ region: "ap-south-1" });
 app.use(express.json({ limit: "200mb" }));
 app.use(bodyParser.json({ limit: "200mb" }));
 app.use(
@@ -99,9 +100,27 @@ app.use(
   })
 );
 app.use(express.urlencoded({ limit: "200mb", extended: true }));
+
 app.use(upload()); // this is required for uploading multipart/formData
 app.use(cors());
 app.use(cookieParser());
+app.use(async (req, res, next) => {
+  try {
+    if (ENVIRON === "production") {
+      const ec2 = new AWS.EC2Metadata();
+      // Get instance ID from EC2 instance metadata
+      const { InstanceId } = await ec2.getInstanceIdentityDocument();
+      // Add instance ID to response headers
+      res.setHeader("X-Instance-ID", InstanceId);
+      next();
+    } else {
+      next();
+    }
+  } catch (error) {
+    console.error("Error getting instance ID:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
 
 app.use(routesConstants.SCHEDULE_LIVE_CLASS, scheduleLiveClass);
 app.use(routesConstants.GENERIC_API, genericRoutes);
