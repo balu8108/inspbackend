@@ -3,7 +3,7 @@ const allRooms = new Map();
 const allPeers = new Map();
 const redis = require("redis");
 const { getPort } = require("./port");
-const { PLATFORM, ENVIRON } = require("../envvar");
+const { PLATFORM, ENVIRON, REDIS_HOST } = require("../envvar");
 const {
   SOCKET_EVENTS,
   mediaCodecs,
@@ -26,7 +26,7 @@ const config = require("./config");
 const ROUTER_SCALE_SIZE = 50;
 
 // Create a Redis client
-const redisClient = redis.createClient();
+const redisClient = redis.createClient({ url: REDIS_HOST });
 redisClient.connect();
 
 class RoomManager extends EventEmitter {

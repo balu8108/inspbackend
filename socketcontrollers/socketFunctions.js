@@ -28,7 +28,7 @@ const {
   generateAWSS3LocationUrl,
   isObjectValid,
 } = require("../utils");
-const { PLATFORM, ENVIRON } = require("../envvar");
+const { PLATFORM, ENVIRON, REDIS_HOST } = require("../envvar");
 
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
@@ -36,7 +36,7 @@ const Gstreamer = require("./gstreamer");
 const RECORD_PROCESS_NAME = "GStreamer";
 
 // Create a Redis client
-const redisClient = redis.createClient();
+const redisClient = redis.createClient({ url: REDIS_HOST });
 redisClient.connect();
 
 const joinRoomPreviewSocketHandler = async (data, callback, socket, io) => {
@@ -54,7 +54,7 @@ const joinRoomPreviewSocketHandler = async (data, callback, socket, io) => {
         const allPeersInThisRoom = await redisClient.hGetAll(
           `room:${roomId}:peers`
         );
-        console.log("all ", allPeersInThisRoom);
+
         const allPeersInThisRoomInfo = Object.values(allPeersInThisRoom)
           .map(JSON.parse)
           .map((peer) => peer.peerDetails);
@@ -130,6 +130,9 @@ const createOrJoinRoomFunction = async (
             errMsg: "You are blocked from this class",
           }; // No corresponding room in db
         }
+
+        // CHECK IN REDIS THAT IF THIS PEER IS CONNECTED WITH ANY SERVER
+
         const existedRoom = allRooms.get(roomId);
         const isPeerExists = existedRoom
           ? existedRoom._isPeerAlreadyExisted(peerDetails)
