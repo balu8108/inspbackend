@@ -1,7 +1,7 @@
 const EventEmitter = require("events");
 const allRooms = new Map();
 const allPeers = new Map();
-
+const redis = require("redis");
 const { getPort } = require("./port");
 const { PLATFORM, ENVIRON } = require("../envvar");
 const {
@@ -24,6 +24,11 @@ const RECORD_PROCESS_NAME = "GStreamer";
 const config = require("./config");
 
 const ROUTER_SCALE_SIZE = 50;
+
+// Create a Redis client
+const redisClient = redis.createClient();
+redisClient.connect();
+
 class RoomManager extends EventEmitter {
   constructor({ roomId, mediaSoupRouters, mediaSoupWorkers }) {
     super();
@@ -206,11 +211,11 @@ class RoomManager extends EventEmitter {
         for (const producerId of Object.keys(this._producers)) {
           if (router.appData.producers.has(producerId)) {
             // same router do not need piping it automatically put streams to these consumers
-            console.log("same router");
+
             continue;
           }
           // Piping all producers in different routers to this router of current peer
-          console.log("different router");
+
           await srcRouter.pipeToRouter({
             producerId: producerId,
             router: router,
@@ -301,12 +306,25 @@ class RoomManager extends EventEmitter {
         peerDetails: newPeerDetails,
       };
 
+      // SETTING NEW PEER IN REDIS TO ALLOW OTHER USER IN ANY SERVER TO GET INFO FROM REDIS
+      await redisClient.hSet(
+        `room:${roomId}:peers`,
+        newPeerDetails?.id,
+        JSON.stringify({ routerId, peerDetails: newPeerDetails })
+      );
+
       if (newPeerDetails?.isTeacher) {
         // Add it to mentor object as well
         this._mentors[newPeerDetails?.id] = {
           routerId,
           peerDetails: newPeerDetails,
         };
+
+        await redisClient.hSet(
+          `room:${roomId}:mentors`,
+          newPeerDetails?.id,
+          JSON.stringify({ routerId, peerDetails: newPeerDetails })
+        );
       }
 
       const rtpCapabilities = this._getRouterCapabilities(routerId);

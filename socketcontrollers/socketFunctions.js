@@ -9,6 +9,7 @@ const {
   classStatus,
   liveClassTestQuestionLogInfo,
 } = require("../constants");
+const redis = require("redis");
 const config = require("./config");
 const { getPort } = require("./port");
 const {
@@ -33,7 +34,12 @@ const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
 
 const RECORD_PROCESS_NAME = "GStreamer";
-const joinRoomPreviewSocketHandler = (data, callback, socket, io) => {
+
+// Create a Redis client
+const redisClient = redis.createClient();
+redisClient.connect();
+
+const joinRoomPreviewSocketHandler = async (data, callback, socket, io) => {
   try {
     const { roomId } = data;
     if (roomId) {
@@ -44,11 +50,20 @@ const joinRoomPreviewSocketHandler = (data, callback, socket, io) => {
 
       if (allRooms.has(roomId)) {
         socket.join(roomId);
+        // FROM REDIS WE NEED TO GET INITIAL ROOM PEERS DATA INSTEAD OF LOCAL ROOM
+        const allPeersInThisRoom = await redisClient.hGetAll(
+          `room:${roomId}:peers`
+        );
+        console.log("all ", allPeersInThisRoom);
+        const allPeersInThisRoomInfo = Object.values(allPeersInThisRoom)
+          .map(JSON.parse)
+          .map((peer) => peer.peerDetails);
+        console.log(allPeersInThisRoomInfo);
 
-        const allPeersInThisRoom = allRooms.has(roomId)
-          ? allRooms.get(roomId)._getAllPeersInRoom()
-          : [];
-        callback({ success: true, peers: allPeersInThisRoom });
+        // const allPeersInThisRoom = allRooms.has(roomId)
+        //   ? allRooms.get(roomId)._getAllPeersInRoom()
+        //   : [];
+        callback({ success: true, peers: allPeersInThisRoomInfo });
       } else {
         // most likely no body joins
 
