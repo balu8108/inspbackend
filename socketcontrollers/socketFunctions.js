@@ -984,44 +984,47 @@ const blockOrUnblockMicSocketHandler = (data, socket, io) => {
   try {
     const { value, peerSocketId, peerId } = data;
     const socketId = socket.id;
-    redisClient.publish(
-      "PEER_ACTIVITY",
-      JSON.stringify({ action: "hello", data }),
-      (err, reply) => {
-        if (err) {
-          // Handle the error
-          console.error("Error publishing message:", err);
-        } else {
-          // Message published successfully
-          console.log("Message published successfully");
+
+    if (peerId && allPeers.has(peerId)) {
+      const roomId = allPeers.get(peerId)?.roomId;
+      const room = allRooms.get(roomId);
+      if (roomId && room) {
+        const peer = room._updateMicBlockOrUnblock(peerId, peerSocketId, value);
+        if (peer) {
+          // Update allPeers
+          const aPeer = allPeers.get(peerId);
+          aPeer.peerDetails = peer.peerDetails;
+          // inform the targetted peer about block or unblock of his mic
+          io.to(peerSocketId).emit(
+            SOCKET_EVENTS.BLOCK_OR_UNBLOCK_MIC_FROM_SERVER,
+            peer.peerDetails
+          );
+          // inform all the peers along with blocked peer, that this peer has mic blocked by mentor
+          io.to(roomId).emit(
+            SOCKET_EVENTS.PEER_MIC_BLOCKED_OR_UNBLOCKED_FROM_SERVER,
+            peer.peerDetails
+          );
         }
       }
-    );
-    console.log("Published after");
-    // if (peerId && allPeers.has(peerId)) {
-    //   const roomId = allPeers.get(peerId)?.roomId;
-    //   const room = allRooms.get(roomId);
-    //   if (roomId && room) {
-    //     const peer = room._updateMicBlockOrUnblock(peerId, peerSocketId, value);
-    //     if (peer) {
-    //       // Update allPeers
-    //       const aPeer = allPeers.get(peerId);
-    //       aPeer.peerDetails = peer.peerDetails;
-    //       // inform the targetted peer about block or unblock of his mic
-    //       io.to(peerSocketId).emit(
-    //         SOCKET_EVENTS.BLOCK_OR_UNBLOCK_MIC_FROM_SERVER,
-    //         peer.peerDetails
-    //       );
-    //       // inform all the peers along with blocked peer, that this peer has mic blocked by mentor
-    //       io.to(roomId).emit(
-    //         SOCKET_EVENTS.PEER_MIC_BLOCKED_OR_UNBLOCKED_FROM_SERVER,
-    //         peer.peerDetails
-    //       );
-    //     }
-    //   }
-    // } else {
-    //   // MISSED SO WE NEED TO  PUBLISH
-    // }
+    } else {
+      // MISSED SO WE NEED TO  PUBLISH
+      console.log(
+        "Block/Unblock mic Missed in this server publish to redish.."
+      );
+      redisClient.publish(
+        "PEER_ACTIVITY",
+        JSON.stringify({ action: "blockOrUnblockMic", data }),
+        (err, reply) => {
+          if (err) {
+            // Handle the error
+            console.error("Error publishing message:", err);
+          } else {
+            // Message published successfully
+            console.log("Message published successfully");
+          }
+        }
+      );
+    }
   } catch (err) {
     console.log("Error in block or unblock", err);
   }
