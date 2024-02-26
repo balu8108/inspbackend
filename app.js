@@ -9,6 +9,9 @@ const bodyParser = require("body-parser");
 const upload = require("express-fileupload");
 const scheduleJob = require("./jobs/scheduleJobs");
 const { SOCKET_EVENTS, routesConstants } = require("./constants");
+const { Server } = require("socket.io");
+const { createAdapter } = require("@socket.io/redis-adapter");
+const { createClient } = require("redis");
 const scheduleLiveClass = require("./routes/scheduleliveclasses/scheduleLiveClass");
 const genericRoutes = require("./routes/genericroutes/genericroutes");
 const authenticationRoutes = require("./routes/authentication/authenticationRoutes");
@@ -18,7 +21,7 @@ const recordingRoutes = require("./routes/recordings/recordings");
 const crashCourseRoutes = require("./routes/crashcourse/crashCourseRoutes");
 const studentFeedbackRoutes = require("./routes/studentfeedback/studentFeedackRoutes");
 const config = require("./socketcontrollers/config");
-const { ENVIRON } = require("./envvar");
+const { ENVIRON, REDIS_HOST } = require("./envvar");
 const {
   isSocketUserAuthenticated,
   socketPaidStatusOrTeacher,
@@ -226,13 +229,38 @@ async function runMediasoupWorkers() {
 runMediasoupWorkers();
 
 const httpServer = http.createServer(app);
-const io = socketIo(httpServer, {
+const io = new Server(httpServer,{
   maxHttpBufferSize: 1e8, // 100 MB,
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
   },
 });
+
+const pubClient = createClient({ url: REDIS_HOST });
+const subClient = createClient({ url: REDIS_HOST });
+
+Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
+  io.adapter(createAdapter(pubClient, subClient));
+  //io.listen(3000);
+});
+
+pubClient.on('connect', () => {
+  console.log('pubClient connected');
+});
+subClient.on('connect', () => {
+  console.log('subClient connected');
+});
+
+pubClient.on('error', (err) => {
+  console.error('pubClient error:', err);
+});
+
+// Error handling for subClient
+subClient.on('error', (err) => {
+  console.error('subClient error:', err);
+});
+
 
 io.use(isSocketUserAuthenticated);
 io.use(socketPaidStatusOrTeacher);

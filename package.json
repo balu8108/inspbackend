@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@socket.io/redis-adapter": "^8.2.1",
     "aws-sdk": "^2.1446.0",
     "bcrypt": "^5.1.0",
     "body-parser": "^1.20.2",
@@ -33,6 +34,7 @@
     "pdf-lib": "^1.17.1",
     "pg": "^8.11.1",
     "pg-hstore": "^2.3.4",
+    "redis": "^4.6.13",
     "request-ip": "^3.3.0",
     "sequelize": "^6.32.1",
     "socket.io": "^4.7.2",
@@ -42,7 +44,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1",
+    "nodemon": "^3.1.0",
     "sequelize-cli": "^6.6.1"
   }
 }
