@@ -144,7 +144,6 @@ class RoomManager extends EventEmitter {
       const mediaSoupRouters = new Map();
       for (const worker of mediaSoupWorkers.values()) {
         const router = await worker.createRouter({ mediaCodecs });
-
         mediaSoupRouters.set(router.id, router);
       }
 
@@ -344,7 +343,12 @@ class RoomManager extends EventEmitter {
       const roomId = this._roomId;
       if (this._mediaSoupRouters.has(routerId)) {
         const webRtcOptions = config.webRtcTransport;
+        // const pipeTransportOptions = config.pipeTransport;
         const router = this._mediaSoupRouters.get(routerId);
+        // const transport = await router.createPipeTransport(
+        //   pipeTransportOptions
+        // );
+        // console.log("pipe transport", transport);
         const transport = await router.createWebRtcTransport(webRtcOptions);
         const transportWithMeta = {
           userId: authId,
