@@ -277,14 +277,13 @@ const joinRoomSocketHandler = async (
         rtpCapabilities,
       });
 
-      socket.to(roomId).emit(SOCKET_EVENTS.NEW_PEER_JOINED, {
-        peer: peer,
-      });
-
       const allPeersInThisRoom = allRooms.has(roomId)
         ? allRooms.get(roomId)._getAllPeersInRoomStartWithPeer(peer)
         : [];
       socket.emit(SOCKET_EVENTS.ROOM_UPDATE, { peers: allPeersInThisRoom });
+      socket.to(roomId).emit(SOCKET_EVENTS.NEW_PEER_JOINED, {
+        peer: peer,
+      });
     }
   } catch (err) {
     console.log("Error in join room hander", err);

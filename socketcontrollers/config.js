@@ -27,7 +27,7 @@ module.exports = Object.freeze({
   plainRtpTransport: {
     listenIp: {
       ip: MEDIA_SOUP_LISTEN_IP,
-      announcedIp: ENVIRON !== "local" ? myIP : "192.168.1.8",
+      announcedIp: ENVIRON !== "local" ? myIP : "192.168.1.4",
     }, // TODO: Change announcedIp to your external IP or domain name
     rtcpMux: false,
     comedia: false,
@@ -36,7 +36,7 @@ module.exports = Object.freeze({
     listenIps: [
       {
         ip: MEDIA_SOUP_LISTEN_IP,
-        announcedIp: ENVIRON !== "local" ? myIP : "192.168.1.8",
+        announcedIp: ENVIRON !== "local" ? myIP : "192.168.1.4",
       },
     ],
     enableUdp: true,
