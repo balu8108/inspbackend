@@ -49,7 +49,10 @@ module.exports = Object.freeze({
       ip: "0.0.0.0",
       announcedAddress: ENVIRON !== "local" ? myIP : "192.168.1.4",
     },
-    listenIp: MEDIA_SOUP_LISTEN_IP,
+    listenIp: {
+      ip: "0.0.0.0",
+      announcedIp: ENVIRON !== "local" ? myIP : "192.168.1.4",
+    },
     enableRtx: false,
     enableSrtp: false,
   },

@@ -133,6 +133,12 @@ async function runSubscribers(io) {
       }
     }
   });
+
+  await redisSubscriber.subscribe("STREAMING", async (message) => {
+    const { action, data } = JSON.parse(message);
+    console.log("action of streaming", action);
+    console.log("message of streaming", message);
+  });
 }
 
 module.exports = runSubscribers;

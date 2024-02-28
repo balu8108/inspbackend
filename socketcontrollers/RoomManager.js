@@ -23,7 +23,7 @@ const RECORD_PROCESS_NAME = "GStreamer";
 
 const config = require("./config");
 
-const ROUTER_SCALE_SIZE = 50;
+const ROUTER_SCALE_SIZE = 1;
 
 // Create a Redis client
 const redisClient = redis.createClient({ url: REDIS_HOST });
@@ -146,8 +146,11 @@ class RoomManager extends EventEmitter {
         const router = await worker.createRouter({ mediaCodecs });
         mediaSoupRouters.set(router.id, router);
       }
-
-      return new RoomManager({ roomId, mediaSoupRouters, mediaSoupWorkers });
+      return new RoomManager({
+        roomId,
+        mediaSoupRouters,
+        mediaSoupWorkers,
+      });
     } catch (err) {
       console.log("Error in RManager create", err);
     }
@@ -224,6 +227,24 @@ class RoomManager extends EventEmitter {
     } catch (err) {
       console.log("Error in RManager pipe producer to Router", err);
     }
+  }
+
+  async _createPipeTransports(routerId) {
+    // Except this routerIdcreate pipeTransport on each router
+    const pipeTransports = [];
+    for (const router of this._mediaSoupRouters.values()) {
+      if (router.id !== routerId) {
+        const pipeTransportOptions = config.pipeTransport;
+        const pipeTransport = await router.createPipeTransport(
+          pipeTransportOptions
+        );
+        pipeTransports.push(pipeTransport);
+        console.log(
+          `pipe TRansport created on router id = ${router.id} with PT id = ${pipeTransport.id}`
+        );
+      }
+    }
+    return pipeTransports;
   }
 
   async _getRouterId() {
@@ -515,8 +536,69 @@ class RoomManager extends EventEmitter {
       const producerWithMeta = { userId: authId, socketId, producer, roomId }; // Extra meta info required;
 
       this._producers[producer.id] = producerWithMeta;
+
+      // const allPipeTransports = await this._createPipeTransports(routerId);
+
+      // for (const pipeTransport of allPipeTransports) {
+      //   const pipeTransportOptions = config.pipeTransport;
+      //   const pipeTransportOfThisRouter = await router.createPipeTransport(
+      //     pipeTransportOptions
+      //   );
+      //   await pipeTransportOfThisRouter.connect({
+      //     ip: pipeTransport.tuple.localIp,
+      //     port: pipeTransport.tuple.localPort,
+      //   });
+      //   await pipeTransport.connect({
+      //     ip: pipeTransportOfThisRouter.tuple.localIp,
+      //     port: pipeTransportOfThisRouter.tuple.localPort,
+      //   });
+      //   // consume this
+      //   const pipeConsumer = await pipeTransportOfThisRouter.consume({
+      //     producerId: producer.id,
+      //     paused: producer.paused,
+      //     appData: producer.appData,
+      //   });
+
+      //   const pipeProducer = await pipeTransport.produce({
+      //     id: pipeConsumer?.producerId,
+      //     kind: pipeConsumer.kind,
+      //     rtpParameters: pipeConsumer.rtpParameters,
+      //     appData: pipeConsumer?.appData,
+      //     paused: pipeConsumer.producerPaused,
+      //   });
+
+      //   // Pipe events from the pipe Consumer to the pipe Producer.
+      //   pipeConsumer.observer.on("close", () => {
+      //     console.log("pipe producer close");
+      //     pipeProducer.close();
+      //   });
+      //   pipeConsumer.observer.on("pause", () => {
+      //     console.log("pipe pause");
+      //     pipeProducer.pause();
+      //   });
+      //   pipeConsumer.observer.on("resume", () => {
+      //     console.log("pipe resume");
+      //     pipeProducer.resume();
+      //   });
+
+      //   // Pipe events from the pipe Producer to the pipe Consumer.
+      //   pipeProducer.observer.on("close", () => {
+      //     console.log("closing pipe consumer");
+      //     pipeConsumer.close();
+      //   });
+
+      //   console.log("both sides connected successfully");
+      // }
+
       // TODO: Adding close producer
       // Piping the producer to every router of this room to allow other user to get streams
+
+      // CREATE PIPETRANSPORT ON EACH ROUTER EXCEPT CURRENT ROUTER
+
+      redisClient.publish(
+        "STREAMING",
+        JSON.stringify({ action: "pipeProduce" })
+      );
 
       const pipeRouters = this._getRoutersToPipeTo(routerId);
 
@@ -792,6 +874,7 @@ class RoomManager extends EventEmitter {
           : undefined,
         rtpCapabilities,
         rtpParameters: rtpConsumer.rtpParameters,
+        rtpConsumerId: rtpConsumer?.id,
       };
     } catch (err) {
       console.log("Error in RManager in Publish Producer RTP", err);
@@ -832,18 +915,41 @@ class RoomManager extends EventEmitter {
           url = generateAWSS3LocationUrl(fileKeyName);
         }
         peer.recordProcess = recordProcess;
+        const videoRecordConsumer =
+          this._consumers[recordInfo["video"]?.rtpConsumerId];
+        const audioRecordConsumer =
+          this._consumers[recordInfo["audio"]?.rtpConsumerId];
+        if (videoRecordConsumer) {
+          setTimeout(async () => {
+            if (videoRecordConsumer.userId === authId) {
+              await videoRecordConsumer.consumer.resume();
 
-        setTimeout(async () => {
-          for (const key in this._consumers) {
-            const consumer = this._consumers[key];
-
-            if (consumer.userId === authId) {
-              await consumer.consumer.resume();
-
-              await consumer.consumer.requestKeyFrame();
+              await videoRecordConsumer.consumer.requestKeyFrame();
             }
-          }
-        }, 1000);
+          }, 1000);
+        }
+
+        if (audioRecordConsumer) {
+          setTimeout(async () => {
+            if (audioRecordConsumer.userId === authId) {
+              await audioRecordConsumer.consumer.resume();
+
+              await audioRecordConsumer.consumer.requestKeyFrame();
+            }
+          }, 1000);
+        }
+
+        // setTimeout(async () => {
+        //   for (const key in this._consumers) {
+        //     const consumer = this._consumers[key];
+
+        //     if (consumer.userId === authId) {
+        //       await consumer.consumer.resume();
+
+        //       await consumer.consumer.requestKeyFrame();
+        //     }
+        //   }
+        // }, 1000);
 
         return { fileKeyName, url };
       }
