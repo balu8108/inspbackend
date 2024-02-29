@@ -192,6 +192,12 @@ module.exports = class GStreamer {
       //   `filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm`,
       // ];
     } else {
+      sinks.push(
+        `tee name=t ! queue ! filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm t. ! queue`
+      );
+      sinks.push(
+        `t. ! queue ! awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`
+      );
       // return [
       //   "webmmux name=mux",
       //   "!",

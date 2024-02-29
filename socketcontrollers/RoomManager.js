@@ -23,7 +23,7 @@ const RECORD_PROCESS_NAME = "GStreamer";
 
 const config = require("./config");
 
-const ROUTER_SCALE_SIZE = 1;
+const ROUTER_SCALE_SIZE = 50;
 
 // Create a Redis client
 const redisClient = redis.createClient({ url: REDIS_HOST });
@@ -257,7 +257,7 @@ class RoomManager extends EventEmitter {
 
         const pipeTransports =
           this._roomProducerPipeTransports[sourceProducer?.producer?.id];
-        console.log("room producer pipe", this._roomProducerPipeTransports);
+
         for (const pipeTransportKey in pipeTransports) {
           const pipeTransport = pipeTransports[pipeTransportKey];
           const pipeConsumer = await pipeTransport?.pipeTransport?.consume({
@@ -827,50 +827,50 @@ class RoomManager extends EventEmitter {
       // TODO: Adding close producer
       // Piping the producer to every router of this room to allow other user to get streams
 
-      // const pipeRouters = this._getRoutersToPipeTo(routerId);
+      const pipeRouters = this._getRoutersToPipeTo(routerId);
 
-      // for (const [routerId, destinationRouter] of this._mediaSoupRouters) {
-      //   if (pipeRouters.includes(routerId)) {
-      //     await router.pipeToRouter({
-      //       producerId: producer.id,
-      //       router: destinationRouter,
-      //     });
-      //   }
-      // }
+      for (const [routerId, destinationRouter] of this._mediaSoupRouters) {
+        if (pipeRouters.includes(routerId)) {
+          await router.pipeToRouter({
+            producerId: producer.id,
+            router: destinationRouter,
+          });
+        }
+      }
 
       // STORE PRODUCER TO REDIS SERVER
-      await redisClient.hSet(
-        `room:${roomId}:producers`,
-        producer?.id,
-        JSON.stringify(producerWithMeta)
-      );
+      // await redisClient.hSet(
+      //   `room:${roomId}:producers`,
+      //   producer?.id,
+      //   JSON.stringify(producerWithMeta)
+      // );
 
       // PUBLISH TO REDIS SO THAT EVERY SERVER CAN CREATE THE PIPE TRANSPORT FOR THIS NEW PRODUCER TO CONSUME
-      redisClient.publish(
-        "STREAMING",
-        JSON.stringify({
-          action: "createPipeProducer",
-          data: {
-            routerId: router.id,
-            producerId: producer.id,
-            roomId: this._roomId,
-          },
-        }),
-        (err, reply) => {
-          if (err) {
-            // Handle the error
-            console.error(
-              "Error publishing message of create pipe producer:",
-              err
-            );
-          } else {
-            // Message published successfully
-            console.log(
-              "Message published successfully of create pipe producer"
-            );
-          }
-        }
-      );
+      // redisClient.publish(
+      //   "STREAMING",
+      //   JSON.stringify({
+      //     action: "createPipeProducer",
+      //     data: {
+      //       routerId: router.id,
+      //       producerId: producer.id,
+      //       roomId: this._roomId,
+      //     },
+      //   }),
+      //   (err, reply) => {
+      //     if (err) {
+      //       // Handle the error
+      //       console.error(
+      //         "Error publishing message of create pipe producer:",
+      //         err
+      //       );
+      //     } else {
+      //       // Message published successfully
+      //       console.log(
+      //         "Message published successfully of create pipe producer"
+      //       );
+      //     }
+      //   }
+      // );
 
       return producer;
     } catch (err) {
