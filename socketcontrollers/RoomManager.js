@@ -755,6 +755,7 @@ class RoomManager extends EventEmitter {
           : undefined,
         rtpCapabilities,
         rtpParameters: rtpConsumer.rtpParameters,
+        rtpConsumerId: rtpConsumer?.id,
       };
     } catch (err) {
       console.log("Error in RManager in Publish Producer RTP", err);
@@ -796,17 +797,41 @@ class RoomManager extends EventEmitter {
         }
         peer.recordProcess = recordProcess;
 
-        setTimeout(async () => {
-          for (const key in this._consumers) {
-            const consumer = this._consumers[key];
+        const videoRecordConsumer =
+          this._consumers[recordInfo["video"]?.rtpConsumerId];
+        const audioRecordConsumer =
+          this._consumers[recordInfo["audio"]?.rtpConsumerId];
+        if (videoRecordConsumer) {
+          setTimeout(async () => {
+            if (videoRecordConsumer.userId === authId) {
+              await videoRecordConsumer.consumer.resume();
 
-            if (consumer.userId === authId) {
-              await consumer.consumer.resume();
-
-              await consumer.consumer.requestKeyFrame();
+              await videoRecordConsumer.consumer.requestKeyFrame();
             }
-          }
-        }, 1000);
+          }, 1000);
+        }
+
+        if (audioRecordConsumer) {
+          setTimeout(async () => {
+            if (audioRecordConsumer.userId === authId) {
+              await audioRecordConsumer.consumer.resume();
+
+              await audioRecordConsumer.consumer.requestKeyFrame();
+            }
+          }, 1000);
+        }
+
+        // setTimeout(async () => {
+        //   for (const key in this._consumers) {
+        //     const consumer = this._consumers[key];
+
+        //     if (consumer.userId === authId) {
+        //       await consumer.consumer.resume();
+
+        //       await consumer.consumer.requestKeyFrame();
+        //     }
+        //   }
+        // }, 1000);
 
         return { fileKeyName, url };
       }

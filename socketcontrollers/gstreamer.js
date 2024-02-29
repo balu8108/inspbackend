@@ -75,14 +75,11 @@ module.exports = class GStreamer {
   }
 
   async kill() {
-    if (PLATFORM === "ubuntu" || PLATFORM === "linux") {
-      const gstPid = await getGStreamerPIDs(this._process.pid);
-      gstPid.forEach((gstPid) => kill(gstPid, "SIGINT")); // In linux we can get the gst-launch-1.0 pid and kill it only then it kills process
-      this._process.stdin.end();
-      this._process.kill("SIGINT");
-    } else {
+    try {
       this._process.stdin.end();
       kill(this._process.pid, "SIGINT"); // Kill method of treekill pacakge, but please note it will abruptly closes record process therefore we are using local file system in case of windows/local environment
+    } catch (err) {
+      console.log("Errro in killing gstreamer process", err);
     }
   }
 
@@ -179,18 +176,30 @@ module.exports = class GStreamer {
   }
 
   get _sinkArgs() {
+    const commonArgs = ["webmmux name=mux", "!"];
+    let sinks = [];
     if (PLATFORM === "windows") {
-      return [
-        "webmmux name=mux",
-        "!",
-        `filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm`,
-      ];
+      sinks.push(
+        `tee name=t ! queue ! filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm t. ! queue`
+      );
+      // return [
+      //   "webmmux name=mux",
+      //   "!",
+      //   `filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm`,
+      // ];
     } else {
-      return [
-        "webmmux name=mux",
-        "!",
-        `awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`,
-      ];
+      sinks.push(
+        `tee name=t ! queue ! filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm t. ! queue`
+      );
+      sinks.push(
+        `t. ! queue ! awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`
+      );
+      // return [
+      //   "webmmux name=mux",
+      //   "!",
+      //   `awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`,
+      // ];
     }
+    return [...commonArgs, ...sinks];
   }
 };
