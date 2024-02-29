@@ -43,6 +43,8 @@ class RoomManager extends EventEmitter {
     this._leaderBoard = {}; // will contain the leaderboard of room
     this._mediaSoupWorkers = mediaSoupWorkers;
     this._mediaSoupRouters = mediaSoupRouters;
+    this._roomPipeTransports = {}; // store the pipe transport that can consume from remote server
+    this._roomProducerPipeTransports = {}; // Store the pipe transport for the producers
   }
 
   static getLeastLoadedRouter(
@@ -229,22 +231,254 @@ class RoomManager extends EventEmitter {
     }
   }
 
-  async _createPipeTransports(routerId) {
-    // Except this routerIdcreate pipeTransport on each router
-    const pipeTransports = [];
-    for (const router of this._mediaSoupRouters.values()) {
-      if (router.id !== routerId) {
+  async _consumingInPipeTransport(data) {
+    // Tricky part here we want to consume but actuall here we will use produce
+    // As when a new producer created on remote server then here in our server we produce those stream to be available in the corressponding router
+    try {
+      const allPipeTransportsOfProducer =
+        this._roomPipeTransports[data?.producerId];
+      for (const pipeTransportKey in allPipeTransportsOfProducer) {
+      }
+    } catch (err) {
+      console.log("Error in consuming pipe transport", err);
+    }
+  }
+
+  async _producingInPipeTransport(data) {
+    try {
+      // Most tricky part here we want to produce but actually here we will use consume
+      // As when a new producer created then its corresponding pipeTransport will consume it first
+      // Then in remote end or in others will use there pipeTransport to produce those streams in there router
+      const { producerId } = data;
+      const sourceProducer = this._producers[producerId]; // Get that producer
+      const streamProducers = {};
+      if (sourceProducer) {
+        // Using this source producer now pipe these streams to make it available for remote stream
+
+        const pipeTransports =
+          this._roomProducerPipeTransports[sourceProducer?.producer?.id];
+        console.log("room producer pipe", this._roomProducerPipeTransports);
+        for (const pipeTransportKey in pipeTransports) {
+          const pipeTransport = pipeTransports[pipeTransportKey];
+          const pipeConsumer = await pipeTransport?.pipeTransport?.consume({
+            producerId: sourceProducer?.producer?.id,
+            paused: sourceProducer?.producer?.paused,
+            appData: sourceProducer?.producer?.appData,
+          });
+          streamProducers[pipeConsumer.id] = {
+            pipeConsumerProducerId: pipeConsumer?.producerId,
+            pipeConsumerKind: pipeConsumer.kind,
+            pipeConsumerRtp: pipeConsumer.rtpParameters,
+            pipeConsumerAppData: pipeConsumer?.appData,
+            pipeConsumerPaused: pipeConsumer.producerPaused,
+          };
+        }
+
+        redisClient.publish(
+          "STREAMING",
+          JSON.stringify({
+            action: "requestForConsumingPipeTransport",
+            data: {
+              roomId: this._roomId,
+              producerId: data?.producerId,
+              sourceRouterId: data?.sourceRouterId, // It is the router id that belongs to other where a producer is created
+              pipeProducers: streamProducers,
+            },
+          }),
+          (err, reply) => {
+            if (err) {
+              // Handle the error
+              console.error(
+                "Error publishing message of create pipe producer:",
+                err
+              );
+            } else {
+              // Message published successfully
+              console.log(
+                "Message published successfully of create pipe producer"
+              );
+            }
+          }
+        );
+      }
+    } catch (err) {
+      console.log("Error in producing pipe transport", err);
+    }
+  }
+
+  async _createPipeTransports(producerId, sourceRouterId) {
+    try {
+      // Create pipe Transport for each router for the above remote producerId
+      const pipeTransportsData = {};
+      const pipeTransports = {};
+      for (const router of this._mediaSoupRouters.values()) {
         const pipeTransportOptions = config.pipeTransport;
         const pipeTransport = await router.createPipeTransport(
           pipeTransportOptions
         );
-        pipeTransports.push(pipeTransport);
-        console.log(
-          `pipe TRansport created on router id = ${router.id} with PT id = ${pipeTransport.id}`
-        );
+
+        pipeTransportsData[pipeTransport.id] = {
+          routerId: router.id,
+          remoteIp: pipeTransport.tuple.localIp,
+          remotePort: pipeTransport.tuple.localPort,
+        };
+        pipeTransports[pipeTransport.id] = {
+          routerId: router.id,
+          remoteIp: pipeTransport.tuple.localIp,
+          remotePort: pipeTransport.tuple.localPort,
+          pipeTransport: pipeTransport,
+        };
       }
+      this._roomPipeTransports[producerId] = pipeTransports;
+
+      redisClient.publish(
+        "STREAMING",
+        JSON.stringify({
+          action: "remotePipeProducerData",
+          data: {
+            roomId: this._roomId,
+            producerId: producerId,
+            sourceRouterId: sourceRouterId, // It is the router id that belongs to other where a producer is created
+            remoteTransports: pipeTransports,
+          },
+        }),
+        (err, reply) => {
+          if (err) {
+            // Handle the error
+            console.error(
+              "Error publishing message of create pipe producer:",
+              err
+            );
+          } else {
+            // Message published successfully
+            console.log(
+              "Message published successfully of create pipe producer"
+            );
+          }
+        }
+      );
+    } catch (err) {
+      console.log("Error in create pipe transports", err);
     }
-    return pipeTransports;
+  }
+
+  async _connectToSourceServer(data) {
+    try {
+      // Connect the source server pipeTransport
+
+      const roomPipeTransports = this._roomPipeTransports[data?.producerId];
+
+      for (const sourceServerPipeTransportKey in data?.remoteTransports) {
+        const sourcePTransport =
+          data?.remoteTransports[sourceServerPipeTransportKey];
+
+        const roomPipeTransport =
+          roomPipeTransports[sourcePTransport?.connectedToPipeTransportId]; // find to which transport the source pipe transport is connected in this server
+
+        if (roomPipeTransport) {
+          await roomPipeTransport?.pipeTransport.connect({
+            ip: sourcePTransport?.remoteIp,
+            port: sourcePTransport?.remotePort,
+          });
+        }
+      }
+
+      redisClient.publish(
+        "STREAMING",
+        JSON.stringify({
+          action: "requestForProducingPipeTransport",
+          data: {
+            roomId: this._roomId,
+            producerId: data?.producerId,
+            sourceRouterId: data?.sourceRouterId, // It is the router id that belongs to other where a producer is created
+          },
+        }),
+        (err, reply) => {
+          if (err) {
+            // Handle the error
+            console.error(
+              "Error publishing message of create pipe producer:",
+              err
+            );
+          } else {
+            // Message published successfully
+            console.log(
+              "Message published successfully of create pipe producer"
+            );
+          }
+        }
+      );
+    } catch (err) {}
+  }
+
+  async _createPipeTransportForEveryRemoteServer(data) {
+    try {
+      // In data we will receiver producer id for which we are creating this pipeProducer
+      const router = this._mediaSoupRouters.get(data?.sourceRouterId);
+      const pipeTransportForThisProducer = {};
+      const pipeTransportForProducerData = {};
+
+      for (const remoteServerPipeProducer in data?.remoteTransports) {
+        const pipeTransportOptions = config.pipeTransport;
+        const pipeTransport = await router.createPipeTransport(
+          pipeTransportOptions
+        );
+        const remotePipeTransportData =
+          data?.remoteTransports[remoteServerPipeProducer];
+        await pipeTransport.connect({
+          ip: remotePipeTransportData?.remoteIp,
+          port: remotePipeTransportData?.remotePort,
+        });
+
+        pipeTransportForProducerData[pipeTransport.id] = {
+          connectedToPipeTransportId: remoteServerPipeProducer,
+          routerId: router.id,
+          remoteIp: pipeTransport.tuple.localIp,
+          remotePort: pipeTransport.tuple.localPort,
+        };
+        pipeTransportForThisProducer[pipeTransport.id] = {
+          connectedToPipeTransportId: remoteServerPipeProducer,
+          routerId: router.id,
+          remoteIp: pipeTransport.tuple.localIp,
+          remotePort: pipeTransport.tuple.localPort,
+          pipeTransport: pipeTransport,
+        };
+      }
+      this._roomProducerPipeTransports[data?.producerId] =
+        pipeTransportForThisProducer;
+
+      redisClient.publish(
+        "STREAMING",
+        JSON.stringify({
+          action: "setupPipeTransportConnect",
+          data: {
+            roomId: this._roomId,
+            producerId: data?.producerId,
+            sourceRouterId: data?.sourceRouterId, // It is the router id that belongs to other where a producer is created
+            remoteTransports: pipeTransportForProducerData,
+          },
+        }),
+        (err, reply) => {
+          if (err) {
+            // Handle the error
+            console.error(
+              "Error publishing message of create pipe producer:",
+              err
+            );
+          } else {
+            // Message published successfully
+            console.log(
+              "Message published successfully of create pipe producer"
+            );
+          }
+        }
+      );
+    } catch (err) {
+      console.log(
+        "Error in create pipe transport for every remote server",
+        err
+      );
+    }
   }
 
   async _getRouterId() {
@@ -593,23 +827,51 @@ class RoomManager extends EventEmitter {
       // TODO: Adding close producer
       // Piping the producer to every router of this room to allow other user to get streams
 
-      // CREATE PIPETRANSPORT ON EACH ROUTER EXCEPT CURRENT ROUTER
+      // const pipeRouters = this._getRoutersToPipeTo(routerId);
 
-      redisClient.publish(
-        "STREAMING",
-        JSON.stringify({ action: "pipeProduce" })
+      // for (const [routerId, destinationRouter] of this._mediaSoupRouters) {
+      //   if (pipeRouters.includes(routerId)) {
+      //     await router.pipeToRouter({
+      //       producerId: producer.id,
+      //       router: destinationRouter,
+      //     });
+      //   }
+      // }
+
+      // STORE PRODUCER TO REDIS SERVER
+      await redisClient.hSet(
+        `room:${roomId}:producers`,
+        producer?.id,
+        JSON.stringify(producerWithMeta)
       );
 
-      const pipeRouters = this._getRoutersToPipeTo(routerId);
-
-      for (const [routerId, destinationRouter] of this._mediaSoupRouters) {
-        if (pipeRouters.includes(routerId)) {
-          await router.pipeToRouter({
+      // PUBLISH TO REDIS SO THAT EVERY SERVER CAN CREATE THE PIPE TRANSPORT FOR THIS NEW PRODUCER TO CONSUME
+      redisClient.publish(
+        "STREAMING",
+        JSON.stringify({
+          action: "createPipeProducer",
+          data: {
+            routerId: router.id,
             producerId: producer.id,
-            router: destinationRouter,
-          });
+            roomId: this._roomId,
+          },
+        }),
+        (err, reply) => {
+          if (err) {
+            // Handle the error
+            console.error(
+              "Error publishing message of create pipe producer:",
+              err
+            );
+          } else {
+            // Message published successfully
+            console.log(
+              "Message published successfully of create pipe producer"
+            );
+          }
         }
-      }
+      );
+
       return producer;
     } catch (err) {
       console.log("Error in RManager in Transport producer", err);

@@ -136,8 +136,68 @@ async function runSubscribers(io) {
 
   await redisSubscriber.subscribe("STREAMING", async (message) => {
     const { action, data } = JSON.parse(message);
-    console.log("action of streaming", action);
-    console.log("message of streaming", message);
+    if (action === "createPipeProducer") {
+      try {
+        const { producerId, roomId, routerId } = data;
+        if (producerId && roomId) {
+          const room = allRooms.get(roomId);
+          if (room) {
+            // Create pipe Transport Producer and then from there we will get back the remote Ip and port
+            await room._createPipeTransports(producerId, routerId);
+          }
+        }
+      } catch (err) {
+        console.log("Error in create pipe producer", err);
+      }
+    } else if (action === "remotePipeProducerData") {
+      try {
+        const { roomId } = data;
+        if (roomId) {
+          const room = allRooms.get(roomId);
+          if (room) {
+            await room._createPipeTransportForEveryRemoteServer(data);
+          }
+        }
+      } catch (err) {
+        console.log("Error in remote pipe producer data", err);
+      }
+    } else if (action === "setupPipeTransportConnect") {
+      try {
+        const { roomId } = data;
+        if (roomId) {
+          const room = allRooms.get(roomId);
+          if (room) {
+            await room._connectToSourceServer(data);
+          }
+        }
+      } catch (err) {
+        console.log("Error in connecting pipeTransport", err);
+      }
+    } else if (action === "requestForProducingPipeTransport") {
+      try {
+        const { roomId } = data;
+        if (roomId) {
+          const room = allRooms.get(roomId);
+          if (room) {
+            await room._producingInPipeTransport(data);
+          }
+        }
+      } catch (err) {
+        console.log("Error in request pipeTransport", err);
+      }
+    } else if (action === "requestForConsumingPipeTransport") {
+      try {
+        const { roomId } = data;
+        if (roomId) {
+          const room = allRooms.get(roomId);
+          if (room) {
+            await room._consumingInPipeTransport(data);
+          }
+        }
+      } catch (err) {
+        console.log("Error in pipe Transport", err);
+      }
+    }
   });
 }
 
