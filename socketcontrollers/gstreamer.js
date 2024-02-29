@@ -75,15 +75,11 @@ module.exports = class GStreamer {
   }
 
   async kill() {
-    console.log("this proces", this._process);
-    if (PLATFORM === "ubuntu" || PLATFORM === "linux") {
-      const gstPid = await getGStreamerPIDs(this._process.pid);
-      gstPid.forEach((gstPid) => kill(gstPid, "SIGINT")); // In linux we can get the gst-launch-1.0 pid and kill it only then it kills process
-      this._process.stdin.end();
-      this._process.kill("SIGINT");
-    } else {
+    try {
       this._process.stdin.end();
       kill(this._process.pid, "SIGINT"); // Kill method of treekill pacakge, but please note it will abruptly closes record process therefore we are using local file system in case of windows/local environment
+    } catch (err) {
+      console.log("Errro in killing gstreamer process", err);
     }
   }
 
