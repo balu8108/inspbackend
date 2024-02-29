@@ -11,7 +11,7 @@ const {
   classStatus,
   liveClassTestQuestionLogInfo,
 } = require("../constants");
-
+const logger = require('../utils/logger')
 const { generateAWSS3LocationUrl, isObjectValid } = require("../utils");
 
 const { LiveClassRoomRecording, LeaderBoard } = require("../models");
@@ -73,7 +73,7 @@ class RoomManager extends EventEmitter {
             workerLoads.set(
               worker.pid,
               workerLoads.get(worker.pid) +
-                (routerLoads.has(routerId) ? routerLoads.get(routerId) : 0)
+              (routerLoads.has(routerId) ? routerLoads.get(routerId) : 0)
             );
           } else {
             workerLoads.set(
@@ -165,7 +165,7 @@ class RoomManager extends EventEmitter {
     try {
       const socketIds = Object.values(this._consumers).map((cs) => cs.socketId);
       return socketIds;
-    } catch (err) {}
+    } catch (err) { }
   }
 
   _getAllPeersInRoomStartWithPeer(peer) {
@@ -675,6 +675,7 @@ class RoomManager extends EventEmitter {
           // Close all routers and delete all routers
           this._removeAllRoutersOfRoom();
           this._removeLeaderBoardOfRoom();
+          logger.info(JSON.stringify("No Peer In the Class(Class end)", null, 2))
         }
         return { peerCountInRoom, leavingPeer };
       }
@@ -937,6 +938,7 @@ class RoomManager extends EventEmitter {
         if (peer?.recordProcess) {
           peer.recordProcess.kill();
           peer.recordProcess = null;
+          logger.info(JSON.stringify(`Command to stop recording`, null, 2))
         }
       }
     } catch (err) {
