@@ -31,6 +31,7 @@ const { PLATFORM, ENVIRON } = require("../envvar");
 
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
+const logger = require("../utils/logger");
 
 const RECORD_PROCESS_NAME = "GStreamer";
 const joinRoomPreviewSocketHandler = (data, callback, socket, io) => {
@@ -706,6 +707,7 @@ const endMeetSocketHandler = async (socket, mediaSoupworkers, io) => {
         }
       }
     }
+    logger.info(JSON.stringify("Classes ended by mentor", null, 2))
   } catch (err) {
     console.log("Error in end meet handler", err);
   }
