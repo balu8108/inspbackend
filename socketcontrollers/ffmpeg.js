@@ -3,6 +3,7 @@ const { EventEmitter } = require("events");
 const { createSdpText } = require("./sdp");
 const { convertStringToStream } = require("./utils");
 const RECORD_FILE_LOCATION_PATH = "./recordfiles";
+const kill = require("tree-kill");
 module.exports = class FFmpeg {
   constructor(rtpParameters) {
     this._rtpParameters = rtpParameters;
@@ -28,7 +29,7 @@ module.exports = class FFmpeg {
       this._process.stderr.setEncoding("utf-8");
 
       this._process.stderr.on("data", (data) => {
-        console.log("ffmpeg::process::data [data:%o]", data);
+        // console.log("ffmpeg::process::data [data:%o]", data);
       });
     }
 
@@ -36,12 +37,12 @@ module.exports = class FFmpeg {
       this._process.stdout.setEncoding("utf-8");
 
       this._process.stdout.on("data", (data) => {
-        console.log("ffmpeg::process::data [data:%o]", data);
+        // console.log("ffmpeg::process::data [data:%o]", data);
       });
     }
 
     this._process.on("message", (message) => {
-      console.log("ffmpeg::process::message [message:%o]", message);
+      // console.log("ffmpeg::process::message [message:%o]", message);
     });
 
     this._process.on("error", (error) => {
@@ -49,7 +50,7 @@ module.exports = class FFmpeg {
     });
 
     this._process.once("close", () => {
-      console.log("ffmpeg::process::close");
+      console.log("ffmpeg::process::close [pid:%d]", this._process.pid);
       this._observer.emit("process-close");
     });
 
@@ -63,11 +64,16 @@ module.exports = class FFmpeg {
   }
 
   kill() {
-    console.log("kill() [pid:%d]", this._process.pid);
-    this._process.stdin.end();
+    try {
+      console.log("killing() ffmpeg process [pid:%d]", this._process.pid);
+      this._process.stdin.end();
+      kill(this._process.pid, "SIGTERM");
 
-    let killedProcess = this._process.kill();
-    console.log("killedProcess:%o", killedProcess);
+      // let killedProcess = this._process.kill();
+      // console.log("killedProcess:%o", killedProcess);
+    } catch (err) {
+      console.log("Error in killing ffmpeg process", err);
+    }
   }
   exit() {
     console.log("exiting process");

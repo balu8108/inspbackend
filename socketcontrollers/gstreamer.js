@@ -17,6 +17,7 @@ const GSTREAMER_DEBUG_LEVEL = 3;
 const GSTREAMER_COMMAND = "gst-launch-1.0";
 const GSTREAMER_OPTIONS = "-v -e";
 const getGStreamerPIDs = require("./gstreamerPids");
+const logger = require("../utils/logger");
 module.exports = class GStreamer {
   constructor(rtpParameters) {
     this._rtpParameters = rtpParameters;
@@ -37,6 +38,7 @@ module.exports = class GStreamer {
       detached: false,
       shell: true,
     });
+    logger.info(JSON.stringify("Created gStreamer process", null, 2));
     if (this._process.stderr) {
       this._process.stderr.setEncoding("utf-8");
     }
@@ -53,14 +55,29 @@ module.exports = class GStreamer {
       )
     );
 
-    this._process.on("error", (error) =>
+    this._process.on("error", (error) => {
+      logger.info(
+        JSON.stringify(
+          `gstreamer::process::error [pid:%d, error:%o] ${this._process.pid}`,
+          null,
+          2
+        )
+      );
+      logger.info(JSON.stringify(`Gstreamer error ${error}`, null, 2));
       console.error(
         "gstreamer::process::error [pid:%d, error:%o]",
         this._process.pid,
         error
-      )
-    );
+      );
+    });
     this._process.once("close", () => {
+      logger.info(
+        JSON.stringify(
+          `Gstreamer process ended id ${this._process.pid}`,
+          null,
+          2
+        )
+      );
       console.log("gstreamer::process::close [pid:%d]", this._process.pid);
       this._observer.emit("process-close");
     });
@@ -76,11 +93,15 @@ module.exports = class GStreamer {
 
   async kill() {
     try {
+      logger.info(
+        JSON.stringify("Started Killing gstreamer(recording)", null, 2)
+      );
       this._process.stdin.end();
       kill(this._process.pid, "SIGINT"); // Kill method of treekill pacakge, but please note it will abruptly closes record process therefore we are using local file system in case of windows/local environment
     } catch (err) {
-      console.log("Errro in killing gstreamer process", err);
+      console.log("Error in killing gstreamer process", err);
     }
+    logger.info(JSON.stringify("End Killing gstreamer(recording)", null, 2));
   }
 
   get _commandArgs() {
@@ -178,6 +199,7 @@ module.exports = class GStreamer {
   get _sinkArgs() {
     const commonArgs = ["webmmux name=mux", "!"];
     let sinks = [];
+    logger.info(JSON.stringify(`Recording uploading started`, null, 2));
     if (PLATFORM === "windows") {
       sinks.push(
         `tee name=t ! queue ! filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm t. ! queue`

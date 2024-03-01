@@ -23,6 +23,8 @@ const studentFeedbackRoutes = require("./routes/studentfeedback/studentFeedackRo
 const config = require("./socketcontrollers/config");
 const runSubscribers = require("./socketcontrollers/subscriberController");
 const { ENVIRON, REDIS_HOST } = require("./envvar");
+const logHandler = require("./utils/logHandler");
+
 const {
   isSocketUserAuthenticated,
   socketPaidStatusOrTeacher,
@@ -113,6 +115,7 @@ app.use(routesConstants.TOPIC_ASSIGNMENTS, myUploadRoutes);
 app.use(routesConstants.RECORDING, recordingRoutes);
 app.use(routesConstants.CRASH_COURSE, crashCourseRoutes);
 app.use(routesConstants.STUDENT_FEEDBACK, studentFeedbackRoutes);
+app.use(logHandler);
 // Cron jobs function
 if (ENVIRON !== "local") {
   scheduleJob();

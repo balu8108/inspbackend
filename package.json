@@ -36,12 +36,15 @@
     "pg-hstore": "^2.3.4",
     "redis": "^4.6.13",
     "request-ip": "^3.3.0",
+    "s3-streamlogger": "^1.9.2",
     "sequelize": "^6.32.1",
     "socket.io": "^4.7.2",
     "sync-request": "^6.1.0",
     "tree-kill": "^1.2.2",
     "twilio": "^4.15.0",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "winston": "^3.11.0",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.0",
