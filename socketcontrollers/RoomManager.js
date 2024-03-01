@@ -11,7 +11,7 @@ const {
   classStatus,
   liveClassTestQuestionLogInfo,
 } = require("../constants");
-const logger = require('../utils/logger')
+const logger = require("../utils/logger");
 const { generateAWSS3LocationUrl, isObjectValid } = require("../utils");
 
 const { LiveClassRoomRecording, LeaderBoard } = require("../models");
@@ -19,7 +19,7 @@ const { LiveClassRoomRecording, LeaderBoard } = require("../models");
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
 
-const RECORD_PROCESS_NAME = "GStreamer";
+const RECORD_PROCESS_NAME = "FFmpeg";
 
 const config = require("./config");
 
@@ -73,7 +73,7 @@ class RoomManager extends EventEmitter {
             workerLoads.set(
               worker.pid,
               workerLoads.get(worker.pid) +
-              (routerLoads.has(routerId) ? routerLoads.get(routerId) : 0)
+                (routerLoads.has(routerId) ? routerLoads.get(routerId) : 0)
             );
           } else {
             workerLoads.set(
@@ -165,7 +165,7 @@ class RoomManager extends EventEmitter {
     try {
       const socketIds = Object.values(this._consumers).map((cs) => cs.socketId);
       return socketIds;
-    } catch (err) { }
+    } catch (err) {}
   }
 
   _getAllPeersInRoomStartWithPeer(peer) {
@@ -660,13 +660,17 @@ class RoomManager extends EventEmitter {
       this._removeItems("consumers", authId, socketId);
       this._removeItems("producers", authId, socketId);
       this._removeItems("transports", authId, socketId);
-      console.log("Removed socket id");
+
       if (authId in this._peers) {
         const leavingPeer = this._peers[authId];
 
-        if (leavingPeer?.recordProcess) {
-          leavingPeer.recordProcess.kill();
-          leavingPeer.recordProcess = null;
+        if (leavingPeer?.["GStreamer"]) {
+          leavingPeer["GStreamer"].kill();
+          leavingPeer["GStreamer"] = null;
+        }
+        if (leavingPeer?.["FFmpeg"]) {
+          leavingPeer["FFmpeg"].kill();
+          leavingPeer["FFmpeg"] = null;
         }
         this._removePeer(authId, socketId);
         const peerCountInRoom = this._checkPeerCountInRoom();
@@ -675,7 +679,9 @@ class RoomManager extends EventEmitter {
           // Close all routers and delete all routers
           this._removeAllRoutersOfRoom();
           this._removeLeaderBoardOfRoom();
-          logger.info(JSON.stringify("No Peer In the Class(Class end)", null, 2))
+          logger.info(
+            JSON.stringify("No Peer In the Class(Class end)", null, 2)
+          );
         }
         return { peerCountInRoom, leavingPeer };
       }
@@ -684,8 +690,8 @@ class RoomManager extends EventEmitter {
     }
   }
 
-  _getProcess = (recordInfo) => {
-    switch (RECORD_PROCESS_NAME) {
+  _getProcess = (recordProcessName, recordInfo) => {
+    switch (recordProcessName) {
       case "FFmpeg":
         return new FFmpeg(recordInfo);
       case "GStreamer":
@@ -763,6 +769,7 @@ class RoomManager extends EventEmitter {
     }
   };
   _startRecord = async (
+    recordProcessName,
     authId,
     roomId,
     socketId,
@@ -783,9 +790,10 @@ class RoomManager extends EventEmitter {
           router
         );
       }
+      const processInitial = recordProcessName === "FFmpeg" ? "F" : "G";
 
-      recordInfo.fileName = `${roomId}-${Date.now().toString()}`;
-      let recordProcess = this._getProcess(recordInfo);
+      recordInfo.fileName = `${roomId}-${Date.now().toString()}${processInitial}`;
+      let recordProcess = this._getProcess(recordProcessName, recordInfo);
       if (recordProcess) {
         let fileKeyName = "";
         let url = "";
@@ -796,7 +804,7 @@ class RoomManager extends EventEmitter {
           fileKeyName = `liveclassrecordings/${recordInfo?.fileName}.webm`;
           url = generateAWSS3LocationUrl(fileKeyName);
         }
-        peer.recordProcess = recordProcess;
+        peer[recordProcessName] = recordProcess;
 
         const videoRecordConsumer =
           this._consumers[recordInfo["video"]?.rtpConsumerId];
@@ -822,6 +830,8 @@ class RoomManager extends EventEmitter {
           }, 1000);
         }
 
+        console.log("Peers ", peer);
+
         // setTimeout(async () => {
         //   for (const key in this._consumers) {
         //     const consumer = this._consumers[key];
@@ -842,6 +852,7 @@ class RoomManager extends EventEmitter {
   };
 
   async _startRecording(
+    recordProcessName,
     authId,
     socketId,
     routerId,
@@ -854,8 +865,8 @@ class RoomManager extends EventEmitter {
         const peer = this._peers[authId];
         const router = this._mediaSoupRouters.get(routerId);
 
-        if (peer?.recordProcess) {
-          peer.recordProcess.kill();
+        if (peer?.[recordProcessName]) {
+          peer[recordProcessName].kill();
           return;
         }
         let peerProducersList = [];
@@ -868,6 +879,7 @@ class RoomManager extends EventEmitter {
 
         if (peerProducersList.length > 0) {
           const recordData = await this._startRecord(
+            recordProcessName,
             authId,
             roomId,
             socketId,
@@ -960,10 +972,20 @@ class RoomManager extends EventEmitter {
     try {
       if (authId in this._peers) {
         const peer = this._peers[authId];
-        if (peer?.recordProcess) {
-          peer.recordProcess.kill();
-          peer.recordProcess = null;
-          logger.info(JSON.stringify(`Command to stop recording`, null, 2))
+        if (peer?.["GStreamer"]) {
+          peer["GStreamer"].kill();
+          peer["GStreamer"] = null;
+          logger.info(
+            JSON.stringify(`Command to stop recording GStreamer`, null, 2)
+          );
+        }
+
+        if (peer?.["FFmpeg"]) {
+          peer["FFmpeg"].kill();
+          peer["FFmpeg"] = null;
+          logger.info(
+            JSON.stringify(`Command to stop recording FFmpeg`, null, 2)
+          );
         }
       }
     } catch (err) {

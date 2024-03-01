@@ -99,7 +99,7 @@ module.exports = class GStreamer {
       this._process.stdin.end();
       kill(this._process.pid, "SIGINT"); // Kill method of treekill pacakge, but please note it will abruptly closes record process therefore we are using local file system in case of windows/local environment
     } catch (err) {
-      console.log("Errro in killing gstreamer process", err);
+      console.log("Error in killing gstreamer process", err);
     }
     logger.info(JSON.stringify("End Killing gstreamer(recording)", null, 2));
   }

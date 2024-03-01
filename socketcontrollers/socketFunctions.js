@@ -707,7 +707,7 @@ const endMeetSocketHandler = async (socket, mediaSoupworkers, io) => {
         }
       }
     }
-    logger.info(JSON.stringify("Classes ended by mentor", null, 2))
+    logger.info(JSON.stringify("Classes ended by mentor", null, 2));
   } catch (err) {
     console.log("Error in end meet handler", err);
   }
@@ -718,25 +718,29 @@ const startRecordingSocketHandler = async (data, socket) => {
     const { authData } = socket;
     const socketId = socket.id;
     const { producerScreenShare, producerAudioShare } = data;
+    const recordProcessNames = ["GStreamer", "FFmpeg"];
     if (authData && allPeers.has(authData.id)) {
       const roomId = allPeers.get(authData.id)?.roomId;
       const classPk = allPeers.get(authData.id)?.classPk;
       const routerId = allPeers.get(authData.id)?.routerId;
       const room = allRooms.get(roomId);
       if (roomId && routerId && room) {
-        const recordData = await room._startRecording(
-          authData.id,
-          socketId,
-          routerId,
-          producerScreenShare,
-          producerAudioShare
-        );
-        if (recordData) {
-          await LiveClassRoomRecording.create({
-            key: recordData?.fileKeyName,
-            url: recordData?.url,
-            classRoomId: classPk,
-          });
+        for (const recordProcessName of recordProcessNames) {
+          const recordData = await room._startRecording(
+            recordProcessName,
+            authData.id,
+            socketId,
+            routerId,
+            producerScreenShare,
+            producerAudioShare
+          );
+          if (recordData) {
+            await LiveClassRoomRecording.create({
+              key: recordData?.fileKeyName,
+              url: recordData?.url,
+              classRoomId: classPk,
+            });
+          }
         }
       }
     }
