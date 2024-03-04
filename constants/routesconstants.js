@@ -47,13 +47,13 @@ const routesConstants = Object.freeze({
   CRASH_COURSE: "/crash-course",
   GET_ALL_CRASH_COURSE_LECTURE: "/get-all-lecture",
   GET_LECTURE_BY_ID: "/get-lecture-by-id/:roomId",
+  GET_LECTURE_BY_TOPIC_NAME:'/get-lecture-by-topic-name/:topicDetails',
+  REGULAR_CLASSES:"/regular-classes",
+  GET_SINGLE_LECTURE_DETAIL:'/get-single-lecture-detail/:roomId',
   STUDENT_FEEDBACK: "/student-feedback",
   CREATE_STUDENT_FEEDBACK: "/create-student-feedback",
   GET_ALL_STUDENT_FEEDBACK: "/get-all-student-feedback",
   DELETE_STUDENT_FEEDBACK: "/delete-student-feedback/:id",
-  GET_LECTURE_BY_TOPIC_NAME:'/get-lecture-by-topic-name/:topicId',
-  REGULAR_CLASSES:"/regular-classes",
-  GET_SINGLE_LECTURE_DETAIL:'/get-single-lecture-detail/:roomId'
 });
 
 module.exports = routesConstants;
