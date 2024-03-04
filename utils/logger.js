@@ -49,7 +49,7 @@ transport.on('error', function (err) {
 const logger = winston.createLogger({
     format: format.combine(format.timestamp(), format.label({ label: 'INSP_SERVER' }), logFormat),
     transports: [transport, info, debug],
-});
+}); 
 
 
 // Error handling for S3 logging
