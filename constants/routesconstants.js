@@ -51,7 +51,7 @@ const routesConstants = Object.freeze({
   CREATE_STUDENT_FEEDBACK: "/create-student-feedback",
   GET_ALL_STUDENT_FEEDBACK: "/get-all-student-feedback",
   DELETE_STUDENT_FEEDBACK: "/delete-student-feedback/:id",
-  GET_LECTURE_BY_TOPIC_NAME:'/get-lecture-by-topic-name/:topicDetails',
+  GET_LECTURE_BY_TOPIC_NAME:'/get-lecture-by-topic-name/:topicId',
   REGULAR_CLASSES:"/regular-classes",
   GET_SINGLE_LECTURE_DETAIL:'/get-single-lecture-detail/:roomId'
 });

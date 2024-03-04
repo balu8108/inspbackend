@@ -3,13 +3,13 @@ const router = express.Router();
 const { routesConstants } = require("../../constants");
 const {
   isAuthenticated,
-  isTeacher,
   checkPaidStatusOrTeacher,
 } = require("../../middlewares");
+
 const {
+  getLectureDetails,
   getAllLectureByTopicName,
-} = require("../../controllers");
-const { getLectureDetails } = require("../../controllers/regularclasses/regularclasses");
+} = require("../../controllers/regularclasses/regularclasses");
 
 router.get(
   routesConstants.GET_LECTURE_BY_TOPIC_NAME,
@@ -20,7 +20,9 @@ router.get(
 
 router.get(
   routesConstants.GET_SINGLE_LECTURE_DETAIL,
+  isAuthenticated,
+  checkPaidStatusOrTeacher,
   getLectureDetails
-)
+);
 
 module.exports = router;
