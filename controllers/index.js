@@ -1,4 +1,8 @@
-const { loginHandler } = require("./authentication/authController");
+const {
+  loginHandler,
+  loginWithIpHandler,
+  loginWithUidHandler,
+} = require("./authentication/authController");
 const {
   getAllSubjects,
   openFile,
@@ -12,7 +16,7 @@ const {
   getAllLiveClasses,
   getLiveClassDetails,
   getUpcomingClass,
-  getLectureNo
+  getLectureNo,
 } = require("./scheduleliveclasses/scheduleLiveClassController");
 const {
   getRecordingsWithDetails,
@@ -25,8 +29,13 @@ const { getAllLectureByTopicName } = require("./regularclasses/regularclasses");
 
 const {
   getAllCrashCourseLecture,
-  getLectureById
+  getLectureById,
 } = require("./crashcoursecontroller/crashCourserController");
+const {
+  createStudentFeedback,
+  getAllStudentFeedback,
+  deleteFeedbackById,
+} = require("./studentfeedback/studentFeedbackController");
 
 module.exports = {
   loginHandler,
@@ -49,4 +58,9 @@ module.exports = {
   getAllCrashCourseLecture,
   getLectureById,
   getAllLectureByTopicName
+  loginWithIpHandler,
+  createStudentFeedback,
+  getAllStudentFeedback,
+  deleteFeedbackById,
+  loginWithUidHandler,
 };

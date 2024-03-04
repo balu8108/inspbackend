@@ -9,6 +9,7 @@ const {
   classStatus,
   liveClassTestQuestionLogInfo,
 } = require("../constants");
+const redis = require("redis");
 const config = require("./config");
 const { getPort } = require("./port");
 const {
@@ -27,13 +28,23 @@ const {
   generateAWSS3LocationUrl,
   isObjectValid,
 } = require("../utils");
-const { PLATFORM, ENVIRON } = require("../envvar");
+const { PLATFORM, ENVIRON, REDIS_HOST } = require("../envvar");
 
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
+const logger = require("../utils/logger");
 
 const RECORD_PROCESS_NAME = "GStreamer";
-const joinRoomPreviewSocketHandler = (data, callback, socket, io) => {
+
+// const redisClient = require("./subscriberController");
+// Create a Redis client
+const redisClient = redis.createClient({ url: REDIS_HOST });
+
+(async () => {
+  await redisClient.connect();
+})();
+
+const joinRoomPreviewSocketHandler = async (data, callback, socket, io) => {
   try {
     const { roomId } = data;
     if (roomId) {
@@ -44,11 +55,20 @@ const joinRoomPreviewSocketHandler = (data, callback, socket, io) => {
 
       if (allRooms.has(roomId)) {
         socket.join(roomId);
+        // FROM REDIS WE NEED TO GET INITIAL ROOM PEERS DATA INSTEAD OF LOCAL ROOM
+        const allPeersInThisRoom = await redisClient.hGetAll(
+          `room:${roomId}:peers`
+        );
 
-        const allPeersInThisRoom = allRooms.has(roomId)
-          ? allRooms.get(roomId)._getAllPeersInRoom()
-          : [];
-        callback({ success: true, peers: allPeersInThisRoom });
+        const allPeersInThisRoomInfo = Object.values(allPeersInThisRoom)
+          .map(JSON.parse)
+          .map((peer) => peer.peerDetails);
+        console.log(allPeersInThisRoomInfo);
+
+        // const allPeersInThisRoom = allRooms.has(roomId)
+        //   ? allRooms.get(roomId)._getAllPeersInRoom()
+        //   : [];
+        callback({ success: true, peers: allPeersInThisRoomInfo });
       } else {
         // most likely no body joins
 
@@ -115,11 +135,20 @@ const createOrJoinRoomFunction = async (
             errMsg: "You are blocked from this class",
           }; // No corresponding room in db
         }
-        const existedRoom = allRooms.get(roomId);
-        const isPeerExists = existedRoom
-          ? existedRoom._isPeerAlreadyExisted(peerDetails)
-          : false;
 
+        // CHECK IN REDIS THAT IF THIS PEER IS CONNECTED WITH ANY SERVER
+
+        // const allPeersInThisRoome = await redisClient.hGetAll(
+        //   `room:${roomId}:peers`
+        // );
+
+        // const existedRoom = allRooms.get(roomId);
+        // const isPeerExists = existedRoom
+        //   ? existedRoom._isPeerAlreadyExisted(peerDetails)
+        //   : false;
+
+        const existedRoom = await redisClient.hGetAll(`room:${roomId}:peers`);
+        const isPeerExists = authData.id in existedRoom || false;
         if (isPeerExists) {
           return {
             success: false,
@@ -277,14 +306,21 @@ const joinRoomSocketHandler = async (
         rtpCapabilities,
       });
 
+      // const allPeersInThisRoom = allRooms.has(roomId)
+      //   ? allRooms.get(roomId)._getAllPeersInRoomStartWithPeer(peer)
+      //   : [];
+      // FROM REDIS WE NEED TO GET INITIAL ROOM PEERS DATA INSTEAD OF LOCAL ROOM
+      const allPeersInThisRoom = await redisClient.hGetAll(
+        `room:${roomId}:peers`
+      );
+
+      const allPeersInThisRoomInfo = Object.values(allPeersInThisRoom)
+        .map(JSON.parse)
+        .map((peer) => peer.peerDetails);
+      socket.emit(SOCKET_EVENTS.ROOM_UPDATE, { peers: allPeersInThisRoomInfo });
       socket.to(roomId).emit(SOCKET_EVENTS.NEW_PEER_JOINED, {
         peer: peer,
       });
-
-      const allPeersInThisRoom = allRooms.has(roomId)
-        ? allRooms.get(roomId)._getAllPeersInRoomStartWithPeer(peer)
-        : [];
-      socket.emit(SOCKET_EVENTS.ROOM_UPDATE, { peers: allPeersInThisRoom });
     }
   } catch (err) {
     console.log("Error in join room hander", err);
@@ -707,6 +743,7 @@ const endMeetSocketHandler = async (socket, mediaSoupworkers, io) => {
         }
       }
     }
+    logger.info(JSON.stringify("Classes ended by mentor", null, 2));
   } catch (err) {
     console.log("Error in end meet handler", err);
   }
@@ -717,25 +754,29 @@ const startRecordingSocketHandler = async (data, socket) => {
     const { authData } = socket;
     const socketId = socket.id;
     const { producerScreenShare, producerAudioShare } = data;
+    const recordProcessNames = ["GStreamer", "FFmpeg"];
     if (authData && allPeers.has(authData.id)) {
       const roomId = allPeers.get(authData.id)?.roomId;
       const classPk = allPeers.get(authData.id)?.classPk;
       const routerId = allPeers.get(authData.id)?.routerId;
       const room = allRooms.get(roomId);
       if (roomId && routerId && room) {
-        const recordData = await room._startRecording(
-          authData.id,
-          socketId,
-          routerId,
-          producerScreenShare,
-          producerAudioShare
-        );
-        if (recordData) {
-          await LiveClassRoomRecording.create({
-            key: recordData?.fileKeyName,
-            url: recordData?.url,
-            classRoomId: classPk,
-          });
+        for (const recordProcessName of recordProcessNames) {
+          const recordData = await room._startRecording(
+            recordProcessName,
+            authData.id,
+            socketId,
+            routerId,
+            producerScreenShare,
+            producerAudioShare
+          );
+          if (recordData) {
+            await LiveClassRoomRecording.create({
+              key: recordData?.fileKeyName,
+              url: recordData?.url,
+              classRoomId: classPk,
+            });
+          }
         }
       }
     }
@@ -751,11 +792,13 @@ const chatMsgSocketHandler = (data, socket) => {
     if (authData && allPeers.has(authData.id)) {
       const roomId = allPeers.get(authData.id)?.roomId;
       const peerDetails = allPeers.get(authData.id)?.peerDetails;
+      const peerDetailsWithUUID = { ...peerDetails, id: uuidv4() };
+
       const { msg } = data;
       // No need for room we can directly pass it from here
       socket.to(roomId).emit(SOCKET_EVENTS.CHAT_MSG_FROM_SERVER, {
         msg: msg,
-        peerDetails: peerDetails,
+        peerDetails: peerDetailsWithUUID,
       }); // broadcast message to all
     }
   } catch (err) {
@@ -775,6 +818,7 @@ const questionMsgSentByStudentSocketHandler = (data, callback, socket, io) => {
       if (roomId && room) {
         const mentors = room._getRoomMentors();
         callback({ success: true, data: { questionMsg, peerDetails } });
+
         if (mentors.length > 0) {
           mentors.forEach((mentor) => {
             socket
@@ -784,6 +828,25 @@ const questionMsgSentByStudentSocketHandler = (data, callback, socket, io) => {
                 peerDetails,
               });
           });
+        } else {
+          // MISSED MEANS NO MENTOR IN THIS SERVER PUBLISH TO REDIS
+          console.log("publishing no mentor found in this server");
+          redisClient.publish(
+            "PEER_ACTIVITY",
+            JSON.stringify({
+              action: "questionMsgToMentor",
+              data: { questionMsg, roomId, peerDetails },
+            }),
+            (err, reply) => {
+              if (err) {
+                // Handle the error
+                console.error("Error publishing message:", err);
+              } else {
+                // Message published successfully
+                console.log("Message published successfully");
+              }
+            }
+          );
         }
       }
     }
@@ -797,7 +860,7 @@ const kickOutFromClassSocketHandler = async (data, socket, io) => {
     const { authData } = socket;
     const socketId = socket.id;
     const { peerSocketId, peerId } = data;
-    console.log("peer id of kicking out", peerId);
+
     if (authData && allPeers.has(authData.id)) {
       const classPk = allPeers.get(authData.id)?.classPk;
       if (classPk && peerSocketId && peerId) {
@@ -809,6 +872,24 @@ const kickOutFromClassSocketHandler = async (data, socket, io) => {
         });
         io.to(peerSocketId).emit(SOCKET_EVENTS.KICK_OUT_FROM_CLASS_FROM_SERVER);
       }
+    } else {
+      // MISSED IN THIS SERVER, PUBLISH IN REDIS
+      redisClient.publish(
+        "PEER_ACTIVITY",
+        JSON.stringify({
+          action: "kickOutFromClass",
+          data: { data, authData },
+        }),
+        (err, reply) => {
+          if (err) {
+            // Handle the error
+            console.error("Error publishing message:", err);
+          } else {
+            // Message published successfully
+            console.log("Message published successfully");
+          }
+        }
+      );
     }
   } catch (err) {
     console.log("Error in kick out", err);
@@ -831,6 +912,23 @@ const questionsSocketHandler = async (data, callback, socket) => {
           socketId,
           qId,
           data
+        );
+        // REDIS UPDATE TO ALLOW OTHER PEERS IN OTHER INSTANCE
+        redisClient.publish(
+          "PEER_ACTIVITY",
+          JSON.stringify({
+            action: "updatePollQuestion",
+            data: { authData, roomId, socketId, qId, data },
+          }),
+          (err, reply) => {
+            if (err) {
+              // Handle the error
+              console.error("Error publishing message:", err);
+            } else {
+              // Message published successfully
+              console.log("Message published successfully");
+            }
+          }
         );
 
         // Seed question log to db
@@ -960,6 +1058,7 @@ const blockOrUnblockMicSocketHandler = (data, socket, io) => {
   try {
     const { value, peerSocketId, peerId } = data;
     const socketId = socket.id;
+
     if (peerId && allPeers.has(peerId)) {
       const roomId = allPeers.get(peerId)?.roomId;
       const room = allRooms.get(roomId);
@@ -981,6 +1080,24 @@ const blockOrUnblockMicSocketHandler = (data, socket, io) => {
           );
         }
       }
+    } else {
+      // MISSED SO WE NEED TO  PUBLISH
+      console.log(
+        "Block/Unblock mic Missed in this server publish to redish.."
+      );
+      redisClient.publish(
+        "PEER_ACTIVITY",
+        JSON.stringify({ action: "blockOrUnblockMic", data }),
+        (err, reply) => {
+          if (err) {
+            // Handle the error
+            console.error("Error publishing message:", err);
+          } else {
+            // Message published successfully
+            console.log("Message published successfully");
+          }
+        }
+      );
     }
   } catch (err) {
     console.log("Error in block or unblock", err);
@@ -990,6 +1107,7 @@ const blockOrUnblockMicSocketHandler = (data, socket, io) => {
 const muteMicCommandByMentorSocketHandler = (data, socket, io) => {
   try {
     const { value, peerSocketId, peerId } = data;
+
     if (peerId && allPeers.has(peerId)) {
       const roomId = allPeers.get(peerId)?.roomId;
       const room = allRooms.get(roomId);
@@ -1004,6 +1122,23 @@ const muteMicCommandByMentorSocketHandler = (data, socket, io) => {
           );
         }
       }
+    } else {
+      // MISSED PUBLISH TO REDIS
+      console.log("publishing mute unmute mic");
+      redisClient.publish(
+        "PEER_ACTIVITY",
+        JSON.stringify({ action: "muteUnmuteMic", data }),
+        (err, reply) => {
+          if (err) {
+            // Handle the error
+            console.error("Error publishing message:", err);
+          } else {
+            // Message published successfully
+            console.log("Message published successfully");
+          }
+        }
+      );
+      console.log("published mute unmute mic");
     }
   } catch (err) {
     console.log("Error in mute mic command by mentor", err);

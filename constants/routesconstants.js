@@ -34,6 +34,8 @@ const routesConstants = Object.freeze({
   GET_ASSIGNMENT_BY_SUBJECTNAME: "/get-assignment-by-subject-name",
   AUTH: "/auth",
   LOGIN: "/login",
+  LOGIN_WITH_IP: "/login_with_ip",
+  LOGIN_WITH_UNIQUE_ID: "/login_with_uid",
   RECORDING: "/recording",
   ALL_LIVE_RECORDINGS: "/all-live-recordings",
   GET_SINGLE_RECORDING: "/get-single-recording",
@@ -41,13 +43,17 @@ const routesConstants = Object.freeze({
   UPDATE_RECORDING_DATA: "/update-recording-data",
   VIEW_RECORDING: "/view-recording",
   PLAY_RECORDING: "/play-recording",
-  GET_LECTURE_NO:"/get-lecture-no",
-  CRASH_COURSE:"/crash-course",
+  GET_LECTURE_NO: "/get-lecture-no",
+  CRASH_COURSE: "/crash-course",
   GET_ALL_CRASH_COURSE_LECTURE: "/get-all-lecture",
   GET_LECTURE_BY_ID: "/get-lecture-by-id/:roomId",
   GET_LECTURE_BY_TOPIC_NAME:'/get-lecture-by-topic-name/:topicDetails',
   REGULAR_CLASSES:"/regular-classes",
   GET_SINGLE_LECTURE_DETAIL:'/get-single-lecture-detail/:roomId'
+  STUDENT_FEEDBACK: "/student-feedback",
+  CREATE_STUDENT_FEEDBACK: "/create-student-feedback",
+  GET_ALL_STUDENT_FEEDBACK: "/get-all-student-feedback",
+  DELETE_STUDENT_FEEDBACK: "/delete-student-feedback/:id",
 });
 
 module.exports = routesConstants;

@@ -9,6 +9,9 @@ const bodyParser = require("body-parser");
 const upload = require("express-fileupload");
 const scheduleJob = require("./jobs/scheduleJobs");
 const { SOCKET_EVENTS, routesConstants } = require("./constants");
+const { Server } = require("socket.io");
+const { createAdapter } = require("@socket.io/redis-adapter");
+const { createClient } = require("redis");
 const scheduleLiveClass = require("./routes/scheduleliveclasses/scheduleLiveClass");
 const genericRoutes = require("./routes/genericroutes/genericroutes");
 const authenticationRoutes = require("./routes/authentication/authenticationRoutes");
@@ -16,8 +19,8 @@ const soloClassroomRoutes = require("./routes/soloclassroom/soloClassroom");
 const myUploadRoutes = require("./routes/myuploads/assignment");
 const recordingRoutes = require("./routes/recordings/recordings");
 const crashCourseRoutes = require("./routes/crashcourse/crashCourseRoutes");
+const studentFeedbackRoutes = require("./routes/studentfeedback/studentFeedackRoutes");
 const config = require("./socketcontrollers/config");
-const regularClassesRoutes = require("./routes/regularclasses/regularclasses");
 const { ENVIRON } = require("./envvar");
 const {
   isSocketUserAuthenticated,
@@ -96,6 +99,7 @@ app.use(
   })
 );
 app.use(express.urlencoded({ limit: "200mb", extended: true }));
+
 app.use(upload()); // this is required for uploading multipart/formData
 app.use(cors());
 app.use(cookieParser());
@@ -107,7 +111,6 @@ app.use(routesConstants.SOLO, soloClassroomRoutes);
 app.use(routesConstants.TOPIC_ASSIGNMENTS, myUploadRoutes);
 app.use(routesConstants.RECORDING, recordingRoutes);
 app.use(routesConstants.CRASH_COURSE, crashCourseRoutes);
-app.use(routesConstants.REGULAR_CLASSES,regularClassesRoutes)
 // Cron jobs function
 if (ENVIRON !== "local") {
   scheduleJob();
@@ -226,7 +229,7 @@ async function runMediasoupWorkers() {
 runMediasoupWorkers();
 
 const httpServer = http.createServer(app);
-const io = socketIo(httpServer, {
+const io = new Server(httpServer, {
   maxHttpBufferSize: 1e8, // 100 MB,
   cors: {
     origin: "*",
@@ -234,9 +237,36 @@ const io = socketIo(httpServer, {
   },
 });
 
+const pubClient = createClient({ url: REDIS_HOST });
+const subClient = createClient({ url: REDIS_HOST });
+
+Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
+  io.adapter(createAdapter(pubClient, subClient));
+  //io.listen(3000);
+});
+
+pubClient.on("connect", () => {
+  console.log("pubClient connected");
+});
+subClient.on("connect", () => {
+  console.log("subClient connected");
+});
+
+pubClient.on("error", (err) => {
+  console.error("pubClient error:", err);
+});
+
+// Error handling for subClient
+subClient.on("error", (err) => {
+  console.error("subClient error:", err);
+});
+
 io.use(isSocketUserAuthenticated);
 io.use(socketPaidStatusOrTeacher);
 
+(async () => {
+  runSubscribers(io);
+})();
 io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   console.log("connected client with socket id", socket.id);
 
