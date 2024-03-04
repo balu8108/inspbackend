@@ -13,7 +13,6 @@ const {
 const { classStatus } = require("../../constants");
 
 // DB FUNCTIONS START
-
 const createLiveClassRoom = async (randomCharacters, body, plainAuthData) => {
   try {
     const newLiveClass = await LiveClassRoom.create({
@@ -69,10 +68,8 @@ const uploadFilesAndCreateEntries = async (
     console.log("Error in uploading files and creating entries", err);
   }
 };
+
 // DB FUNCTIONS END
-
-// BELOW IS REST APIS HANDLER
-
 const getAllLiveClasses = async (req, res) => {
   try {
     const liveClassesData = await LiveClassRoom.findAll({
@@ -240,10 +237,59 @@ const getLectureNo = async (req, res) => {
 
 }
 
+const uploadFilesToClass = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    const { files } = req;
+
+    if (!classId) {
+      return res.status(400).json({ error: "Class Id is required" });
+    }
+
+    let addFilesInArray = [];
+    if (files) {
+      addFilesInArray = Array.isArray(files?.files)
+        ? files?.files
+        : [files?.files];
+    }
+
+    const getLiveClassRoom = await LiveClassRoom.findOne({ where: { id: classId } });
+
+    if (getLiveClassRoom) {
+      let LiveClassRoomFiles = [];
+      if (files) {
+        const fileUploads = await uploadFilesToS3(
+          addFilesInArray,
+          `files/roomId_${getLiveClassRoom.roomId}`
+        );
+        if (fileUploads) {
+          fileUploads.forEach(async (file) => {
+            const newFileToDB = await LiveClassRoomFile.create({
+              key: file.key,
+              url: file.url,
+              classRoomId: classId,
+            });
+            LiveClassRoomFiles.push(newFileToDB);
+          });
+          return res.status(200).json({ message: "Uploaded files" });
+        } else {
+          throw new Error("unable to upload files");
+        }
+      }
+    }
+    else {
+      throw new Error("No Live Class Found with this Room Id");
+    }
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   createLiveClass,
   getAllLiveClasses,
   getLiveClassDetails,
   getUpcomingClass,
-  getLectureNo
+  getLectureNo,
+  uploadFilesToClass
 };
