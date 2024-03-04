@@ -57,7 +57,7 @@ module.exports = {
   getLectureNo,
   getAllCrashCourseLecture,
   getLectureById,
-  getAllLectureByTopicName
+  getAllLectureByTopicName,
   loginWithIpHandler,
   createStudentFeedback,
   getAllStudentFeedback,
