@@ -12,7 +12,7 @@ exports.createAssignment = async (req, res) => {
       key: key,
       url: url,
     });
-    console.log("assignment", assignment);
+
     res.status(201).json({
       message: "Assignment created successfully and saved ",
       assignment,
@@ -25,9 +25,6 @@ exports.createAssignment = async (req, res) => {
   }
 };
 
-
-
-
 exports.allAssignmentsWithFiles = async (req, res) => {
   try {
     const assignmentsWithFiles = await Assignment.findAll({
@@ -36,34 +33,35 @@ exports.allAssignmentsWithFiles = async (req, res) => {
 
     res.status(200).json(assignmentsWithFiles);
   } catch (error) {
-    console.error('Error fetching assignments with files:', error);
-    res.status(500).json({ error: 'An error occurred while fetching assignments with files' });
+    console.error("Error fetching assignments with files:", error);
+    res.status(500).json({
+      error: "An error occurred while fetching assignments with files",
+    });
   }
 };
 
-
-// all assignments files for particular id 
+// all assignments files for particular id
 exports.allAssignmentsbytopicid = async (req, res) => {
   try {
-    const { topicId } = req.query; 
+    const { topicId } = req.query;
 
     const assignments = await Assignment.findAll({
-      where: { topicId }, 
-      include: [{ model: AssignmentFiles }], 
+      where: { topicId },
+      include: [{ model: AssignmentFiles }],
     });
 
     res.status(200).json(assignments);
   } catch (error) {
     console.error("Error fetching assignments:", error);
-    res.status(500).json({ error: "An error occurred while fetching assignments" });
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching assignments" });
   }
 };
 
-
-
 exports.deleteAssignment = async (req, res) => {
   try {
-    const { id} = req.params;
+    const { id } = req.params;
     const assignment = await Assignment.findByPk(id);
 
     if (!assignment) {
@@ -99,7 +97,6 @@ exports.latestAssignments = async (req, res) => {
   }
 };
 
-
 // this is the controller  for student home page where  only 1 recent assignment will be show ..
 exports.recentOneAssignments = async (req, res) => {
   try {
@@ -116,8 +113,6 @@ exports.recentOneAssignments = async (req, res) => {
     });
   }
 };
-
-
 
 // this is the controller where  assignement will be created.
 exports.uploadAssignment = async (req, res) => {
@@ -138,12 +133,13 @@ exports.uploadAssignment = async (req, res) => {
 
     // Extract other data from the request
     const { plainAuthData } = req;
-    console.log("AuthData", req.plainAuthData);
-    const {subjectId,subjectName, topicName, topicId, description} = req.body;
+
+    const { subjectId, subjectName, topicName, topicId, description } =
+      req.body;
 
     // Save assignment information in the Assignment model
     const assignment = await Assignment.create({
-      subjectId:subjectId,
+      subjectId,
       subjectName,
       topicName,
       topicId,
@@ -152,7 +148,10 @@ exports.uploadAssignment = async (req, res) => {
     });
 
     // Upload files to S3 or your desired storage
-    const filesUploading = await uploadFilesToS3(addFilesInArray, "assignments");
+    const filesUploading = await uploadFilesToS3(
+      addFilesInArray,
+      "assignments"
+    );
 
     // Create AssignmentFiles records for each uploaded file
     const assignmentFiles = await Promise.all(
@@ -163,9 +162,9 @@ exports.uploadAssignment = async (req, res) => {
         const assignmentFile = await AssignmentFiles.create({
           key,
           url,
-          isDownloadable: true,
-          isShareable: true,
-          assignmentId: assignment.id, // Assign the assignment ID to the file
+          isDownloadable: false,
+          isShareable: false,
+          assignmentId: assignment.id,
         });
 
         return assignmentFile;
@@ -174,7 +173,7 @@ exports.uploadAssignment = async (req, res) => {
 
     res.status(201).json({
       message: "Assignment and files uploaded successfully",
-      assignmentFiles,
+      assignment,
     });
   } catch (error) {
     console.error("Error uploading files:", error);
@@ -182,3 +181,49 @@ exports.uploadAssignment = async (req, res) => {
   }
 };
 
+// for getting assignments for a particular subjects :: CHEMISTRY , MATHEMATICS , PHYSICS ,.
+
+exports.getSubjectsAssignments = async (req, res) => {
+  try {
+    const subjectId = req.params.subjectId;
+
+    if (subjectId === "ALL") {
+      const assignments = await Assignment.findAll({
+        include: AssignmentFiles,
+      });
+      res.status(200).json(assignments);
+    } else {
+      const assignments = await Assignment.findAll({
+        where: { subjectId },
+        include: AssignmentFiles,
+      });
+      res.status(200).json(assignments);
+    }
+  } catch (err) {
+    console.error("Error in fetching assignments:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+// fetching the assignment by giving subjectName..
+exports.getAssignmentsBySubjectName = async (req, res) => {
+  try {
+    const { subjectName } = req.params;
+
+    // Find assignments by subjectName
+    const assignments = await Assignment.findAll({
+      where: { subjectName },
+      include: AssignmentFiles,
+    });
+
+    if (assignments.length === 0) {
+      return res
+        .status(200)
+        .json({ message: "No assignments found for the given subjectName" });
+    }
+    res.status(200).json(assignments);
+  } catch (err) {
+    console.error("Error in fetching assignments by subjectName:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};

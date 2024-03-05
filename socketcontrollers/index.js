@@ -63,13 +63,24 @@ const processLeaderBoardData = (roomId, leaderBoardData) => {
         },
       };
     }
+
     if (isObjectValid(leaderBoardObjects)) {
       leaderBoard[roomId] = leaderBoardObjects;
     }
+    // console.log("main leader board object", leaderBoard);
 
-    return leaderBoard.hasOwnProperty(roomId)
-      ? Object.values(leaderBoard[roomId])
-      : [];
+    const sortedLeaderBoard = Object.values(leaderBoardObjects).sort((a, b) => {
+      // Sort by correct answers in descending order
+      if (b.correctAnswers !== a.correctAnswers) {
+        return b.correctAnswers - a.correctAnswers;
+      }
+      // If correct answers are equal, sort by combined response time in ascending order
+      return a.combinedResponseTime - b.combinedResponseTime;
+    });
+    return sortedLeaderBoard;
+    // return leaderBoard.hasOwnProperty(roomId)
+    //   ? Object.values(leaderBoard[roomId])
+    //   : [];
   } catch (err) {
     console.log("Error in processing leaderboard data", err);
     return;
@@ -79,10 +90,10 @@ const processLeaderBoardData = (roomId, leaderBoardData) => {
 const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
   try {
     // check if create room have this id or not
+    console.log("Worker in create", worker);
     let router1;
-    let peers = [];
+    let prevPeers = [];
     let mentors = [];
-
     let leaderBoardArray = [];
     if ("roomId" in data) {
       // means room exist then add this peer to given room
@@ -136,6 +147,8 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           return {
             roomId: false,
             router1: false,
+            newPeerDetails: null,
+            liveClass: null,
             errMsg: "You have already joined the class!!",
           };
         }
@@ -143,25 +156,23 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
         if (peerDetails.user_type === 1) {
           liveClass.classStatus = classStatus.ONGOING;
           await liveClass.save();
-          LiveClassLog.create({
+          await LiveClassLog.create({
             classRoomId: liveClass.id,
             logInfo: liveClassLogInfo.TEACHER_JOINED,
           });
         }
       }
 
-      // Get leaderboard for teacher if the authDtaa if of teacher
-      if (authData?.user_type === 1) {
-        const leaderBoardData = await LeaderBoard.findAll({
-          where: { classRoomId: liveClass?.id },
-          order: [
-            ["correctAnswers", "DESC"],
-            ["combinedResponseTime", "ASC"],
-          ],
-        });
-        leaderBoardArray = processLeaderBoardData(roomId, leaderBoardData); // process leaderboard data
-      }
+      // Get leaderboard for teacher if the authData if of teacher
 
+      const leaderBoardData = await LeaderBoard.findAll({
+        where: { classRoomId: liveClass?.id },
+        order: [
+          ["correctAnswers", "DESC"],
+          ["combinedResponseTime", "ASC"],
+        ],
+      });
+      leaderBoardArray = processLeaderBoardData(roomId, leaderBoardData); // process leaderboard data
       let newPeerDetails = {
         socketId: socketId,
         id:
@@ -172,6 +183,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           ENVIRON !== "local"
             ? authData.name
             : authData.name + Math.floor(Math.random() * (10000 - 1 + 1)) + 1,
+        email: authData?.email,
         isTeacher: authData?.user_type === 1,
         isAudioBlocked:
           authData?.user_type === 1 ? false : liveClass?.muteAllStudents, // At the moment we used blocked and enabled differently need optimzation later on
@@ -190,7 +202,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
       // In below mentors key we are taking an array as we can have multiple mentors in a class
       if (roomId in rooms) {
         router1 = rooms[roomId].router;
-        peers = rooms[roomId].peers || [];
+        prevPeers = rooms[roomId].peers || [];
         mentors = rooms[roomId].mentors || [];
 
         rooms[roomId] = {
@@ -198,7 +210,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           mentors: newPeerDetails.isTeacher
             ? [newPeerDetails, ...mentors]
             : [...mentors],
-          peers: [newPeerDetails, ...peers],
+          peers: [newPeerDetails, ...prevPeers],
         };
 
         return {
@@ -212,6 +224,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
         // TODO Check in db and then create room if it exists otherwise don't create and send false,false
         // Right now we will create using uuid
         // let generateRoomId = uuidv4();
+
         router1 = await worker.createRouter({ mediaCodecs });
 
         rooms[roomId] = {
@@ -219,7 +232,7 @@ const createOrJoinRoomFunction = async (data, authData, socketId, worker) => {
           mentors: newPeerDetails.isTeacher
             ? [newPeerDetails, ...mentors]
             : [...mentors],
-          peers: [newPeerDetails, ...peers],
+          peers: [newPeerDetails, ...prevPeers],
         };
 
         return {
@@ -257,15 +270,23 @@ const joinRoomPreviewHandler = (data, callback, socket, io) => {
         socket.join(roomId);
         callback({ success: true, peers: [] });
       }
+    } else {
+      callback({ success: false }); // No room id supplied
     }
-    callback({ success: false }); // No room id supplied
   } catch (err) {
     console.log("Error in join room Preview Handler", err);
   }
 };
 
-const joinRoomHandler = async (data, callback, socket, io, worker) => {
+const joinRoomHandler = async (
+  data,
+  callback,
+  socket,
+  io,
+  mediaSoupworkers
+) => {
   try {
+    const worker = mediaSoupworkers.values().next().value;
     const { authData } = socket;
     const {
       roomId,
@@ -307,11 +328,11 @@ const joinRoomHandler = async (data, callback, socket, io, worker) => {
   }
 };
 
-const createWebRtcTransport = async (router) => {
+const createWebRtcTransportCreator = async (router) => {
   try {
     const webRtcOptions = config.webRtcTransport;
 
-    let transport = await router.createWebRtcTransport(webRtcOptions);
+    const transport = await router.createWebRtcTransport(webRtcOptions);
     transport.on(SOCKET_EVENTS.DTLS_STATE_CHANGE, (dtlsState) => {
       if (dtlsState === "closed") {
         transport.close();
@@ -329,10 +350,12 @@ const createWebRtcTransport = async (router) => {
 
 const addTransport = (transport, roomId, consumer, socket) => {
   try {
+    console.log("transports before adding", transports);
     transports = [
       ...transports,
       { socketId: socket.id, transport, roomId, consumer },
     ];
+    console.log("transports after adding", transports);
     peers[socket.id] = {
       ...peers[socket.id],
       transports: [...peers[socket.id].transports, transport.id],
@@ -347,14 +370,14 @@ const createWebRtcTransportHandler = async (
   callback,
   socket,
   io,
-  worker
+  mediaSoupworkers
 ) => {
   try {
     const { consumer } = data;
     const roomId = peers[socket.id].roomId;
     const router = rooms[roomId].router;
 
-    const transport = await createWebRtcTransport(router);
+    const transport = await createWebRtcTransportCreator(router);
     if (transport) {
       const dtlsData = {
         params: {
@@ -378,13 +401,15 @@ const getTransport = (socketId) => {
     const [producerTransport] = transports.filter(
       (transport) => transport.socketId === socketId && !transport.consumer
     );
+    console.log("getting producer transport", producerTransport);
+
     return producerTransport.transport;
   } catch (err) {
     console.log("Error in getTransport", err);
   }
 };
 
-const connectWebRTCTransportSendHandler = (data, socket, worker) => {
+const connectWebRTCTransportSendHandler = (data, socket, mediaSoupworkers) => {
   // this is for connecting the producer transport
   try {
     const { dtlsParameters } = data;
@@ -407,7 +432,12 @@ const addProducer = (producer, roomId, socket) => {
   }
 };
 
-const transportProduceHandler = async (data, callback, socket, worker) => {
+const transportProduceHandler = async (
+  data,
+  callback,
+  socket,
+  mediaSoupworkers
+) => {
   try {
     const { kind, rtpParameters, appData } = data;
 
@@ -423,7 +453,7 @@ const transportProduceHandler = async (data, callback, socket, worker) => {
     // POSSIBLE_TODO - We may require remove Producer also so that when either a producer leaves or it stops producing then it should not be there in the producer list
     // emit that new-producer started like someone started his video streaming and do not send the stream to the original user who initiated the request
 
-    socket.broadcast.to(roomId).emit(SOCKET_EVENTS.NEW_PRODUCER, {
+    socket.to(roomId).emit(SOCKET_EVENTS.NEW_PRODUCER, {
       producerId: producer.id,
       appData: appData,
     });
@@ -443,7 +473,7 @@ const transportProduceHandler = async (data, callback, socket, worker) => {
   }
 };
 
-const getProducersHandler = (callback, socket, worker) => {
+const getProducersHandler = (callback, socket, mediaSoupworkers) => {
   try {
     // send back all the producers list to the user of the room to which this user belongs
     const { roomId } = peers[socket.id];
@@ -467,7 +497,11 @@ const getProducersHandler = (callback, socket, worker) => {
   }
 };
 
-const connectWebRTCTransportRecvHandler = async (data, socket, worker) => {
+const connectWebRTCTransportRecvHandler = async (
+  data,
+  socket,
+  mediaSoupworkers
+) => {
   try {
     const { dtlsParameters, serverConsumerTransportId } = data;
     // find the transport and check if that transport is consumer type
@@ -476,6 +510,7 @@ const connectWebRTCTransportRecvHandler = async (data, socket, worker) => {
         transportData.consumer &&
         transportData.transport.id == serverConsumerTransportId
     ).transport;
+    console.log("consumer got it", consumerTransport);
     await consumerTransport.connect({ dtlsParameters });
   } catch (err) {
     console.log("Error in connectWebRTCTransportRecvHandler", err);
@@ -494,7 +529,7 @@ const addConsumer = (consumer, roomId, socket) => {
   }
 };
 
-const consumeHandler = async (data, callback, socket, worker) => {
+const consumeHandler = async (data, callback, socket, mediaSoupworkers) => {
   const {
     rtpCapabilities,
     remoteProducerId,
@@ -505,17 +540,20 @@ const consumeHandler = async (data, callback, socket, worker) => {
   try {
     const { roomId } = peers[socket.id];
     const router = rooms[roomId].router;
-    let consumerTransport = transports.find(
+
+    const consumerTransport = transports.find(
       (transport) =>
         transport.consumer &&
         transport.transport.id === serverConsumerTransportId
     ).transport;
+
     if (router.canConsume({ producerId: remoteProducerId, rtpCapabilities })) {
       // transport can consume and return a consumer
       const consumer = await consumerTransport.consume({
         producerId: remoteProducerId,
         rtpCapabilities,
         paused: true,
+        appData: appData,
       });
 
       consumer.on(SOCKET_EVENTS.PRODUCERPAUSE, () => {
@@ -525,7 +563,6 @@ const consumeHandler = async (data, callback, socket, worker) => {
         });
       });
       consumer.on(SOCKET_EVENTS.PRODUCERRESUME, () => {
-        console.log("producer resmue");
         socket.emit(SOCKET_EVENTS.PRODUCER_RESUMED, {
           appData,
           remoteProducerId,
@@ -536,12 +573,19 @@ const consumeHandler = async (data, callback, socket, worker) => {
       consumer.on(SOCKET_EVENTS.TRANSPORT_CLOSE, () => {});
       // on producer close
       consumer.on(SOCKET_EVENTS.PRODUCERCLOSE, () => {
-        socket.emit(SOCKET_EVENTS.PRODUCER_CLOSED, { remoteProducerId });
+        // In frontend we have used producerId and producerAppData because we used similar thing in SOME_PRODUCER_CLOSED
+        socket.emit(SOCKET_EVENTS.PRODUCER_CLOSED, {
+          producerId: remoteProducerId,
+          producerAppData: appData,
+        });
 
-        consumerTransport.close();
-        transports = transports.filter(
-          (transportData) => transportData.transport.id !== consumerTransport.id
-        );
+        // console.log("EXPECTED BUG POINT2");
+        // console.log("transport on producer close before", transports);
+        // consumerTransport.close();
+        // transports = transports.filter(
+        //   (transportData) => transportData.transport.id !== consumerTransport.id
+        // );
+        // console.log("transport on producer close after", transports);
         consumer.close();
         consumers = consumers.filter(
           (consumerData) => consumerData.consumer.id !== consumer.id
@@ -556,14 +600,16 @@ const consumeHandler = async (data, callback, socket, worker) => {
         rtpParameters: consumer.rtpParameters,
         serverConsumerId: consumer.id,
       };
+
       callback({ params });
     }
   } catch (err) {
+    console.log("Error in consuming", err);
     callback({ params: { error: err } });
   }
 };
 
-const consumerResumeHandler = async (data, socket, worker) => {
+const consumerResumeHandler = async (data, socket, mediaSoupworkers) => {
   try {
     const { serverConsumerId } = data;
     const { consumer } = consumers.find(
@@ -575,15 +621,37 @@ const consumerResumeHandler = async (data, socket, worker) => {
   }
 };
 
-const removeItems = (items, socketId, type) => {
+const removeItems = (itemName, socketId, type) => {
   try {
-    items.forEach((item) => {
-      if (item.socketId === socketId) {
-        item[type].close();
-      }
-    });
-    items = items.filter((item) => item.socketId !== socketId);
-    return items;
+    if (itemName === "producers") {
+      producers.forEach((item) => {
+        if (item?.socketId === socketId) {
+          item[type].close();
+        }
+      });
+      producers = producers.filter((item) => item.socketId !== socketId);
+    } else if (itemName === "consumers") {
+      consumers.forEach((item) => {
+        if (item?.socketId === socketId) {
+          item[type].close();
+        }
+      });
+      consumers = consumers.filter((item) => item.socketId !== socketId);
+    } else if (itemName === "transports") {
+      transports.forEach((item) => {
+        if (item?.socketId === socketId) {
+          item[type].close();
+        }
+      });
+      transports = transports.filter((item) => item.socketId !== socketId);
+    }
+    // items.forEach((item) => {
+    //   if (item?.socketId === socketId) {
+    //     item[type].close();
+    //   }
+    // });
+    // items = items.filter((item) => item.socketId !== socketId);
+    // return items;
   } catch (err) {
     console.log("Error in removeItems", err);
   }
@@ -602,15 +670,22 @@ const chatMsgHandler = (data, socket) => {
   }
 };
 
-const disconnectHandler = async (socket, worker, io) => {
+const disconnectHandler = async (socket, mediaSoupworkers, io) => {
   try {
-    console.log("leaderboards", leaderBoard);
-    consumers = removeItems(consumers, socket.id, "consumer");
-    producers = removeItems(producers, socket.id, "producer");
-    transports = removeItems(transports, socket.id, "transport");
+    removeItems("consumers", socket.id, "consumer");
+    console.log("consumers after disconnect", consumers);
+    removeItems("producers", socket.id, "producer");
+    console.log("prodcuers after disconnect", producers);
+    removeItems("transports", socket.id, "transport");
+    console.log("transports", transports);
     if (socket.id in peers) {
       const { roomId } = peers[socket.id];
       const leavingPeer = peers[socket.id];
+
+      // before deleting peer delete the record process if exist(In case of teacher to allow gstreamer process to stop )
+      if (peers[socket.id].recordProcess) {
+        stopRecordingHandler(socket);
+      }
       delete peers[socket.id];
 
       rooms[roomId] = {
@@ -624,6 +699,10 @@ const disconnectHandler = async (socket, worker, io) => {
       };
 
       if (rooms[roomId].peers.length === 0) {
+        const { router } = rooms[roomId];
+        if (router) {
+          router.close();
+        }
         delete rooms[roomId];
         delete leaderBoard[roomId];
         socket.leave(roomId);
@@ -637,21 +716,24 @@ const disconnectHandler = async (socket, worker, io) => {
         });
       }
     }
-    console.log("rooms after disconnect", rooms);
-    console.log("leaderboard after disconnect", leaderBoard);
   } catch (err) {
     console.log("Error in disconnectHandler", err);
   }
 };
 
-const leaveRoomHandler = async (callback, socket, worker, io) => {
+const leaveRoomHandler = async (callback, socket, mediaSoupworkers, io) => {
   try {
-    consumers = removeItems(consumers, socket.id, "consumer");
-    producers = removeItems(producers, socket.id, "producer");
-    transports = removeItems(transports, socket.id, "transport");
+    removeItems("consumers", socket.id, "consumer");
+    removeItems("producers", socket.id, "producer");
+    removeItems("transports", socket.id, "transport");
+
     if (socket.id in peers) {
       const { roomId } = peers[socket.id];
       const leavingPeer = peers[socket.id];
+      // before deleting peer delete the record process if exist(In case of teacher to allow gstreamer process to stop )
+      if (peers[socket.id].recordProcess) {
+        stopRecordingHandler(socket);
+      }
       delete peers[socket.id];
 
       rooms[roomId] = {
@@ -668,13 +750,16 @@ const leaveRoomHandler = async (callback, socket, worker, io) => {
         leavingPeer.peerDetails,
         roomId
       );
-      console.log("feedbacks", success, isFeedback, feedBackTopicId);
 
       callback({
         feedBackStatus: { success, isFeedback, feedBackTopicId },
       });
 
       if (rooms[roomId].peers.length === 0) {
+        const { router } = rooms[roomId];
+        if (router) {
+          router.close();
+        }
         delete rooms[roomId];
         socket.leave(roomId);
         io.to(roomId).emit(SOCKET_EVENTS.PEER_LEAVED, {
@@ -688,10 +773,10 @@ const leaveRoomHandler = async (callback, socket, worker, io) => {
       }
     }
   } catch (err) {
-    console.log("Error in disconnectHandler", err);
+    console.log("Error in leave Handler", err);
   }
 };
-const endMeetHandler = async (socket, worker, io) => {
+const endMeetHandler = async (socket, mediaSoupworkers, io) => {
   // End meet by mentor
   try {
     const { roomId } = peers[socket.id];
@@ -767,7 +852,7 @@ const stopProducingHandler = (data, socket) => {
     producer.producer.close(); // this will fire of all the consumers producer close event above in consume handler we can do some cleanups there
     // after close we can emit to broadcast everyone that producer closed at the moment
 
-    socket.broadcast.to(roomId).emit(SOCKET_EVENTS.SOME_PRODUCER_CLOSED, {
+    socket.to(roomId).emit(SOCKET_EVENTS.SOME_PRODUCER_CLOSED, {
       producerId,
       producerAppData,
     });
@@ -780,7 +865,7 @@ const raiseHandHandler = (data, socket) => {
   try {
     const { isHandRaised } = data;
     const { roomId, peerDetails } = peers[socket.id];
-    socket.broadcast.to(roomId).emit(SOCKET_EVENTS.RAISE_HAND_FROM_SERVER, {
+    socket.to(roomId).emit(SOCKET_EVENTS.RAISE_HAND_FROM_SERVER, {
       isHandRaised,
       peerDetails,
     });
@@ -807,7 +892,6 @@ const uploadFileHandler = async (data, callback, socket) => {
     );
     let filesResArray = [];
     if (fileUploads) {
-      console.log("fileUploads", fileUploads);
       for (const file of fileUploads) {
         const newFileToDB = await LiveClassRoomFile.create({
           key: file.key,
@@ -1036,14 +1120,19 @@ const studentTestAnswerResponseHandler = (data, socket, io) => {
       peerDetails,
       data
     );
-    console.log("leaderboard from answer", leaderBoard);
+
     const getAllTeachers = rooms[roomId].mentors;
 
-    getAllTeachers.forEach(async (peer) => {
-      // send leader board to specific teacher
-      io.to(peer.socketId).emit(SOCKET_EVENTS.LEADERBOARD_FROM_SERVER, {
-        leaderBoard: updatedLeaderboard.slice(0, 10),
-      });
+    // getAllTeachers.forEach(async (peer) => {
+    //   // send leader board to specific teacher
+    //   io.to(peer.socketId).emit(SOCKET_EVENTS.LEADERBOARD_FROM_SERVER, {
+    //     leaderBoard: updatedLeaderboard.slice(0, 10),
+    //   });
+    // });
+
+    // send leaderboard feed to all the connected clients in the room students and mentor both
+    io.in(roomId).emit(SOCKET_EVENTS.LEADERBOARD_FROM_SERVER, {
+      leaderBoard: updatedLeaderboard.slice(0, 10),
     });
   } catch (err) {
     console.log("Error in studentTestAnswerResponseHandler", err);
@@ -1053,9 +1142,7 @@ const studentTestAnswerResponseHandler = (data, socket, io) => {
 const miroBoardDataHandler = (data, socket) => {
   try {
     const { roomId } = peers[socket.id];
-    socket.broadcast
-      .to(roomId)
-      .emit(SOCKET_EVENTS.MIRO_BOARD_DATA_FROM_SERVER, data);
+    socket.to(roomId).emit(SOCKET_EVENTS.MIRO_BOARD_DATA_FROM_SERVER, data);
   } catch (err) {
     console.log("Err in Miro board data handler", err);
   }
@@ -1069,7 +1156,7 @@ const stopRecordingHandler = (socket) => {
       peers[socket.id] = { ...peer, recordProcess: null };
     }
   } catch (err) {
-    console.log("No recording proces to stop");
+    console.log("No recording proces to stop", err);
   }
 };
 const setIsAudioStreamEnabled = (data, socket, io) => {
@@ -1119,6 +1206,11 @@ const blockOrUnblockMicHandler = (data, socket, io) => {
       // inform the targetted peer about block or unblock of his mic
       io.to(peerSocketId).emit(
         SOCKET_EVENTS.BLOCK_OR_UNBLOCK_MIC_FROM_SERVER,
+        peers[peerSocketId].peerDetails
+      );
+      // inform all the peers along with blocked peer, that this peer has mic blocked by mentor
+      io.to(roomId).emit(
+        SOCKET_EVENTS.PEER_MIC_BLOCKED_OR_UNBLOCKED_FROM_SERVER,
         peers[peerSocketId].peerDetails
       );
     }
@@ -1189,6 +1281,18 @@ const pollTimeIncreaseHandler = (data, socket) => {
   }
 };
 
+const replaceTrackHandler = (data, io, socket) => {
+  try {
+    for (const consumer of consumers) {
+      if (consumer?.roomId == data?.roomId) {
+        io.to(consumer.socketId).emit(SOCKET_EVENTS.REPLACED_TRACK, data);
+      }
+    }
+  } catch (err) {
+    console.log("error in replace track");
+  }
+};
+
 module.exports = {
   joinRoomPreviewHandler,
   joinRoomHandler,
@@ -1219,4 +1323,5 @@ module.exports = {
   muteMicCommandByMentorHandler,
   questionMsgSentByStudentHandler,
   pollTimeIncreaseHandler,
+  replaceTrackHandler,
 };

@@ -17,6 +17,7 @@ const GSTREAMER_DEBUG_LEVEL = 3;
 const GSTREAMER_COMMAND = "gst-launch-1.0";
 const GSTREAMER_OPTIONS = "-v -e";
 const getGStreamerPIDs = require("./gstreamerPids");
+const logger = require("../utils/logger");
 module.exports = class GStreamer {
   constructor(rtpParameters) {
     this._rtpParameters = rtpParameters;
@@ -27,7 +28,6 @@ module.exports = class GStreamer {
     this._createProcess();
   }
   _createProcess() {
-    console.log("gstreaemr rtpparameters", this._rtpParameters);
     let exe = null;
     if (PLATFORM === "windows") {
       exe = `SET GST_DEBUG=${GSTREAMER_DEBUG_LEVEL} && ${GSTREAMER_COMMAND} ${GSTREAMER_OPTIONS}`;
@@ -38,6 +38,7 @@ module.exports = class GStreamer {
       detached: false,
       shell: true,
     });
+    logger.info(JSON.stringify("Created gStreamer process", null, 2));
     if (this._process.stderr) {
       this._process.stderr.setEncoding("utf-8");
     }
@@ -54,14 +55,29 @@ module.exports = class GStreamer {
       )
     );
 
-    this._process.on("error", (error) =>
+    this._process.on("error", (error) => {
+      logger.info(
+        JSON.stringify(
+          `gstreamer::process::error [pid:%d, error:%o] ${this._process.pid}`,
+          null,
+          2
+        )
+      );
+      logger.info(JSON.stringify(`Gstreamer error ${error}`, null, 2));
       console.error(
         "gstreamer::process::error [pid:%d, error:%o]",
         this._process.pid,
         error
-      )
-    );
+      );
+    });
     this._process.once("close", () => {
+      logger.info(
+        JSON.stringify(
+          `Gstreamer process ended id ${this._process.pid}`,
+          null,
+          2
+        )
+      );
       console.log("gstreamer::process::close [pid:%d]", this._process.pid);
       this._observer.emit("process-close");
     });
@@ -76,15 +92,16 @@ module.exports = class GStreamer {
   }
 
   async kill() {
-    if (PLATFORM === "ubuntu" || PLATFORM === "linux") {
-      const gstPid = await getGStreamerPIDs(this._process.pid);
-      gstPid.forEach((gstPid) => kill(gstPid, "SIGINT")); // In linux we can get the gst-launch-1.0 pid and kill it only then it kills process
-      this._process.stdin.end();
-      this._process.kill("SIGINT");
-    } else {
+    try {
+      logger.info(
+        JSON.stringify("Started Killing gstreamer(recording)", null, 2)
+      );
       this._process.stdin.end();
       kill(this._process.pid, "SIGINT"); // Kill method of treekill pacakge, but please note it will abruptly closes record process therefore we are using local file system in case of windows/local environment
+    } catch (err) {
+      console.log("Error in killing gstreamer process", err);
     }
+    logger.info(JSON.stringify("End Killing gstreamer(recording)", null, 2));
   }
 
   get _commandArgs() {
@@ -180,18 +197,31 @@ module.exports = class GStreamer {
   }
 
   get _sinkArgs() {
+    const commonArgs = ["webmmux name=mux", "!"];
+    let sinks = [];
+    logger.info(JSON.stringify(`Recording uploading started`, null, 2));
     if (PLATFORM === "windows") {
-      return [
-        "webmmux name=mux",
-        "!",
-        `filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm`,
-      ];
+      sinks.push(
+        `tee name=t ! queue ! filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm t. ! queue`
+      );
+      // return [
+      //   "webmmux name=mux",
+      //   "!",
+      //   `filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm`,
+      // ];
     } else {
-      return [
-        "webmmux name=mux",
-        "!",
-        `awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`,
-      ];
+      sinks.push(
+        `tee name=t ! queue ! filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm t. ! queue`
+      );
+      sinks.push(
+        `t. ! queue ! awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`
+      );
+      // return [
+      //   "webmmux name=mux",
+      //   "!",
+      //   `awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`,
+      // ];
     }
+    return [...commonArgs, ...sinks];
   }
 };

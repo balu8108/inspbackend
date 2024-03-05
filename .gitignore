@@ -2,5 +2,8 @@ node_modules/
 
 variable.env
 .env
-
+/logs/debug/*.json
+/logs/info/*.json
+/logs/debug/*.log
+/logs/info/*.log
 config.json

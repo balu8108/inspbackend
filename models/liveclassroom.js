@@ -22,6 +22,9 @@ module.exports = (sequelize, DataTypes) => {
       LiveClassRoom.hasOne(models.LiveClassRoomQNANotes, {
         foreignKey: "classRoomId",
       });
+      LiveClassRoom.hasOne(models.LiveClassRoomNote, {
+        foreignKey: "classRoomId",
+      });
       LiveClassRoom.hasOne(models.LiveClassNotificationStatus, {
         foreignKey: "classRoomId",
       });
@@ -57,6 +60,11 @@ module.exports = (sequelize, DataTypes) => {
         "FINISHED",
         "NOT_CONDUCTED"
       ),
+      classType: DataTypes.ENUM(
+        "REGULARCLASS",
+        "CRASHCOURSE",
+      ),
+      // class Type eg regular  and crash course
     },
     {
       sequelize,

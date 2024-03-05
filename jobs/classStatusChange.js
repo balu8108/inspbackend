@@ -3,6 +3,7 @@ const { Op } = Sequelize;
 const { LiveClassRoom, LiveClassLog } = require("../models");
 const { classStatus, liveClassLogInfo } = require("../constants");
 const { rooms } = require("../socketcontrollers/socketglobalvariables");
+const { allRooms } = require("../socketcontrollers/RoomManager");
 const { isObjectValid } = require("../utils");
 const moment = require("moment-timezone");
 moment.tz.setDefault("Asia/Kolkata");
@@ -39,13 +40,15 @@ const checkRoom = async (element) => {
   // this check if there is an active room with a teacher in the class room
   try {
     const room = rooms[element?.roomId];
-    if (isObjectValid(room)) {
-      room?.peers?.forEach((peer) => {
-        if (peer?.isTeacher) {
-          return { isRoomFound: true, isTeacherFound: true };
-        }
-      });
-      return { isRoomFound: true, isTeacherFound: false };
+    const roomFound = allRooms.get(element?.roomId);
+    const isMentorInRoom = roomFound?._isMentorsInRoom();
+    if (isMentorInRoom) {
+      // room?.peers?.forEach((peer) => {
+      //   if (peer?.isTeacher) {
+
+      //   }
+      // });
+      return { isRoomFound: true, isTeacherFound: true };
     } else {
       return { isRoomFound: false, isTeacherFound: false };
     }
@@ -54,8 +57,10 @@ const checkRoom = async (element) => {
   }
 };
 
-const changeClassStatus = async (element, currentTime) => {
+const changeClassStatus = async (element, currentTime, currentDate) => {
   try {
+    const scheduledDate = moment(element.scheduledDate).format("YYYY-MM-DD");
+
     const scheduledStartTimeMoment = moment(
       element.scheduledStartTime,
       "HH:mm:ss"
@@ -67,7 +72,11 @@ const changeClassStatus = async (element, currentTime) => {
       .add(10, "minutes")
       .format("HH:mm:ss");
 
-    if (currentTime >= scheduledEndTime) {
+    if (
+      moment(currentDate).isAfter(scheduledDate) ||
+      (moment(currentDate).isSame(scheduledDate) &&
+        currentTime >= scheduledEndTime)
+    ) {
       // check logs if teacher not joined and already time has passed then we can conclude that class is not conducted
       const liveClassLogs = await findLiveClassLog(
         element,
@@ -114,10 +123,10 @@ const changeClassStatus = async (element, currentTime) => {
 const classStatusChange = async () => {
   try {
     const asof = moment();
-    console.log("asof", asof);
 
     const currentTime = asof.format("HH:mm:ss");
-    console.log("currentTime", currentTime);
+    const currentDate = asof.format("YYYY-MM-DD");
+
     //  Get scheduled classes but if current date === scheduled Date and current time >=scheduledStartTime+10
     const scheduledClasses = await LiveClassRoom.findAll({
       where: {
@@ -130,9 +139,9 @@ const classStatusChange = async () => {
         },
       },
     });
-    console.log("scheduledClasses", scheduledClasses);
+
     scheduledClasses.forEach((element) =>
-      changeClassStatus(element, currentTime)
+      changeClassStatus(element, currentTime, currentDate)
     );
   } catch (err) {
     console.log("Error in class status change scheduler", err);

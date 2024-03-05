@@ -1,16 +1,23 @@
-const { loginHandler } = require("./authentication/authController");
+const {
+  loginHandler,
+  loginWithIpHandler,
+  loginWithUidHandler,
+} = require("./authentication/authController");
 const {
   getAllSubjects,
   openFile,
   imageToDoc,
   generateGetPresignedUrl,
   createFeedback,
+  createLiveClassNotes,
 } = require("./genericcontrollers/genericController");
 const {
   createLiveClass,
   getAllLiveClasses,
   getLiveClassDetails,
   getUpcomingClass,
+  getLectureNo,
+  uploadFilesToClass
 } = require("./scheduleliveclasses/scheduleLiveClassController");
 const {
   getRecordingsWithDetails,
@@ -20,11 +27,22 @@ const {
   playRecording,
 } = require("./recordingscontrollers/recordingsController");
 
+const {
+  getAllCrashCourseLecture,
+  getLectureById,
+} = require("./crashcoursecontroller/crashCourserController");
+const {
+  createStudentFeedback,
+  getAllStudentFeedback,
+  deleteFeedbackById,
+} = require("./studentfeedback/studentFeedbackController");
+
 module.exports = {
   loginHandler,
   getAllSubjects,
   openFile,
   imageToDoc,
+  createLiveClassNotes,
   createLiveClass,
   getAllLiveClasses,
   getLiveClassDetails,
@@ -36,4 +54,13 @@ module.exports = {
   getRecordingsByTopicOnly,
   viewRecording,
   playRecording,
+  getLectureNo,
+  uploadFilesToClass,
+  getAllCrashCourseLecture,
+  getLectureById,
+  loginWithIpHandler,
+  createStudentFeedback,
+  getAllStudentFeedback,
+  deleteFeedbackById,
+  loginWithUidHandler,
 };

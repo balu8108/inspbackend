@@ -16,9 +16,9 @@ const createOrUpdateLeaderBoard = async (classPk, roomId, leaderBoardData) => {
       });
     } else {
       await LeaderBoard.create({
-        peerId: leaderBoardData.peerDetails.id,
-        peerName: leaderBoardData.peerDetails.name,
-        peerEmail: leaderBoardData.peerDetails?.email || "test@gmail.com",
+        peerId: leaderBoardData?.peerDetails?.id,
+        peerName: leaderBoardData?.peerDetails?.name,
+        peerEmail: leaderBoardData?.peerDetails?.email || "test@gmail.com",
         correctAnswers: leaderBoardData.correctAnswers,
         combinedResponseTime: leaderBoardData.combinedResponseTime,
         classRoomId: classPk,
@@ -91,7 +91,6 @@ const checkIsAnswersCorrect = (roomId, response) => {
 const updateLeaderboard = (classPk, roomId, peerDetails, response) => {
   if (!leaderBoard[roomId]) {
     leaderBoard[roomId] = {};
-    console.log("creating new leaderbaord", leaderBoard[roomId]);
   }
   const isAnswersCorrect = checkIsAnswersCorrect(roomId, response);
   if (!leaderBoard[roomId][peerDetails.id]) {
@@ -123,7 +122,7 @@ const updateLeaderboard = (classPk, roomId, peerDetails, response) => {
   }
 
   const roomLeaderBoard = leaderBoard[roomId];
-  console.log("leaderboards in roomleaerboar", roomLeaderBoard);
+
   const sortedLeaderBoard = Object.values(roomLeaderBoard).sort((a, b) => {
     if (b.correctAnswers !== a.correctAnswers) {
       return b.correctAnswers - a.correctAnswers;

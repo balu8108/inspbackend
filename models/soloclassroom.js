@@ -17,8 +17,8 @@ module.exports = (sequelize, DataTypes) => {
       mentorName: DataTypes.STRING,
       topicId: DataTypes.STRING,
       topic: DataTypes.STRING,
-      agenda: DataTypes.STRING,
-      description: DataTypes.STRING,
+      agenda: DataTypes.TEXT,
+      description: DataTypes.TEXT,
     },
     {
       sequelize,

@@ -11,7 +11,7 @@ const {
 exports.createSoloClassRoom = async (req, res) => {
   try {
     const { files } = req;
-    console.log("files in solo", files);
+
     let addFilesInArray = [];
 
     if (files) {
@@ -24,7 +24,6 @@ exports.createSoloClassRoom = async (req, res) => {
     const { plainAuthData } = req;
 
     const { subjectId, topicId, topic, agenda, description } = req.body;
-    console.log("log body", req.body);
 
     // Save solo lecture  information in the  SoloClassRoom model
     const soloclassroomlecture = await SoloClassRoom.create({
@@ -35,8 +34,6 @@ exports.createSoloClassRoom = async (req, res) => {
       agenda: agenda,
       description: description,
     });
-
-    console.log("solo lec", soloclassroomlecture);
 
     const soloClassRoomId = soloclassroomlecture.id;
     // Upload files to S3 or your desired storage
@@ -53,8 +50,8 @@ exports.createSoloClassRoom = async (req, res) => {
         const sololectureFile = await SoloClassRoomFiles.create({
           key: key,
           url: url,
-          isDownloadable: true,
-          isShareable: true,
+          isDownloadable: false,
+          isShareable: false,
           soloClassRoomId: soloclassroomlecture.id,
         });
 
@@ -67,8 +64,7 @@ exports.createSoloClassRoom = async (req, res) => {
       soloClassRoomId,
     });
   } catch (error) {
-    console.error("Error uploading files:", error);
-    res.status(500).json({ error: "An error occurred while uploading files" });
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -78,6 +74,7 @@ exports.uploadSoloClassRoomRecordings = async (req, res) => {
   try {
     const { files } = req;
     const { soloClassRoomId } = req.params;
+    console.log("record files", files);
 
     if (!files?.files) {
       return res.status(400).json({ message: "No files were uploaded." });
@@ -90,12 +87,14 @@ exports.uploadSoloClassRoomRecordings = async (req, res) => {
         ? files?.files
         : [files?.files];
     }
+    console.log("fies in array", addFilesInArray);
 
     // Upload files to S3 or your desired storage
     const filesUploading = await uploadFilesToS3(
       addFilesInArray,
       "soloclassroom-recordings"
     );
+    console.log("file uploaded?", filesUploading);
 
     // Create  records for each uploaded file
     const solorecordings = await Promise.all(
@@ -127,27 +126,26 @@ exports.getTopicDetails = async (req, res) => {
   try {
     const { topicId } = req.params;
 
-    const assignments = await SoloClassRoom.findAll({
+    const soloClassroomDetails = await SoloClassRoom.findAll({
       where: { topicId },
-      attributes: ["description", "agenda"],
       include: [
         {
           model: SoloClassRoomFiles,
-          attributes: ["key", "url"],
         },
         {
           model: SoloClassRoomRecording,
-          attributes: ["key", "url"],
         },
       ],
     });
 
-    res.status(200).json(assignments);
+    if (soloClassroomDetails.length === 0) {
+      res.status(201).json({ message: "No data available for this topic" });
+    } else {
+      res.status(200).json(soloClassroomDetails);
+    }
   } catch (error) {
-    console.error("Error fetching assignments:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while fetching assignments" });
+    console.error("Error fetching details:", error);
+    res.status(500).json({ error: "An error occurred while fetching details" });
   }
 };
 
@@ -174,9 +172,7 @@ exports.getSoloClassroomDetails = async (req, res) => {
     const { soloClassRoomId } = req.params;
 
     // Use Sequelize to query the 'soloclassrooms' table to retrieve topic, description, and agenda.
-    const soloClassroomDetails = await SoloClassRoom.findByPk(soloClassRoomId, {
-      attributes: ["topic", "description", "agenda"],
-    });
+    const soloClassroomDetails = await SoloClassRoom.findByPk(soloClassRoomId);
 
     if (!soloClassroomDetails) {
       return res.status(404).json({ error: "Solo classroom not found" });
@@ -186,7 +182,7 @@ exports.getSoloClassroomDetails = async (req, res) => {
     const soloClassRoomFile = await SoloClassRoomFiles.findAll({
       where: { soloClassRoomId: soloClassRoomId },
     });
-    console.log("soloclassfile", soloClassRoomFile);
+
     // Combine the data into a single JSON response.
     const response = {
       soloClassroomDetails,

@@ -8,6 +8,7 @@ const {
   SoloClassRoomRecording,
   SoloClassRoomFiles,
   AssignmentFiles,
+  LiveClassRoomNote,
 } = require("../../models");
 const {
   generatePresignedUrls,
@@ -17,6 +18,7 @@ const {
   formM3U8String,
   formMPDString,
   generateAWSS3LocationUrl,
+  createOrUpdateLiveClassNotes,
 } = require("../../utils");
 
 const { Op } = require("sequelize");
@@ -50,11 +52,17 @@ const openFile = async (req, res) => {
     }
     if (
       docType &&
-      !(docType === "live" || docType === "solo" || docType === "assignment")
+      !(
+        docType === "live" ||
+        docType === "solo" ||
+        docType === "assignment" ||
+        docType === "qna" ||
+        docType === "note"
+      )
     ) {
       return res
         .status(400)
-        .json({ error: "File type can be only live,solo,assignment" });
+        .json({ error: "File type can be only live,solo,assignment,qna,note" });
     }
     // All files uploaded to S3 so we need to generate presigned urls
     let file = null;
@@ -64,6 +72,10 @@ const openFile = async (req, res) => {
       file = await SoloClassRoomFiles.findOne({ where: { id: docId } });
     } else if (docType === "assignment") {
       file = await AssignmentFiles.findOne({ where: { id: docId } });
+    } else if (docType === "qna") {
+      file = await LiveClassRoomQNANotes.findOne({ where: { id: docId } });
+    } else if (docType === "note") {
+      file = await LiveClassRoomNote.findOne({ where: { id: docId } });
     }
 
     if (!file) {
@@ -130,8 +142,6 @@ const imageToDoc = async (req, res) => {
 const createFeedback = async (req, res) => {
   try {
     const { body, plainAuthData } = req;
-    console.log("body", body);
-    console.log("plain auth data", plainAuthData);
 
     if (plainAuthData && validateCreateFeedBack(body)) {
       const { id, name } = plainAuthData;
@@ -217,14 +227,10 @@ const getCompletedLiveClasses = async (req, res) => {
       },
       limit: 3,
       order: [["createdAt", "DESC"]],
-      attributes: [
-        "mentorName", // Include mentorName from LiveClassRoom
-      ],
       include: [
         {
           model: LiveClassRoomDetail,
           as: "LiveClassRoomDetail",
-          attributes: ["topicId", "topicName", "description"], // Include these attributes from LiveClassRoomDetail
         },
       ],
     });
@@ -241,7 +247,6 @@ const getTopicDetails = async (req, res) => {
     const topicId = req.params.topicId;
     const topicDetails = await Rating.findAll({
       where: { topicId },
-      attributes: ["raterName", "feedback", "rating"],
     });
     res.status(200).json({ topicId, topicDetails });
   } catch (error) {
@@ -304,6 +309,7 @@ const updateRecordingData = async (req, res) => {
         const awsUrl = generateAWSS3LocationUrl(finalOutputKey);
         soloRecord.key = finalOutputKey;
         soloRecord.url = awsUrl;
+        soloRecord.drmKeyId = drmKeyId;
         soloRecord.save();
       }
     }
@@ -315,11 +321,58 @@ const updateRecordingData = async (req, res) => {
     return res.status(400).json({ success: false, error: err.message });
   }
 };
+const createLiveClassNotes = async (req, res) => {
+  try {
+    const { body, files } = req;
+
+    if (!body.roomId) {
+      return res.status(400).json({ error: "Room Id is required" });
+    }
+
+    const isRoomExist = await LiveClassRoom.findOne({
+      where: { roomId: body.roomId },
+    });
+    if (!isRoomExist) {
+      return res.status(400).json({ error: "No room found with this id" });
+    }
+
+    const folderPath = `liveclassnotes`; // in AWS S3
+    const fileName = `notes_roomId_${body.roomId}.pdf`;
+
+    const { success, result, key, url } = await createOrUpdateLiveClassNotes(
+      folderPath,
+      fileName,
+      files
+    );
+
+    if (success && key && url) {
+      const isNotesExistForThisRoom = await LiveClassRoomNote.findOne({
+        where: { classRoomId: isRoomExist.id },
+      });
+      if (!isNotesExistForThisRoom) {
+        await LiveClassRoomNote.create({
+          key: key,
+          url: url,
+          classRoomId: isRoomExist.id,
+        });
+      }
+
+      return res.status(200).json({ data: result });
+    } else {
+      return res
+        .status(400)
+        .json({ error: "Some error occured while adding qna notes" });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+};
 
 module.exports = {
   getAllSubjects,
   openFile,
   imageToDoc,
+  createLiveClassNotes,
   generateGetPresignedUrl,
   createFeedback,
   latestfeedback,

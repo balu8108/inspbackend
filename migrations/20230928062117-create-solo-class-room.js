@@ -22,10 +22,10 @@ module.exports = {
         type: Sequelize.STRING,
       },
       agenda: {
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
       },
       description: {
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
       },
 
       createdAt: {

@@ -77,8 +77,7 @@ const upcomingLiveClass = async () => {
           mobile: item.mentorMobile,
         });
 
-        const notfUsers =
-          ENVIRON === "production" ? fetchNotfRecUsers : tempUsers;
+        const notfUsers = ENVIRON === "production" ? tempUsers : tempUsers;
 
         const notificationReceivers = notfUsers.map((user) => {
           const { emailText, smsText } = generateNotificationText(

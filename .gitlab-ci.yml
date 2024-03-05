@@ -1,12 +1,37 @@
 stages:
+  - sonar_scan
   - deploy_dev
+  - deploy_prod
+
+sonar_scan_job:
+  stage: sonar_scan
+  script:
+    - export SONAR_SCANNER_VERSION=4.7.0.2747
+    - export SONAR_SCANNER_HOME=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux
+    - curl --create-dirs -sSLo $HOME/.sonar/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip
+    - unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
+    - export PATH=$SONAR_SCANNER_HOME/bin:$PATH
+    - export SONAR_SCANNER_OPTS="-server"
+    - sonar-scanner -Dsonar.projectKey=inspbackend -Dsonar.sources=. -Dsonar.host.url=https://sonar.turnkey.work -Dsonar.login="${SONAR_TOKEN}"
+  only:
+    - dev
 
 deploy_dev_job:
   stage: deploy_dev
   script:
-    - echo "Starting Deploying to ..."
+    - echo "Starting Deploying to Dev ..."
     - echo "${INSP_PEM_FILE}" > ssh_key.pem
     - chmod 400 ssh_key.pem
+    - whoami
     - ssh -o StrictHostKeyChecking=no -i ssh_key.pem -A "${INSP_DEV_USER}"@"${INSP_DEV_SERVER_IP}" "./script.sh"
   only:
     - dev
+deploy_prod_job:
+  stage: deploy_prod
+  script:
+    - echo "Starting Deploying to Prod ..."
+    - echo "${INSP_PEM_FILE}" > ssh_key.pem
+    - chmod 400 ssh_key.pem
+    - ssh -o StrictHostKeyChecking=no -i ssh_key.pem -A "${INSP_PROD_USER}"@"${INSP_PROD_SERVER_IP}" "./script.sh"
+  only:
+    - master

@@ -22,7 +22,6 @@ module.exports.createSdpText = (rtpParameters) => {
       video.rtpParameters
     );
 
-    console.log("video codec", videoCodecInfo);
     sdpString += `
     m=video ${video.remoteRtpPort} RTP/AVP ${videoCodecInfo.payloadType} 
     a=rtpmap:${videoCodecInfo.payloadType} ${videoCodecInfo.codecName}/${videoCodecInfo.clockRate}
@@ -44,6 +43,6 @@ module.exports.createSdpText = (rtpParameters) => {
     `;
     metaInfo.isAudioAvailable = true;
   }
-  console.log({ sdpString, ...metaInfo });
+
   return { sdpString, ...metaInfo };
 };

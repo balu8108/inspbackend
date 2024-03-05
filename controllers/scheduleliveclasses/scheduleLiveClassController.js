@@ -13,7 +13,6 @@ const {
 const { classStatus } = require("../../constants");
 
 // DB FUNCTIONS START
-
 const createLiveClassRoom = async (randomCharacters, body, plainAuthData) => {
   try {
     const newLiveClass = await LiveClassRoom.create({
@@ -29,6 +28,7 @@ const createLiveClassRoom = async (randomCharacters, body, plainAuthData) => {
       mentorMobile: plainAuthData.mobile || "1234567890",
       subjectId: JSON.parse(body.subject).value,
       subjectName: JSON.parse(body.subject).label,
+      classType: JSON.parse(body.classType).value,
       classStatus: classStatus.SCHEDULED,
     });
     return { success: true, result: newLiveClass };
@@ -68,15 +68,15 @@ const uploadFilesAndCreateEntries = async (
     console.log("Error in uploading files and creating entries", err);
   }
 };
+
 // DB FUNCTIONS END
-
-// BELOW IS REST APIS HANDLER
-
 const getAllLiveClasses = async (req, res) => {
   try {
+    console.log("getting live classes");
     const liveClassesData = await LiveClassRoom.findAll({
       include: [{ model: LiveClassRoomDetail }, { model: LiveClassRoomFile }],
     });
+    console.log("live", liveClassesData);
     res.status(200).json({ data: liveClassesData });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -85,9 +85,8 @@ const getAllLiveClasses = async (req, res) => {
 
 const createLiveClass = async (req, res) => {
   try {
-    console.log("create live class");
     const { body, files, plainAuthData } = req;
-    console.log("files", files);
+
     let addFilesInArray = [];
     if (files) {
       addFilesInArray = Array.isArray(files?.files)
@@ -121,6 +120,7 @@ const createLiveClass = async (req, res) => {
           agenda: body.agenda,
           description: body.description,
           classRoomId: id,
+          lectureNo: body.lectureNo,
         });
 
         result.liveClassRoomDetail = liveClassRoomDetail; // create parent child relationship however not necessary
@@ -148,6 +148,7 @@ const getLiveClassDetails = async (req, res) => {
     if (!roomId) {
       return res.status(400).json({ error: "Room Id is required" });
     }
+
     const getLiveClassRoom = await LiveClassRoom.findOne({
       where: { roomId: roomId },
       include: [{ model: LiveClassRoomFile }, { model: LiveClassRoomDetail }],
@@ -189,9 +190,106 @@ const getUpcomingClass = async (req, res) => {
   }
 };
 
+const getLectureNo = async (req, res) => {
+  try {
+    const { subjectName, classType, chapterName, topicName } = req.body;
+
+    if (!subjectName || !classType || !chapterName || !topicName) {
+      return res.status(400).json({ error: "please send is required" });
+    }
+
+    let numberOfLecture = 0;
+    if (classType == "REGULARCLASS") {
+      const liveClassRooms = await LiveClassRoom.findAll({
+        where: {
+          subjectName: subjectName,
+          classType: classType,
+        },
+        include: [
+          {
+            model: LiveClassRoomDetail,
+            where: {
+              chapterName: chapterName,
+              topicName: topicName,
+            },
+          },
+        ],
+      });
+      numberOfLecture = liveClassRooms.length;
+    } else if (classType == "CRASHCOURSE") {
+      const liveClassRooms = await LiveClassRoom.findAll({
+        where: {
+          subjectName: subjectName,
+          classType: classType,
+        },
+        include: [
+          {
+            model: LiveClassRoomDetail,
+          },
+        ],
+      });
+      numberOfLecture = liveClassRooms.length;
+    }
+
+    return res.status(200).json({ data: numberOfLecture });
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+};
+
+const uploadFilesToClass = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    const { files } = req;
+
+    if (!classId) {
+      return res.status(400).json({ error: "Class Id is required" });
+    }
+
+    let addFilesInArray = [];
+    if (files) {
+      addFilesInArray = Array.isArray(files?.files)
+        ? files?.files
+        : [files?.files];
+    }
+
+    const getLiveClassRoom = await LiveClassRoom.findOne({ where: { id: classId } });
+
+    if (getLiveClassRoom) {
+      let LiveClassRoomFiles = [];
+      if (files) {
+        const fileUploads = await uploadFilesToS3(
+          addFilesInArray,
+          `files/roomId_${getLiveClassRoom.roomId}`
+        );
+        if (fileUploads) {
+          fileUploads.forEach(async (file) => {
+            const newFileToDB = await LiveClassRoomFile.create({
+              key: file.key,
+              url: file.url,
+              classRoomId: classId,
+            });
+            LiveClassRoomFiles.push(newFileToDB);
+          });
+          return res.status(200).json({ message: "Uploaded files" });
+        } else {
+          throw new Error("unable to upload files");
+        }
+      }
+    }
+    else {
+      throw new Error("No Live Class Found with this Room Id");
+    }
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   createLiveClass,
   getAllLiveClasses,
   getLiveClassDetails,
   getUpcomingClass,
+  getLectureNo,
+  uploadFilesToClass
 };

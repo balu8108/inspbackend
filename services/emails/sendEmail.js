@@ -37,11 +37,9 @@ const sendEmail = async (notificationDBObject) => {
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        console.log(error);
         notificationDBObject.notificationStatus = "FAILED";
         notificationDBObject.save();
       } else {
-        console.log("Email sent: " + info.response);
         notificationDBObject.notificationStatus = "SENT"; //This ensures atleast one of the notification is sent
         notificationDBObject.save();
       }
