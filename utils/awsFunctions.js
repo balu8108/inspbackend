@@ -1,5 +1,6 @@
 const { URL } = require("url");
 const aws = require("aws-sdk");
+const stream = require("stream");
 
 // These static files include to be added within files
 const {
@@ -160,6 +161,56 @@ const uploadToS3 = async (folderPath, fileName, body) => {
   });
 };
 
+// Special function to upload recordings to s3
+
+const uploadRecordingToS3 = async (folderPath, fileName, fileStream) => {
+  return new Promise((resolve, reject) => {
+    let pass = new stream.PassThrough();
+    const params = {
+      Bucket: AWS_BUCKET_NAME,
+      Key: `${folderPath}/${fileName}`, // Include folderPath in the key
+      Body: pass,
+    };
+    const uploadRequest = s3.upload(params, (err, data) => {
+      if (err) {
+        reject({ success: false, err });
+      } else {
+        const fileUrl = encodeURIComponent(fileName).replace(/%20/g, "+");
+        const fileKey = `${folderPath}/${fileName}`;
+        const modifiedData = {
+          ...data,
+          success: true,
+          Key: fileKey,
+          Location: generateAWSS3LocationUrl(`${folderPath}/${fileUrl}`),
+        };
+        resolve(modifiedData);
+      }
+    });
+    fileStream.pipe(pass);
+
+    uploadRequest.on("httpUploadProgress", (progress) => {
+      console.log("Upload in progress...", progress);
+    });
+
+    uploadRequest.on("httpDone", () => {
+      console.log("Upload completed.");
+    });
+
+    uploadRequest.on("complete", () => {
+      console.log("Upload request completed.");
+    });
+
+    uploadRequest.on("success", (data) => {
+      console.log("Upload request success:", data);
+    });
+
+    uploadRequest.on("error", (err) => {
+      console.error("Upload request error:", err);
+      reject(err);
+    });
+  });
+};
+
 module.exports = {
   uploadFilesToS3,
   generatePresignedUrls,
@@ -168,4 +219,5 @@ module.exports = {
   uploadToS3,
   generateAWSS3LocationUrl,
   isObjectExistInS3ByKey,
+  uploadRecordingToS3,
 };
