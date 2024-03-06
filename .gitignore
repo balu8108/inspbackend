@@ -7,3 +7,4 @@ variable.env
 /logs/debug/*.log
 /logs/info/*.log
 config.json
+cron.lock

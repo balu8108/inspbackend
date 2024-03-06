@@ -47,11 +47,11 @@ module.exports = Object.freeze({
     listenInfo: {
       protocol: "udp",
       ip: "0.0.0.0",
-      announcedAddress: ENVIRON !== "local" ? myIP : "192.168.1.4",
+      announcedAddress: ENVIRON !== "local" ? myIP : "127.0.0.1",
     },
     listenIp: {
       ip: "0.0.0.0",
-      announcedIp: ENVIRON !== "local" ? myIP : "192.168.1.4",
+      announcedIp: ENVIRON !== "local" ? myIP : "127.0.0.1",
     },
     enableRtx: false,
     enableSrtp: false,
