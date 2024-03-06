@@ -6,5 +6,7 @@ variable.env
 /logs/info/*.json
 /logs/debug/*.log
 /logs/info/*.log
+/recordfiles/*.webm
+/backuprecordfiles/*.webm
 config.json
 cron.lock

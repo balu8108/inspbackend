@@ -18,7 +18,7 @@ const { LiveClassRoomRecording, LeaderBoard } = require("../models");
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
 
-const RECORD_PROCESS_NAME = "FFmpeg";
+const RECORD_PROCESS_NAME = "GStreamer";
 
 const config = require("./config");
 
@@ -672,13 +672,9 @@ class RoomManager extends EventEmitter {
       if (authId in this._peers) {
         const leavingPeer = this._peers[authId];
 
-        if (leavingPeer?.["GStreamer"]) {
-          leavingPeer["GStreamer"].kill();
-          leavingPeer["GStreamer"] = null;
-        }
-        if (leavingPeer?.["FFmpeg"]) {
-          leavingPeer["FFmpeg"].kill();
-          leavingPeer["FFmpeg"] = null;
+        if (leavingPeer?.recordProcess) {
+          leavingPeer.recordProcess.kill();
+          leavingPeer.recordProcess = null;
         }
         this._removePeer(authId, socketId);
         const peerCountInRoom = this._checkPeerCountInRoom();
@@ -698,8 +694,8 @@ class RoomManager extends EventEmitter {
     }
   }
 
-  _getProcess = (recordProcessName, recordInfo) => {
-    switch (recordProcessName) {
+  _getProcess = (recordInfo) => {
+    switch (RECORD_PROCESS_NAME) {
       case "FFmpeg":
         return new FFmpeg(recordInfo);
       case "GStreamer":
@@ -777,7 +773,6 @@ class RoomManager extends EventEmitter {
     }
   };
   _startRecord = async (
-    recordProcessName,
     authId,
     roomId,
     socketId,
@@ -798,10 +793,9 @@ class RoomManager extends EventEmitter {
           router
         );
       }
-      const processInitial = recordProcessName === "FFmpeg" ? "F" : "G";
 
-      recordInfo.fileName = `${roomId}-${Date.now().toString()}${processInitial}`;
-      let recordProcess = this._getProcess(recordProcessName, recordInfo);
+      recordInfo.fileName = `${roomId}-${Date.now().toString()}`;
+      let recordProcess = this._getProcess(recordInfo);
       if (recordProcess) {
         let fileKeyName = "";
         let url = "";
@@ -812,7 +806,7 @@ class RoomManager extends EventEmitter {
           fileKeyName = `liveclassrecordings/${recordInfo?.fileName}.webm`;
           url = generateAWSS3LocationUrl(fileKeyName);
         }
-        peer[recordProcessName] = recordProcess;
+        peer[recordProcess] = recordProcess;
 
         const videoRecordConsumer =
           this._consumers[recordInfo["video"]?.rtpConsumerId];
@@ -858,7 +852,6 @@ class RoomManager extends EventEmitter {
   };
 
   async _startRecording(
-    recordProcessName,
     authId,
     socketId,
     routerId,
@@ -871,8 +864,8 @@ class RoomManager extends EventEmitter {
         const peer = this._peers[authId];
         const router = this._mediaSoupRouters.get(routerId);
 
-        if (peer?.[recordProcessName]) {
-          peer[recordProcessName].kill();
+        if (peer?.recordProcess) {
+          peer.recordProcess.kill();
           return;
         }
         let peerProducersList = [];
@@ -885,7 +878,6 @@ class RoomManager extends EventEmitter {
 
         if (peerProducersList.length > 0) {
           const recordData = await this._startRecord(
-            recordProcessName,
             authId,
             roomId,
             socketId,
@@ -978,20 +970,10 @@ class RoomManager extends EventEmitter {
     try {
       if (authId in this._peers) {
         const peer = this._peers[authId];
-        if (peer?.["GStreamer"]) {
-          peer["GStreamer"].kill();
-          peer["GStreamer"] = null;
-          logger.info(
-            JSON.stringify(`Command to stop recording GStreamer`, null, 2)
-          );
-        }
-
-        if (peer?.["FFmpeg"]) {
-          peer["FFmpeg"].kill();
-          peer["FFmpeg"] = null;
-          logger.info(
-            JSON.stringify(`Command to stop recording FFmpeg`, null, 2)
-          );
+        if (peer?.recordProcess) {
+          peer.recordProcess.kill();
+          peer.recordProcess = null;
+          logger.info(JSON.stringify(`Command to stop recording`, null, 2))
         }
       }
     } catch (err) {
