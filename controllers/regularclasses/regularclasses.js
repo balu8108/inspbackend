@@ -72,7 +72,7 @@ exports.getLectureDetails = async (req, res) => {
     });
 
     if (!liveClassRoom) return res.status(400).json({ error: "No data found" });
-
+    console.log("testinggg")
     return res
       .status(200)
       .json({ message: "Lecture details by id success ", data: liveClassRoom });
