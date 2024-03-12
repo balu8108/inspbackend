@@ -9,6 +9,7 @@ const bodyParser = require("body-parser");
 const upload = require("express-fileupload");
 const scheduleJob = require("./jobs/scheduleJobs");
 const { SOCKET_EVENTS, routesConstants } = require("./constants");
+const { Server } = require("socket.io");
 const scheduleLiveClass = require("./routes/scheduleliveclasses/scheduleLiveClass");
 const genericRoutes = require("./routes/genericroutes/genericroutes");
 const authenticationRoutes = require("./routes/authentication/authenticationRoutes");
@@ -21,6 +22,7 @@ const routesreg = require("./routes/regularclasses/regularclasses");
 const config = require("./socketcontrollers/config");
 const logHandler = require("./utils/logHandler");
 const { ENVIRON } = require("./envvar");
+
 const {
   isSocketUserAuthenticated,
   socketPaidStatusOrTeacher,
@@ -98,6 +100,7 @@ app.use(
   })
 );
 app.use(express.urlencoded({ limit: "200mb", extended: true }));
+
 app.use(upload()); // this is required for uploading multipart/formData
 app.use(cors());
 app.use(cookieParser());
@@ -231,7 +234,7 @@ async function runMediasoupWorkers() {
 runMediasoupWorkers();
 
 const httpServer = http.createServer(app);
-const io = socketIo(httpServer, {
+const io = new Server(httpServer, {
   maxHttpBufferSize: 1e8, // 100 MB,
   cors: {
     origin: "*",

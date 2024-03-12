@@ -34,7 +34,8 @@ const Gstreamer = require("./gstreamer");
 const logger = require("../utils/logger");
 
 const RECORD_PROCESS_NAME = "GStreamer";
-const joinRoomPreviewSocketHandler = (data, callback, socket, io) => {
+
+const joinRoomPreviewSocketHandler = async (data, callback, socket, io) => {
   try {
     const { roomId } = data;
     if (roomId) {
@@ -228,6 +229,7 @@ const createOrJoinRoomFunction = async (
     console.log("Error occurs in create or join room function ", err);
   }
 };
+
 const joinRoomSocketHandler = async (
   data,
   callback,
@@ -707,7 +709,7 @@ const endMeetSocketHandler = async (socket, mediaSoupworkers, io) => {
         }
       }
     }
-    logger.info(JSON.stringify("Classes ended by mentor", null, 2))
+    logger.info(JSON.stringify("Classes ended by mentor", null, 2));
   } catch (err) {
     console.log("Error in end meet handler", err);
   }
@@ -800,7 +802,6 @@ const kickOutFromClassSocketHandler = async (data, socket, io) => {
     const { authData } = socket;
     const socketId = socket.id;
     const { peerSocketId, peerId } = data;
-    console.log("peer id of kicking out", peerId);
     if (authData && allPeers.has(authData.id)) {
       const classPk = allPeers.get(authData.id)?.classPk;
       if (classPk && peerSocketId && peerId) {
@@ -823,7 +824,6 @@ const questionsSocketHandler = async (data, callback, socket) => {
     const { authData } = socket;
     const socketId = socket.id;
     const qId = uuidv4();
-    console.log("question triggerd");
     if (authData && allPeers.has(authData.id)) {
       const roomId = allPeers.get(authData.id)?.roomId;
       const classPk = allPeers.get(authData.id)?.classPk;

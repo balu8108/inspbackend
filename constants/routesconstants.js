@@ -14,6 +14,7 @@ const routesConstants = Object.freeze({
   OPEN_FILE: "/open-file",
   IMAGE_TO_DOC: "/image-to-doc",
   CREATE_LIVE_CLASS_NOTES: "/create-live-class-notes",
+  UPLOAD_ASSIGNMENT_TO_CLASS_BY_ID: '/upload-assignment-to-class',
   SOLO: "/solo-lecture",
   SOLO_CLASSROOM: "/create-room",
   LATEST_CLASSROOM: "/latest-room",

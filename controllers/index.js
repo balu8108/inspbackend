@@ -17,6 +17,7 @@ const {
   getLiveClassDetails,
   getUpcomingClass,
   getLectureNo,
+  uploadFilesToClass
 } = require("./scheduleliveclasses/scheduleLiveClassController");
 const {
   getRecordingsWithDetails,
@@ -54,6 +55,7 @@ module.exports = {
   viewRecording,
   playRecording,
   getLectureNo,
+  uploadFilesToClass,
   getAllCrashCourseLecture,
   getLectureById,
   loginWithIpHandler,

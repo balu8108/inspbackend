@@ -1,7 +1,6 @@
 const EventEmitter = require("events");
 const allRooms = new Map();
 const allPeers = new Map();
-
 const { getPort } = require("./port");
 const { PLATFORM, ENVIRON } = require("../envvar");
 const {
@@ -11,7 +10,7 @@ const {
   classStatus,
   liveClassTestQuestionLogInfo,
 } = require("../constants");
-const logger = require('../utils/logger')
+const logger = require("../utils/logger");
 const { generateAWSS3LocationUrl, isObjectValid } = require("../utils");
 
 const { LiveClassRoomRecording, LeaderBoard } = require("../models");
@@ -38,6 +37,8 @@ class RoomManager extends EventEmitter {
     this._leaderBoard = {}; // will contain the leaderboard of room
     this._mediaSoupWorkers = mediaSoupWorkers;
     this._mediaSoupRouters = mediaSoupRouters;
+    this._roomPipeTransports = {}; // store the pipe transport that can consume from remote server
+    this._roomProducerPipeTransports = {}; // Store the pipe transport for the producers
   }
 
   static getLeastLoadedRouter(
@@ -73,7 +74,7 @@ class RoomManager extends EventEmitter {
             workerLoads.set(
               worker.pid,
               workerLoads.get(worker.pid) +
-              (routerLoads.has(routerId) ? routerLoads.get(routerId) : 0)
+                (routerLoads.has(routerId) ? routerLoads.get(routerId) : 0)
             );
           } else {
             workerLoads.set(
@@ -139,11 +140,13 @@ class RoomManager extends EventEmitter {
       const mediaSoupRouters = new Map();
       for (const worker of mediaSoupWorkers.values()) {
         const router = await worker.createRouter({ mediaCodecs });
-
         mediaSoupRouters.set(router.id, router);
       }
-
-      return new RoomManager({ roomId, mediaSoupRouters, mediaSoupWorkers });
+      return new RoomManager({
+        roomId,
+        mediaSoupRouters,
+        mediaSoupWorkers,
+      });
     } catch (err) {
       console.log("Error in RManager create", err);
     }
@@ -165,7 +168,7 @@ class RoomManager extends EventEmitter {
     try {
       const socketIds = Object.values(this._consumers).map((cs) => cs.socketId);
       return socketIds;
-    } catch (err) { }
+    } catch (err) {}
   }
 
   _getAllPeersInRoomStartWithPeer(peer) {
@@ -206,11 +209,11 @@ class RoomManager extends EventEmitter {
         for (const producerId of Object.keys(this._producers)) {
           if (router.appData.producers.has(producerId)) {
             // same router do not need piping it automatically put streams to these consumers
-            console.log("same router");
+
             continue;
           }
           // Piping all producers in different routers to this router of current peer
-          console.log("different router");
+
           await srcRouter.pipeToRouter({
             producerId: producerId,
             router: router,
@@ -326,7 +329,12 @@ class RoomManager extends EventEmitter {
       const roomId = this._roomId;
       if (this._mediaSoupRouters.has(routerId)) {
         const webRtcOptions = config.webRtcTransport;
+        // const pipeTransportOptions = config.pipeTransport;
         const router = this._mediaSoupRouters.get(routerId);
+        // const transport = await router.createPipeTransport(
+        //   pipeTransportOptions
+        // );
+        // console.log("pipe transport", transport);
         const transport = await router.createWebRtcTransport(webRtcOptions);
         const transportWithMeta = {
           userId: authId,
@@ -660,7 +668,7 @@ class RoomManager extends EventEmitter {
       this._removeItems("consumers", authId, socketId);
       this._removeItems("producers", authId, socketId);
       this._removeItems("transports", authId, socketId);
-      console.log("Removed socket id");
+
       if (authId in this._peers) {
         const leavingPeer = this._peers[authId];
 
@@ -675,7 +683,9 @@ class RoomManager extends EventEmitter {
           // Close all routers and delete all routers
           this._removeAllRoutersOfRoom();
           this._removeLeaderBoardOfRoom();
-          logger.info(JSON.stringify("No Peer In the Class(Class end)", null, 2))
+          logger.info(
+            JSON.stringify("No Peer In the Class(Class end)", null, 2)
+          );
         }
         return { peerCountInRoom, leavingPeer };
       }
@@ -796,7 +806,7 @@ class RoomManager extends EventEmitter {
           fileKeyName = `liveclassrecordings/${recordInfo?.fileName}.webm`;
           url = generateAWSS3LocationUrl(fileKeyName);
         }
-        peer.recordProcess = recordProcess;
+        peer[recordProcess] = recordProcess;
 
         const videoRecordConsumer =
           this._consumers[recordInfo["video"]?.rtpConsumerId];
