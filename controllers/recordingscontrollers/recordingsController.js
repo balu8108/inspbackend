@@ -140,7 +140,8 @@ const viewRecording = async (req, res) => {
         type !== "live_specific" &&
         type !== "solo_specific" &&
         type !== "live_topic" &&
-        type !== "solo_topic")
+        type !== "solo_topic" &&
+        type !== "live_lecture_specific")
     ) {
       // if not correct query params then return error
       throw new Error("Invalid parameters or no recordings available");
@@ -270,6 +271,10 @@ const viewRecording = async (req, res) => {
           responseData?.[0]?.SoloClassRoomRecordings?.[0] ?? null,
       };
       responseData = combinedData;
+    } else if (type === "live_lecture_specific") {
+      
+    } else {
+      throw new Error("Invalid recording type");
     }
     return res.status(200).json({
       status: true,
