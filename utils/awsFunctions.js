@@ -170,6 +170,7 @@ const uploadRecordingToS3 = async (folderPath, fileName, fileStream) => {
       Bucket: AWS_BUCKET_NAME,
       Key: `${folderPath}/${fileName}`, // Include folderPath in the key
       Body: pass,
+      ContentType: "video/webm",
     };
     const uploadRequest = s3.upload(params, (err, data) => {
       if (err) {
