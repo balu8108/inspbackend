@@ -7,14 +7,16 @@ const { ENVIRON } = require("../envvar");
 // let jobRule = "*/1 * * * *";
 
 let jobRule = "*/10 * * * * *";
+let recordingRule = "*/1 * * * *";
 
 if (ENVIRON === "local") {
   jobRule = "*/10 * * * * *"; // job run in 10 seconds in local environ
+  recordingRule = "*/1 * * * *";
 }
 const scheduleJobs = () => {
   schedule.scheduleJob(jobRule, upcomingLiveClass);
   schedule.scheduleJob(jobRule, notificationSender);
   schedule.scheduleJob(jobRule, classStatusChange);
-  //schedule.scheduleJob(jobRule, recordingToS3);
+  schedule.scheduleJob(recordingRule, recordingToS3);
 };
 module.exports = scheduleJobs;
