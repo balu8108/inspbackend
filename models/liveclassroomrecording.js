@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
       classRoomId: DataTypes.INTEGER,
       drmKeyId: DataTypes.STRING,
       hlsDrmKey: DataTypes.STRING,
-      hlsfrmurl: DataTypes.STRING,
+      hlsDrmUrl: DataTypes.STRING,
     },
     {
       sequelize,

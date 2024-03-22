@@ -3,18 +3,16 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.addColumn("LiveClassRoomsRecordings", "hlsDrmKey", {
+    await queryInterface.addColumn("LiveClassRoomRecordings", "hlsDrmKey", {
       type: Sequelize.STRING,
-      allowNull: true,
     });
-    await queryInterface.addColumn("LiveClassRoomsRecordings", "hlsfrmurl", {
+    await queryInterface.addColumn("LiveClassRoomRecordings", "hlsDrmUrl", {
       type: Sequelize.STRING,
-      allowNull: true,
     });
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.removeColumn("LiveClassRoomsRecordings", "hlsDrmKey");
-    await queryInterface.removeColumn("LiveClassRoomsRecordings", "hlsfrmurl");
+    await queryInterface.removeColumn("LiveClassRoomRecordings", "hlsDrmKey");
+    await queryInterface.removeColumn("LiveClassRoomRecordings", "hlsDrmUrl");
   },
 };

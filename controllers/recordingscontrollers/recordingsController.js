@@ -303,6 +303,8 @@ const playRecording = async (req, res) => {
       throw new Error("Invalid parameters or no recordings available");
     }
     let jwtToken = null;
+    let hlsJwtToken = null;
+
     if (type === "live" || type === "live_specific" || type === "live_topic") {
       // we need to search in LiveClassRecording table
       const getRecording = await LiveClassRoomRecording.findOne({
@@ -311,6 +313,10 @@ const playRecording = async (req, res) => {
       if (getRecording?.drmKeyId) {
         const tok = generateDRMJWTToken(getRecording?.drmKeyId);
         jwtToken = tok;
+      }
+      if(getRecording?.hlsDrmKey){
+        const hlstok = generateDRMJWTToken(getRecording?.hlsDrmKey);
+        hlsJwtToken= hlstok;
       }
     } else if (
       type === "solo" ||
@@ -325,10 +331,14 @@ const playRecording = async (req, res) => {
         const tok = generateDRMJWTToken(getSoloRecording?.drmKeyId);
         jwtToken = tok;
       }
+      if(getSoloRecording?.hlsDrmKey){
+        const hlstok = generateDRMJWTToken(getSoloRecording?.hlsDrmKey);
+        hlsJwtToken= hlstok;
+      }
     }
     return res
       .status(200)
-      .json({ status: true, data: { DRMjwtToken: jwtToken } });
+      .json({ status: true, data: { DRMjwtToken: jwtToken, HlsDRMJwtToken: hlsJwtToken } });
   } catch (err) {
     console.log("Error in play recordings", err);
     return res.status(400).json({ status: false, data: err.message });
