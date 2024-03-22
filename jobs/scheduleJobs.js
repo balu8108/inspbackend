@@ -15,6 +15,6 @@ const scheduleJobs = () => {
   schedule.scheduleJob(jobRule, upcomingLiveClass);
   schedule.scheduleJob(jobRule, notificationSender);
   schedule.scheduleJob(jobRule, classStatusChange);
-  //schedule.scheduleJob(jobRule, recordingToS3);
+  schedule.scheduleJob(jobRule, recordingToS3);
 };
 module.exports = scheduleJobs;
