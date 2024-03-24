@@ -284,7 +284,8 @@ const formM3U8Key = (inputFileKey, outputFolder) => {
 // THEN AFTER SUCCESS JOB CREATION IT WILL TRIGGER THIS API TO UPDATE DATABASES
 const updateRecordingData = async (req, res) => {
   try {
-    const { bucketName, inputFileKey, outputFolder, drmKeyId, hlsDrmKeyId } = req.body;
+    const { bucketName, inputFileKey, outputFolder, drmKeyId, hlsDrmKeyId } =
+      req.body;
     // we expect the above data from AWS lambda
     // input file key is to search in db whether the inputFileKey is present in any of recording table means either in Live or soloRecord
     // Example of above data:-
@@ -310,7 +311,7 @@ const updateRecordingData = async (req, res) => {
         liveRecording.key = finalOutputKey;
         liveRecording.url = awsUrl;
         liveRecording.hlsDrmKey = hlsDrmKeyId;
-        liveRecording.hlsDrmUrl = hlsawsUrl
+        liveRecording.hlsDrmUrl = hlsawsUrl;
         liveRecording.drmKeyId = drmKeyId;
         liveRecording.save();
       }
@@ -327,8 +328,8 @@ const updateRecordingData = async (req, res) => {
         const hlsawsUrl = generateAWSS3LocationUrl(finalHlsOutputKey);
         soloRecord.key = finalOutputKey;
         soloRecord.url = awsUrl;
-        liveRecording.hlsDrmKey = hlsDrmKeyId;
-        liveRecording.hlsDrmUrl = hlsawsUrl
+        soloRecord.hlsDrmKey = hlsDrmKeyId;
+        soloRecord.hlsDrmUrl = hlsawsUrl;
         soloRecord.drmKeyId = drmKeyId;
         soloRecord.save();
       }
