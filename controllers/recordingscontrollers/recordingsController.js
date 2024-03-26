@@ -272,7 +272,6 @@ const viewRecording = async (req, res) => {
       };
       responseData = combinedData;
     } else if (type === "live_lecture_specific") {
-      
     } else {
       throw new Error("Invalid recording type");
     }
@@ -314,9 +313,9 @@ const playRecording = async (req, res) => {
         const tok = generateDRMJWTToken(getRecording?.drmKeyId);
         jwtToken = tok;
       }
-      if(getRecording?.hlsDrmKey){
+      if (getRecording?.hlsDrmKey) {
         const hlstok = generateDRMJWTToken(getRecording?.hlsDrmKey);
-        hlsJwtToken= hlstok;
+        hlsJwtToken = hlstok;
       }
     } else if (
       type === "solo" ||
@@ -331,14 +330,17 @@ const playRecording = async (req, res) => {
         const tok = generateDRMJWTToken(getSoloRecording?.drmKeyId);
         jwtToken = tok;
       }
-      if(getSoloRecording?.hlsDrmKey){
+      if (getSoloRecording?.hlsDrmKey) {
         const hlstok = generateDRMJWTToken(getSoloRecording?.hlsDrmKey);
-        hlsJwtToken= hlstok;
+        hlsJwtToken = hlstok;
       }
     }
     return res
       .status(200)
-      .json({ status: true, data: { DRMjwtToken: jwtToken, HlsDRMJwtToken: hlsJwtToken } });
+      .json({
+        status: true,
+        data: { DRMjwtToken: jwtToken, HlsDRMJwtToken: hlsJwtToken },
+      });
   } catch (err) {
     console.log("Error in play recordings", err);
     return res.status(400).json({ status: false, data: err.message });

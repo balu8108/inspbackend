@@ -4,6 +4,7 @@ const {
   LiveClassRoom,
   LiveClassRoomDetail,
   LiveClassRoomFile,
+  SoloClassRoomRecording,
 } = require("../../models");
 const {
   generateRandomCharacters,
@@ -239,8 +240,23 @@ const getLectureNo = async (req, res) => {
 
 const uploadFilesToClass = async (req, res) => {
   try {
-    const { classId } = req.params;
+    const { type, classId } = req.params;
     const { files } = req;
+
+    if (
+      !type ||
+      !id ||
+      (type !== "live" &&
+        type !== "live_specific" &&
+        type !== "live_topic" &&
+        type !== "live_lecture_specific" &&
+        type !== "solo" &&
+        type !== "solo_specific" &&
+        type !== "solo_topic")
+    ) {
+      // if not correct query params then return error
+      throw new Error("Invalid parameters or no recordings available");
+    }
 
     if (!classId) {
       return res.status(400).json({ error: "Class Id is required" });
@@ -253,32 +269,73 @@ const uploadFilesToClass = async (req, res) => {
         : [files?.files];
     }
 
-    const getLiveClassRoom = await LiveClassRoom.findOne({ where: { id: classId } });
+    if (
+      type !== "live" &&
+      type !== "live_specific" &&
+      type !== "live_topic" &&
+      type !== "live_lecture_specific"
+    ) {
+      const getLiveClassRoom = await LiveClassRoom.findOne({
+        where: { id: classId },
+      });
 
-    if (getLiveClassRoom) {
-      let LiveClassRoomFiles = [];
-      if (files) {
-        const fileUploads = await uploadFilesToS3(
-          addFilesInArray,
-          `files/roomId_${getLiveClassRoom.roomId}`
-        );
-        if (fileUploads) {
-          fileUploads.forEach(async (file) => {
-            const newFileToDB = await LiveClassRoomFile.create({
-              key: file.key,
-              url: file.url,
-              classRoomId: classId,
+      if (getLiveClassRoom) {
+        let LiveClassRoomFiles = [];
+        if (files) {
+          const fileUploads = await uploadFilesToS3(
+            addFilesInArray,
+            `files/roomId_${getLiveClassRoom.roomId}`
+          );
+          if (fileUploads) {
+            fileUploads.forEach(async (file) => {
+              const newFileToDB = await LiveClassRoomFile.create({
+                key: file.key,
+                url: file.url,
+                classRoomId: classId,
+              });
+              LiveClassRoomFiles.push(newFileToDB);
             });
-            LiveClassRoomFiles.push(newFileToDB);
-          });
-          return res.status(200).json({ message: "Uploaded files" });
-        } else {
-          throw new Error("unable to upload files");
+            return res.status(200).json({ message: "Uploaded files" });
+          } else {
+            throw new Error("unable to upload files");
+          }
         }
+      } else {
+        throw new Error("No Live Class Found with this Room Id");
       }
-    }
-    else {
-      throw new Error("No Live Class Found with this Room Id");
+    } else if (
+      type === "solo" ||
+      type === "solo_specific" ||
+      type === "solo_topic"
+    ) {
+      // we need soloclassrecordings
+      const getSoloRecording = await SoloClassRoomRecording.findOne({
+        where: { id: recordId },
+      });
+      if (getSoloRecording) {
+        let SoloClassRoomFiles = [];
+        if (files) {
+          const fileUploads = await uploadFilesToS3(
+            addFilesInArray,
+            `files/soloRoomId_${getSoloRecording.roomId}`
+          );
+          if (fileUploads) {
+            fileUploads.forEach(async (file) => {
+              const newFileToDB = await SoloClassRoomFiles.create({
+                key: file.key,
+                url: file.url,
+                soloClassRoomId: classId,
+              });
+              SoloClassRoomFiles.push(newFileToDB);
+            });
+            return res.status(200).json({ message: "Uploaded files" });
+          } else {
+            throw new Error("unable to upload files");
+          }
+        }
+      } else {
+        throw new Error("No Live Class Found with this Room Id");
+      }
     }
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -291,5 +348,5 @@ module.exports = {
   getLiveClassDetails,
   getUpcomingClass,
   getLectureNo,
-  uploadFilesToClass
+  uploadFilesToClass,
 };
