@@ -245,7 +245,7 @@ const uploadFilesToClass = async (req, res) => {
 
     if (
       !type ||
-      !id ||
+      !classId ||
       (type !== "live" &&
         type !== "live_specific" &&
         type !== "live_topic" &&
