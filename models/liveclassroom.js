@@ -60,12 +60,11 @@ module.exports = (sequelize, DataTypes) => {
         "FINISHED",
         "NOT_CONDUCTED"
       ),
-      classType: DataTypes.ENUM(
-        "REGULARCLASS",
-        "CRASHCOURSE",
-      ),
+      classType: DataTypes.ENUM("REGULARCLASS", "CRASHCOURSE"),
+      classLevel: DataTypes.ENUM("Class_11", "Class_12", "Foundation_Course"),
       // class Type eg regular  and crash course
     },
+
     {
       sequelize,
       modelName: "LiveClassRoom",

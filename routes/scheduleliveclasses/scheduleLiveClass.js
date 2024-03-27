@@ -7,7 +7,7 @@ const {
   getLiveClassDetails,
   getUpcomingClass,
   getLectureNo,
-  uploadFilesToClass
+  uploadFilesToClass,
 } = require("../../controllers");
 const {
   isAuthenticated,
@@ -39,11 +39,7 @@ router.get(
   checkPaidStatusOrTeacher,
   getUpcomingClass
 );
-router.post(
-  `${routesConstants.GET_LECTURE_NO}`,
-  isAuthenticated,
-  getLectureNo
-)
+router.post(`${routesConstants.GET_LECTURE_NO}`, isAuthenticated, getLectureNo);
 router.post(
   `${routesConstants.UPLOAD_ASSIGNMENT_TO_CLASS_BY_ID}/:classId`,
   isAuthenticated,

@@ -29,6 +29,7 @@ const createLiveClassRoom = async (randomCharacters, body, plainAuthData) => {
       subjectId: JSON.parse(body.subject).value,
       subjectName: JSON.parse(body.subject).label,
       classType: JSON.parse(body.classType).value,
+      classLevel: JSON.parse(body.classLevel).value,
       classStatus: classStatus.SCHEDULED,
     });
     return { success: true, result: newLiveClass };
@@ -253,7 +254,9 @@ const uploadFilesToClass = async (req, res) => {
         : [files?.files];
     }
 
-    const getLiveClassRoom = await LiveClassRoom.findOne({ where: { id: classId } });
+    const getLiveClassRoom = await LiveClassRoom.findOne({
+      where: { id: classId },
+    });
 
     if (getLiveClassRoom) {
       let LiveClassRoomFiles = [];
@@ -276,8 +279,7 @@ const uploadFilesToClass = async (req, res) => {
           throw new Error("unable to upload files");
         }
       }
-    }
-    else {
+    } else {
       throw new Error("No Live Class Found with this Room Id");
     }
   } catch (err) {
@@ -291,5 +293,5 @@ module.exports = {
   getLiveClassDetails,
   getUpcomingClass,
   getLectureNo,
-  uploadFilesToClass
+  uploadFilesToClass,
 };
