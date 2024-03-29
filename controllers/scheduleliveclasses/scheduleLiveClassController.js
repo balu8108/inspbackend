@@ -30,6 +30,7 @@ const createLiveClassRoom = async (randomCharacters, body, plainAuthData) => {
       subjectId: JSON.parse(body.subject).value,
       subjectName: JSON.parse(body.subject).label,
       classType: JSON.parse(body.classType).value,
+      classLevel: JSON.parse(body.classLevel).value,
       classStatus: classStatus.SCHEDULED,
     });
     return { success: true, result: newLiveClass };
@@ -245,7 +246,7 @@ const uploadFilesToClass = async (req, res) => {
 
     if (
       !type ||
-      !id ||
+      !classId ||
       (type !== "live" &&
         type !== "live_specific" &&
         type !== "live_topic" &&
@@ -270,10 +271,10 @@ const uploadFilesToClass = async (req, res) => {
     }
 
     if (
-      type !== "live" &&
-      type !== "live_specific" &&
-      type !== "live_topic" &&
-      type !== "live_lecture_specific"
+      type === "live" ||
+      type === "live_specific" ||
+      type === "live_topic" ||
+      type === "live_lecture_specific"
     ) {
       const getLiveClassRoom = await LiveClassRoom.findOne({
         where: { id: classId },
