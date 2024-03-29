@@ -6,7 +6,7 @@ const {
   LiveClassRoomFile,
   LiveClassRoomRecording,
   LiveClassRoomNote,
-  LeaderBoard
+  LeaderBoard,
 } = require("../../models");
 
 exports.getAllLectureByTopicName = async (req, res) => {
@@ -29,12 +29,10 @@ exports.getAllLectureByTopicName = async (req, res) => {
       ],
     });
 
-    return res
-      .status(200)
-      .json({
-        message: "All Regular classes lecture data",
-        data: liveClassRooms,
-      });
+    return res.status(200).json({
+      message: "All Regular classes lecture data",
+      data: liveClassRooms,
+    });
   } catch (err) {
     return res.status(400).json({ error: err.message });
   }
@@ -72,7 +70,7 @@ exports.getLectureDetails = async (req, res) => {
     });
 
     if (!liveClassRoom) return res.status(400).json({ error: "No data found" });
-    console.log("testinggg")
+    console.log("testinggg");
     return res
       .status(200)
       .json({ message: "Lecture details by id success ", data: liveClassRoom });

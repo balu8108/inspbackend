@@ -24,7 +24,6 @@ const config = require("./socketcontrollers/config");
 const { ENVIRON } = require("./envvar");
 const logHandler = require("./utils/logHandler");
 
-
 const {
   isSocketUserAuthenticated,
   socketPaidStatusOrTeacher,

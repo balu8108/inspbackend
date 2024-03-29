@@ -17,7 +17,7 @@ const {
   getLiveClassDetails,
   getUpcomingClass,
   getLectureNo,
-  uploadFilesToClass
+  uploadFilesToClass,
 } = require("./scheduleliveclasses/scheduleLiveClassController");
 const {
   getRecordingsWithDetails,
