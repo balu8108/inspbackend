@@ -270,10 +270,10 @@ const uploadFilesToClass = async (req, res) => {
     }
 
     if (
-      type !== "live" &&
-      type !== "live_specific" &&
-      type !== "live_topic" &&
-      type !== "live_lecture_specific"
+      type === "live" ||
+      type === "live_specific" ||
+      type === "live_topic" ||
+      type === "live_lecture_specific"
     ) {
       const getLiveClassRoom = await LiveClassRoom.findOne({
         where: { id: classId },
