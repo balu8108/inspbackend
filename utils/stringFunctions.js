@@ -14,7 +14,7 @@ const formM3U8String = (arrOfStrings) => {
   const splitFromDot = extractLastFileName.split(".");
   const joinComplete = splitFromDot.slice(0, -1).join(".");
 
-  return joinComplete + ".m3u8";
+  return joinComplete + "/" + joinComplete + ".m3u8";
 };
 
 const formMPDString = (arrOfStrings) => {
@@ -25,6 +25,6 @@ const formMPDString = (arrOfStrings) => {
   const splitFromDot = extractLastFileName.split(".");
   const joinComplete = splitFromDot.slice(0, -1).join(".");
 
-  return joinComplete + ".mpd";
+  return joinComplete + "/" + joinComplete + ".mpd";
 };
 module.exports = { splitStringWithSlash, formM3U8String, formMPDString };

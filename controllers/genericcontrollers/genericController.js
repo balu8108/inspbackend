@@ -255,10 +255,22 @@ const getTopicDetails = async (req, res) => {
   }
 };
 
-const formM3U8Key = (inputFileKey, outputFolder) => {
+const formMPDKey = (inputFileKey, outputFolder) => {
   try {
     const splitKeyToArray = splitStringWithSlash(inputFileKey);
     const convertToMPDformat = formMPDString(splitKeyToArray);
+    const finalOutputKey = `${outputFolder}/${convertToMPDformat}`;
+    return finalOutputKey;
+  } catch (err) {
+    console.log("Err", err);
+    throw err;
+  }
+};
+
+const formM3U8Key = (inputFileKey, outputFolder) => {
+  try {
+    const splitKeyToArray = splitStringWithSlash(inputFileKey);
+    const convertToMPDformat = formM3U8String(splitKeyToArray);
     const finalOutputKey = `${outputFolder}/${convertToMPDformat}`;
     return finalOutputKey;
   } catch (err) {
@@ -272,7 +284,8 @@ const formM3U8Key = (inputFileKey, outputFolder) => {
 // THEN AFTER SUCCESS JOB CREATION IT WILL TRIGGER THIS API TO UPDATE DATABASES
 const updateRecordingData = async (req, res) => {
   try {
-    const { bucketName, inputFileKey, outputFolder, drmKeyId } = req.body;
+    const { bucketName, inputFileKey, outputFolder, drmKeyId, hlsDrmKeyId } =
+      req.body;
     // we expect the above data from AWS lambda
     // input file key is to search in db whether the inputFileKey is present in any of recording table means either in Live or soloRecord
     // Example of above data:-
@@ -281,7 +294,7 @@ const updateRecordingData = async (req, res) => {
     // outputFolder - outputvideofiles //this folder is output folder where all the m3u8 recoridng will live
     // therefore the new key we need to form with this data is somethinglike:
     // outputvideofiles/sample.m3u8
-    if (!bucketName || !inputFileKey || !outputFolder) {
+    if (!bucketName || !inputFileKey || !outputFolder || !hlsDrmKeyId) {
       throw new Error("Some required data missing");
     }
 
@@ -290,11 +303,15 @@ const updateRecordingData = async (req, res) => {
     });
 
     if (liveRecording) {
-      const finalOutputKey = formM3U8Key(inputFileKey, outputFolder);
+      const finalOutputKey = formMPDKey(inputFileKey, outputFolder);
+      const finalHlsOutputKey = formM3U8Key(inputFileKey, outputFolder);
       if (finalOutputKey) {
         const awsUrl = generateAWSS3LocationUrl(finalOutputKey);
+        const hlsawsUrl = generateAWSS3LocationUrl(finalHlsOutputKey);
         liveRecording.key = finalOutputKey;
         liveRecording.url = awsUrl;
+        liveRecording.hlsDrmKey = hlsDrmKeyId;
+        liveRecording.hlsDrmUrl = hlsawsUrl;
         liveRecording.drmKeyId = drmKeyId;
         liveRecording.save();
       }
@@ -304,11 +321,15 @@ const updateRecordingData = async (req, res) => {
       where: { key: { [Op.like]: `%${inputFileKey}%` } },
     });
     if (soloRecord) {
-      const finalOutputKey = formM3U8Key(inputFileKey, outputFolder);
+      const finalOutputKey = formMPDKey(inputFileKey, outputFolder);
+      const finalHlsOutputKey = formM3U8Key(inputFileKey, outputFolder);
       if (finalOutputKey) {
         const awsUrl = generateAWSS3LocationUrl(finalOutputKey);
+        const hlsawsUrl = generateAWSS3LocationUrl(finalHlsOutputKey);
         soloRecord.key = finalOutputKey;
         soloRecord.url = awsUrl;
+        soloRecord.hlsDrmKey = hlsDrmKeyId;
+        soloRecord.hlsDrmUrl = hlsawsUrl;
         soloRecord.drmKeyId = drmKeyId;
         soloRecord.save();
       }
