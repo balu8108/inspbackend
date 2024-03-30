@@ -1,10 +1,12 @@
+const { Op, Sequelize } = require("sequelize");
 const {
     LiveClassRoom,
     LiveClassRoomDetail,
     LiveClassRoomFile,
     LiveClassRoomRecording,
     LiveClassRoomNote,
-    LeaderBoard
+    LeaderBoard,
+    LiveClassTestQuestionLog
 } = require("../../models");
 
 const getAllLecture = async (req, res) => {
@@ -95,6 +97,9 @@ const getLectureById = async (req, res) => {
                 model: LeaderBoard,
                 order: [['correctAnswers', 'DESC']], // Order by correctAnswers in descending order
                 limit: 10 // Limit the number of LeaderBoard records to 10
+            },{
+                model: LiveClassTestQuestionLog,
+                attributes: [[Sequelize.fn('COUNT', Sequelize.col('*')), 'questionLogCount']]
             }]
         });
 
