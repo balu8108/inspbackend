@@ -12,6 +12,10 @@ const {
   createLiveClassNotes,
 } = require("./genericcontrollers/genericController");
 const {
+  getAllLecture,
+  getLectureById
+} = require("./lectures/lectureController")
+const {
   createLiveClass,
   getAllLiveClasses,
   getLiveClassDetails,
@@ -26,11 +30,6 @@ const {
   viewRecording,
   playRecording,
 } = require("./recordingscontrollers/recordingsController");
-
-const {
-  getAllCrashCourseLecture,
-  getLectureById,
-} = require("./crashcoursecontroller/crashCourserController");
 const {
   createStudentFeedback,
   getAllStudentFeedback,
@@ -56,7 +55,7 @@ module.exports = {
   playRecording,
   getLectureNo,
   uploadFilesToClass,
-  getAllCrashCourseLecture,
+  getAllLecture,
   getLectureById,
   loginWithIpHandler,
   createStudentFeedback,
