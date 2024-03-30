@@ -16,9 +16,8 @@ const authenticationRoutes = require("./routes/authentication/authenticationRout
 const soloClassroomRoutes = require("./routes/soloclassroom/soloClassroom");
 const myUploadRoutes = require("./routes/myuploads/assignment");
 const recordingRoutes = require("./routes/recordings/recordings");
-const crashCourseRoutes = require("./routes/crashcourse/crashCourseRoutes");
 const studentFeedbackRoutes = require("./routes/studentfeedback/studentFeedackRoutes");
-const routesreg = require("./routes/regularclasses/regularclasses");
+const lectureRoute = require("./routes/lecturesRoute/lectureRoutes");
 const config = require("./socketcontrollers/config");
 
 const { ENVIRON } = require("./envvar");
@@ -112,9 +111,8 @@ app.use(routesConstants.AUTH, authenticationRoutes);
 app.use(routesConstants.SOLO, soloClassroomRoutes);
 app.use(routesConstants.TOPIC_ASSIGNMENTS, myUploadRoutes);
 app.use(routesConstants.RECORDING, recordingRoutes);
-app.use(routesConstants.CRASH_COURSE, crashCourseRoutes);
 app.use(routesConstants.STUDENT_FEEDBACK, studentFeedbackRoutes);
-app.use(routesConstants.REGULAR_CLASSES, routesreg);
+app.use(routesConstants.LECTURES_ENDPOINT, lectureRoute)
 
 app.use(logHandler);
 // Cron jobs function
