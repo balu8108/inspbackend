@@ -35,10 +35,15 @@ class RoomManager extends EventEmitter {
     this._testQuestions = {}; // For holding poll questions
     this._testResponses = {}; // this will contains all the test/poll/tf/mcq answers by students
     this._leaderBoard = {}; // will contain the leaderboard of room
+    this._pollTotalOptions = {};
     this._mediaSoupWorkers = mediaSoupWorkers;
     this._mediaSoupRouters = mediaSoupRouters;
     this._roomPipeTransports = {}; // store the pipe transport that can consume from remote server
     this._roomProducerPipeTransports = {}; // Store the pipe transport for the producers
+  }
+
+  componentDidMount(res) {
+   console.log(JSON.stringify(res))
   }
 
   static getLeastLoadedRouter(
@@ -1069,6 +1074,48 @@ class RoomManager extends EventEmitter {
     }
   }
 
+  _generateAlphabets(num) {
+      const alphabets = [];
+      for (let i = 0; i < num; i++) {
+        alphabets.push({ key: String.fromCharCode(65 + i), value: 0 });
+      }
+      return alphabets;
+  }
+
+  _increaseValueForKey(roomId, keyToFind) {
+    const roomPollData = this._pollTotalOptions[roomId];
+    for (let i = 0; i < roomPollData?.noOfOptions.length; i++) {
+        if (roomPollData?.noOfOptions[i].key === keyToFind) {
+           this._pollTotalOptions[roomId].noOfOptions[i].value = roomPollData?.noOfOptions[i].value + 1;
+            break; // Break the loop once the key is found and updated
+        }
+    }
+  }
+
+  _calculateAverageAnswers(roomId) {
+    const roomData = this._leaderBoard[roomId];
+    const roomPollData = this._pollTotalOptions[roomId];
+    let totalPeers = 0;
+    // Iterate through each peer's answers
+    for (const peerId in roomData) {
+        const answers = roomData[peerId].peerAnswer;
+        if(answers){
+          totalPeers++;
+          // Count occurrences of each option
+          answers.forEach(option => {
+            this._increaseValueForKey(roomId, option)
+          });
+        }
+    }
+
+    for (let i = 0; i < roomPollData?.noOfOptions.length; i++) {
+      const percentage = (roomPollData?.noOfOptions[i]?.value / totalPeers) * 100;
+      this._pollTotalOptions[roomId].noOfOptions[i].value = parseFloat(percentage.toFixed(2));
+    }
+
+    return this._pollTotalOptions[roomId]?.noOfOptions;
+}
+
   _updateLeaderBoard(authId, socketId, classPk, response) {
     try {
       const roomId = this._roomId;
@@ -1077,10 +1124,17 @@ class RoomManager extends EventEmitter {
         if (!this._leaderBoard[roomId]) {
           this._leaderBoard[roomId] = {};
         }
+        if(!this._pollTotalOptions[roomId]){
+          this._pollTotalOptions[roomId] = {
+            noOfOptions: this._generateAlphabets(response?.noOfOptions),
+            type: response?.type,
+          };
+        }
         const isAnswersCorrect = this._checkIsAnswersCorrect(roomId, response);
         if (!this._leaderBoard[roomId][peerDetails.id]) {
           this._leaderBoard[roomId][peerDetails.id] = {
             peerDetails,
+            peerAnswer: response?.answers,
             correctAnswers: isAnswersCorrect ? 1 : 0,
             combinedResponseTime: response.responseTimeInSeconds,
           };
@@ -1094,6 +1148,7 @@ class RoomManager extends EventEmitter {
         } else {
           this._leaderBoard[roomId][peerDetails.id].correctAnswers +=
             isAnswersCorrect ? 1 : 0;
+          this._leaderBoard[roomId][peerDetails.id].peerAnswer = response?.answers
           this._leaderBoard[roomId][peerDetails.id].combinedResponseTime +=
             response.responseTimeInSeconds;
 
@@ -1106,6 +1161,10 @@ class RoomManager extends EventEmitter {
         }
 
         const roomLeaderBoard = this._leaderBoard[roomId];
+  
+        const averagePeersOption = this._calculateAverageAnswers(roomId);
+        this.componentDidMount(this._pollTotalOptions[roomId])
+        this.componentDidMount(averagePeersOption)
 
         const sortedLeaderBoard = Object.values(roomLeaderBoard).sort(
           (a, b) => {
@@ -1115,7 +1174,8 @@ class RoomManager extends EventEmitter {
             return a.combinedResponseTime - b.combinedResponseTime;
           }
         );
-        return sortedLeaderBoard;
+
+        return {averagePeersOption, sortedLeaderBoard};
       }
     } catch (err) {
       console.log("Error in RManager updating _updateLeaderboard", err);
