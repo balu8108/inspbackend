@@ -12,10 +12,6 @@ const {
   createLiveClassNotes,
 } = require("./genericcontrollers/genericController");
 const {
-  getAllLecture,
-  getLectureById
-} = require("./lectures/lectureController")
-const {
   createLiveClass,
   getAllLiveClasses,
   getLiveClassDetails,
