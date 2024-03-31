@@ -44,13 +44,13 @@ const routesConstants = Object.freeze({
   UPDATE_RECORDING_DATA: "/update-recording-data",
   VIEW_RECORDING: "/view-recording",
   PLAY_RECORDING: "/play-recording",
-  GET_LECTURE_NO: "/get-lecture-no",
-  LECTURE_ENDPOINT: "/lecture",
+
+  LECTURES_ENDPOINT: "/lecture",
   GET_ALL_LECTURE: "/get-all-lecture",
+  GET_LECTURE_NO: "/get-lecture-no",
+  GET_LECTURE_BY_TOPIC_NAME: "/get-lecture-by-topic-name/:topicName",
   GET_LECTURE_BY_ID: "/get-lecture-by-id",
-  GET_LECTURE_BY_TOPIC_NAME:'/get-lecture-by-topic-name/:topicName',
-  REGULAR_CLASSES:"/regular-classes",
-  GET_SINGLE_LECTURE_DETAIL:'/get-single-lecture-detail/:roomId',
+
   STUDENT_FEEDBACK: "/student-feedback",
   CREATE_STUDENT_FEEDBACK: "/create-student-feedback",
   GET_ALL_STUDENT_FEEDBACK: "/get-all-student-feedback",

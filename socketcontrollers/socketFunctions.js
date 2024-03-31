@@ -1022,15 +1022,20 @@ const studentTestAnswerResponseSocketHandler = (data, socket, io) => {
       const classPk = allPeers.get(authData.id)?.classPk;
       const room = allRooms.get(roomId);
       if (roomId && room && classPk) {
-        const updatedLeaderBoard = room._updateLeaderBoard(
+        const { averagePeersOption, sortedLeaderBoard} = room._updateLeaderBoard(
           authData.id,
           socketId,
           classPk,
           data
         );
-        if (updatedLeaderBoard) {
+        if (sortedLeaderBoard) {
           io.in(roomId).emit(SOCKET_EVENTS.LEADERBOARD_FROM_SERVER, {
-            leaderBoard: updatedLeaderBoard.slice(0, 10),
+            leaderBoard: sortedLeaderBoard.slice(0, 10),
+          });
+        }
+        if(averagePeersOption){
+          io.in(roomId).emit(SOCKET_EVENTS.LEADERBOARD_AVERAGE_ANSWER_FROM_SERVER, {
+            averagePeersOption: averagePeersOption
           });
         }
       }

@@ -30,6 +30,13 @@ const {
   viewRecording,
   playRecording,
 } = require("./recordingscontrollers/recordingsController");
+
+const {
+  getAllLecture,
+  getLectureById,
+  getAllLectureByTopicName
+ }= require("./lectures/lecturesController");
+
 const {
   createStudentFeedback,
   getAllStudentFeedback,
@@ -57,6 +64,7 @@ module.exports = {
   uploadFilesToClass,
   getAllLecture,
   getLectureById,
+  getAllLectureByTopicName,
   loginWithIpHandler,
   createStudentFeedback,
   getAllStudentFeedback,
