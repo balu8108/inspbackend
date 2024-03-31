@@ -1124,7 +1124,19 @@ class RoomManager extends EventEmitter {
         if (!this._leaderBoard[roomId]) {
           this._leaderBoard[roomId] = {};
         }
-        if(!this._pollTotalOptions[roomId]){
+        if(response?.type === "tf"){
+          this._pollTotalOptions[roomId] = {
+            noOfOptions: [{
+              key: 'true',
+              value: 0
+            },
+            {
+              key: 'false',
+              value: 0
+            }],
+            type: response?.type,
+          };
+        }else{
           this._pollTotalOptions[roomId] = {
             noOfOptions: this._generateAlphabets(response?.noOfOptions),
             type: response?.type,
