@@ -61,7 +61,7 @@ module.exports = (sequelize, DataTypes) => {
         "NOT_CONDUCTED"
       ),
       classType: DataTypes.ENUM("REGULARCLASS", "CRASHCOURSE"),
-      classLevel: DataTypes.ENUM("Class_11", "Class_12", "Foundation_Course"),
+      classLevel: DataTypes.ENUM("Class_11", "Class_12", "Foundation_Olympiad"),
       // class Type eg regular  and crash course
     },
 

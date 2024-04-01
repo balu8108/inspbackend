@@ -10,7 +10,7 @@ module.exports = {
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
     await queryInterface.addColumn("LiveClassRooms", "classLevel", {
-      type: Sequelize.ENUM("Class_11", "Class_12", "Foundation_Course"),
+      type: Sequelize.ENUM("Class_11", "Class_12", "Foundation_Olympiad"),
       allowNull: false,
       defaultValue: "Class_11",
     });
