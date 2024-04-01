@@ -5,8 +5,13 @@ const {
   isAuthenticated,
   checkPaidStatusOrTeacher,
 } = require("../../middlewares");
-
-const { getLectureDetails,getAllLectureByTopicName } = require("../../controllers/regularclasses/regularclasses");
+const { getAllLecture, getAllLectureByTopicName, getLectureById } = require("../../controllers");
+router.get(
+    `${routesConstants.GET_ALL_LECTURE}/:classType/:classLevel`,
+    isAuthenticated,
+    checkPaidStatusOrTeacher,
+    getAllLecture
+)
 
 router.get(
   routesConstants.GET_LECTURE_BY_TOPIC_NAME,
@@ -16,10 +21,9 @@ router.get(
 );
 
 router.get(
-  routesConstants.GET_SINGLE_LECTURE_DETAIL,
-   isAuthenticated,
-  checkPaidStatusOrTeacher,
-  getLectureDetails
+    `${routesConstants.GET_LECTURE_BY_ID}/:roomId`,
+    isAuthenticated,
+    checkPaidStatusOrTeacher,
+    getLectureById
 )
-
 module.exports = router;

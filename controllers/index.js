@@ -17,7 +17,7 @@ const {
   getLiveClassDetails,
   getUpcomingClass,
   getLectureNo,
-  uploadFilesToClass
+  uploadFilesToClass,
 } = require("./scheduleliveclasses/scheduleLiveClassController");
 const {
   getRecordingsWithDetails,
@@ -28,9 +28,11 @@ const {
 } = require("./recordingscontrollers/recordingsController");
 
 const {
-  getAllCrashCourseLecture,
+  getAllLecture,
   getLectureById,
-} = require("./crashcoursecontroller/crashCourserController");
+  getAllLectureByTopicName
+ }= require("./lectures/lecturesController");
+
 const {
   createStudentFeedback,
   getAllStudentFeedback,
@@ -56,8 +58,9 @@ module.exports = {
   playRecording,
   getLectureNo,
   uploadFilesToClass,
-  getAllCrashCourseLecture,
+  getAllLecture,
   getLectureById,
+  getAllLectureByTopicName,
   loginWithIpHandler,
   createStudentFeedback,
   getAllStudentFeedback,
