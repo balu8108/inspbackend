@@ -26,10 +26,6 @@ const {
   isSocketUserAuthenticated,
   socketPaidStatusOrTeacher,
 } = require("./middlewares");
-const {
-  raiseHandHandler,
-  miroBoardDataHandler,
-} = require("./socketcontrollers");
 
 const {
   joinRoomPreviewSocketHandler,
@@ -83,7 +79,7 @@ app.use(routesConstants.SOLO, soloClassroomRoutes);
 app.use(routesConstants.TOPIC_ASSIGNMENTS, myUploadRoutes);
 app.use(routesConstants.RECORDING, recordingRoutes);
 app.use(routesConstants.STUDENT_FEEDBACK, studentFeedbackRoutes);
-app.use(routesConstants.LECTURES_ENDPOINT, lectureRoute)
+app.use(routesConstants.LECTURES_ENDPOINT, lectureRoute);
 
 app.use(logHandler);
 // Cron jobs function
@@ -193,9 +189,6 @@ async function runMediasoupWorkers() {
       mediaSoupWorkers.set(worker.pid, worker);
       console.log(`Worker ${i + 1} successfully created with id ${worker.pid}`);
     }
-
-    // const newWorker = await mediasoup.createWorker(workerConfig);
-    // mediaSoupWorkers.set(newWorker.pid, newWorker);
   } catch (err) {
     console.log("Some error in creating mediasoup worker", err);
   }
@@ -216,15 +209,11 @@ io.use(isSocketUserAuthenticated);
 io.use(socketPaidStatusOrTeacher);
 
 io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
-  console.log("connected client with socket id", socket.id);
-
   socket.on(SOCKET_EVENTS.JOIN_ROOM_PREVIEW, (data, callback) => {
-    joinRoomPreviewSocketHandler(data, callback, socket, io); // class based architecture change
-    // joinRoomPreviewHandler(data, callback, socket, io); // Depreceted architecture
+    joinRoomPreviewSocketHandler(data, callback, socket, io);
   });
   socket.on(SOCKET_EVENTS.JOIN_ROOM, (data, callback) => {
     joinRoomSocketHandler(data, callback, socket, io, mediaSoupWorkers);
-    // joinRoomHandler(data, callback, socket, io, mediaSoupWorkers); // Depreceted architecture
   });
   socket.on(SOCKET_EVENTS.CREATE_WEB_RTC_TRANSPORT, (data, callback) => {
     createWebRtcTransportSocketHandler(
@@ -234,116 +223,81 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
       io,
       mediaSoupWorkers
     );
-    // createWebRtcTransportHandler(data, callback, socket, io, mediaSoupWorkers); // Depreceted architecture
   });
   socket.on(SOCKET_EVENTS.TRANSPORT_SEND_CONNECT, (data) => {
     connectWebRTCTransportSendSocketHandler(data, socket, mediaSoupWorkers);
-    // connectWebRTCTransportSendHandler(data, socket, mediaSoupWorkers); // Depreceted architecture
   });
   socket.on(SOCKET_EVENTS.TRANSPORT_PRODUCE, (data, callback) => {
     transportProduceSocketHandler(data, callback, socket, mediaSoupWorkers);
-    // transportProduceHandler(data, callback, socket, mediaSoupWorkers); // Depreceted architecture
   });
   socket.on(SOCKET_EVENTS.GET_PRODUCERS, (callback) => {
     getProducersSocketHandler(callback, socket, mediaSoupWorkers);
-    // getProducersHandler(callback, socket, mediaSoupWorkers);
   });
   socket.on(SOCKET_EVENTS.TRANSPORT_RECV_CONNECT, (data) => {
     connectWebRTCTransportRecvSocketHandler(data, socket, mediaSoupWorkers);
-    // connectWebRTCTransportRecvHandler(data, socket, mediaSoupWorkers); // Depreceted architecture
   });
   socket.on(SOCKET_EVENTS.CONSUME, (data, callback) => {
     consumeSocketHandler(data, callback, socket, mediaSoupWorkers);
-    // consumeHandler(data, callback, socket, mediaSoupWorkers); // Depreceted architecture
   });
   socket.on(SOCKET_EVENTS.CONSUMER_RESUME, (data) => {
     consumerResumeSocketHandler(data, socket, mediaSoupWorkers);
-    // consumerResumeHandler(data, socket, mediaSoupWorkers); // Depreceted architecture
   });
   socket.on(SOCKET_EVENTS.CHAT_MSG_TO_SERVER, (data) => {
     chatMsgSocketHandler(data, socket);
-    // chatMsgHandler(data, socket); // Deprecated architecture
   });
   socket.on(SOCKET_EVENTS.QUESTION_SENT_TO_SERVER, (data, callback) => {
     questionsSocketHandler(data, callback, socket);
-    // questionsHandler(data, callback, socket); // Deprecated Architecture
   });
   socket.on(SOCKET_EVENTS.ANSWER_SENT_TO_SERVER, (data) => {
     studentTestAnswerResponseSocketHandler(data, socket, io);
-    // studentTestAnswerResponseHandler(data, socket, io); // Deprecated Architecture
   });
   socket.on(SOCKET_EVENTS.STOP_PRODUCING, (data) => {
     stopProducingSocketHandler(data, socket);
-    // stopProducingHandler(data, socket); // Deprecated architecture
-  });
-  socket.on(SOCKET_EVENTS.RAISE_HAND_TO_SERVER, (data) => {
-    raiseHandHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.UPLOAD_FILE_TO_SERVER, (data, callback) => {
     uploadFileSocketHandler(data, callback, socket);
-    // uploadFileHandler(data, callback, socket); // Deprecated architecture
   });
   socket.on(SOCKET_EVENTS.PRODUCER_PAUSE, (data) => {
     producerPauseSocketHandler(data, socket);
-    // producerPauseHandler(data, socket); // deprecated  architecture
   });
   socket.on(SOCKET_EVENTS.PRODUCER_RESUME, (data) => {
     producerResumeSocketHandler(data, socket);
-    // producerResumeHandler(data, socket); // deprecated  architecture
   });
   socket.on(SOCKET_EVENTS.REPLACE_TRACK, (data) => {
     replaceTrackSocketHandler(data, socket);
-    // replaceTrackHandler(data, socket); // deprecated  architecture
   });
   socket.on(SOCKET_EVENTS.START_RECORDING, (data) => {
     startRecordingSocketHandler(data, socket);
-    // startRecordingHandler(data, socket); // deprecated architecture
   });
   socket.on(SOCKET_EVENTS.STOP_RECORDING, () => {
     stopRecordingSocketHandler(socket);
-    // stopRecordingHandler(socket);
-  });
-  socket.on(SOCKET_EVENTS.MIRO_BOARD_DATA_TO_SERVER, (data) => {
-    miroBoardDataHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.IS_AUDIO_STREAM_ENABLED_TO_SERVER, (data) => {
     setIsAudioStreamSocketEnabled(data, socket, io);
-    // setIsAudioStreamEnabled(data, socket, io); // Deprecated architecture
   });
   socket.on(SOCKET_EVENTS.BLOCK_OR_UNBLOCK_MIC_TO_SERVER, (data) => {
     blockOrUnblockMicSocketHandler(data, socket, io);
-    // blockOrUnblockMicHandler(data, socket, io);   // Deprecated architecture
   });
   socket.on(SOCKET_EVENTS.MUTE_MIC_COMMAND_BY_MENTOR_TO_SERVER, (data) => {
     muteMicCommandByMentorSocketHandler(data, socket, io);
-    // muteMicCommandByMentorHandler(data, socket, io);  // Deprecated architecture
   });
   socket.on(SOCKET_EVENTS.KICK_OUT_FROM_CLASS_TO_SERVER, (data) => {
     kickOutFromClassSocketHandler(data, socket, io);
-    // kickOutFromClassHandler(data, socket, io); // Deprecated architecture
   });
   socket.on(SOCKET_EVENTS.QUESTION_MSG_SENT_TO_SERVER, (data, callback) => {
     questionMsgSentByStudentSocketHandler(data, callback, socket, io);
-    // questionMsgSentByStudentHandler(data, callback, socket, io); // Deprecated architecture
   });
   socket.on(SOCKET_EVENTS.LEAVE_ROOM, (callback) => {
     leaveRoomSocketHandler(callback, socket, mediaSoupWorkers, io);
-    // leaveRoomHandler(callback, socket, mediaSoupWorkers, io); // Deprecated architecture
-    console.log("Client leaved the room", socket.id);
   });
   socket.on(SOCKET_EVENTS.END_MEET_TO_SERVER, () => {
     endMeetSocketHandler(socket, mediaSoupWorkers, io);
-    // endMeetHandler(socket, mediaSoupWorkers, io);  // Deprecated architecture
-    console.log("Client ended the meet", socket.id);
   });
   socket.on(SOCKET_EVENTS.POLL_TIME_INCREASE_TO_SERVER, (data) => {
     pollTimeIncreaseSocketHandler(data, socket);
-    // pollTimeIncreaseHandler(data, socket); // Deprecated architecture
   });
   socket.on(SOCKET_EVENTS.DISCONNECT, () => {
     disconnectSocketHandler(socket, mediaSoupWorkers, io);
-    // disconnectHandler(socket, mediaSoupWorkers, io);
-    console.log("disconnected client with socket id", socket.id);
   });
 });
 

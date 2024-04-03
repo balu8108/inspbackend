@@ -194,16 +194,9 @@ const getUpcomingClass = async (req, res) => {
 
 const getLectureNo = async (req, res) => {
   try {
-    const { subjectName, classType, classLevel, chapterName, topicName } =
-      req.body;
+    const { subjectName, classType, classLevel } = req.body;
 
-    if (
-      !subjectName ||
-      !classType ||
-      !classLevel ||
-      !chapterName ||
-      !topicName
-    ) {
+    if (!subjectName || !classType || !classLevel) {
       return res.status(400).json({ error: "please send is required" });
     }
 
@@ -218,10 +211,6 @@ const getLectureNo = async (req, res) => {
         include: [
           {
             model: LiveClassRoomDetail,
-            where: {
-              chapterName: chapterName,
-              topicName: topicName,
-            },
           },
         ],
       });
@@ -231,7 +220,6 @@ const getLectureNo = async (req, res) => {
         where: {
           subjectName: subjectName,
           classType: classType,
-          classLevel: classLevel,
         },
         include: [
           {

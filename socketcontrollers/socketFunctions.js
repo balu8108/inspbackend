@@ -671,9 +671,6 @@ const leaveRoomSocketHandler = async (
         const { success, isFeedback, feedBackTopicId } =
           await isFeedbackProvided(leavingPeer.peerDetails, roomId);
 
-        callback({
-          feedBackStatus: { success, isFeedback, feedBackTopicId },
-        });
         socket.leave(roomId);
         if (peerCountInRoom === 0) {
           // Delete room as well
@@ -682,6 +679,10 @@ const leaveRoomSocketHandler = async (
 
         io.to(roomId).emit(SOCKET_EVENTS.PEER_LEAVED, {
           peerLeaved: leavingPeer.peerDetails,
+        });
+
+        callback({
+          feedBackStatus: { success, isFeedback, feedBackTopicId },
         });
       }
     }
@@ -946,7 +947,10 @@ const setIsAudioStreamSocketEnabled = (data, socket, io) => {
     if (authData && allPeers.has(authData.id)) {
       const roomId = allPeers.get(authData.id)?.roomId;
       const peerDetails = allPeers.get(authData.id)?.peerDetails;
-
+      const room = allRooms.get(roomId);
+      if (roomId && room) {
+        room._updateMicEnabledOrDisable(authData.id, data?.value);
+      }
       if (roomId && peerDetails) {
         io.in(roomId).emit(SOCKET_EVENTS.IS_AUDIO_STREAM_ENABLED_FROM_SERVER, {
           ...data,
@@ -967,7 +971,7 @@ const blockOrUnblockMicSocketHandler = (data, socket, io) => {
       const roomId = allPeers.get(peerId)?.roomId;
       const room = allRooms.get(roomId);
       if (roomId && room) {
-        const peer = room._updateMicBlockOrUnblock(peerId, peerSocketId, value);
+        const peer = room._updateMicBlockOrUnblock(peerId, value);
         if (peer) {
           // Update allPeers
           const aPeer = allPeers.get(peerId);
@@ -1022,21 +1026,20 @@ const studentTestAnswerResponseSocketHandler = (data, socket, io) => {
       const classPk = allPeers.get(authData.id)?.classPk;
       const room = allRooms.get(roomId);
       if (roomId && room && classPk) {
-        const { averagePeersOption, sortedLeaderBoard} = room._updateLeaderBoard(
-          authData.id,
-          socketId,
-          classPk,
-          data
-        );
+        const { averagePeersOption, sortedLeaderBoard } =
+          room._updateLeaderBoard(authData.id, socketId, classPk, data);
         if (sortedLeaderBoard) {
           io.in(roomId).emit(SOCKET_EVENTS.LEADERBOARD_FROM_SERVER, {
             leaderBoard: sortedLeaderBoard.slice(0, 10),
           });
         }
-        if(averagePeersOption){
-          io.in(roomId).emit(SOCKET_EVENTS.LEADERBOARD_AVERAGE_ANSWER_FROM_SERVER, {
-            averagePeersOption: averagePeersOption
-          });
+        if (averagePeersOption) {
+          io.in(roomId).emit(
+            SOCKET_EVENTS.LEADERBOARD_AVERAGE_ANSWER_FROM_SERVER,
+            {
+              averagePeersOption: averagePeersOption,
+            }
+          );
         }
       }
     }
