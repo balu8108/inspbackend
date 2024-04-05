@@ -9,6 +9,7 @@ const {
 const {
   generateRandomCharacters,
   validateCreationOfLiveClass,
+  validateUpdateScheduleLiveClass,
   uploadFilesToS3,
 } = require("../../utils");
 const { classStatus } = require("../../constants");
@@ -236,6 +237,32 @@ const getLectureNo = async (req, res) => {
   }
 };
 
+const updateScheduleClassData = async (req, res) => {
+  try {
+    const { body } = req;
+
+    if (validateUpdateScheduleLiveClass(body)) {
+      const LiveClass = await LiveClassRoom.findByPk(body.classId);
+
+      if (!LiveClass) {
+        return res.status(404).json({ error: "Live class not found" });
+      }
+
+      await LiveClass.update({
+        scheduledDate: body.scheduledDate,
+        scheduledStartTime: body.scheduledStartTime,
+        scheduledEndTime: body.scheduledEndTime,
+      });
+
+      return res.status(200).json({ message: "Class schedule change" });
+    } else {
+      return res.status(400).json({ error: "Some fields are missing!!" });
+    }
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
 const uploadFilesToClass = async (req, res) => {
   try {
     const { type, classId } = req.params;
@@ -347,4 +374,5 @@ module.exports = {
   getUpcomingClass,
   getLectureNo,
   uploadFilesToClass,
+  updateScheduleClassData,
 };

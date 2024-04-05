@@ -10,10 +10,20 @@ const validateCreationOfLiveClass = (data) => {
   );
 };
 
+const validateUpdateScheduleLiveClass = (data) => {
+  return (
+    data.classId &&
+    data.scheduledDate &&
+    data.scheduledStartTime &&
+    data.scheduledEndTime
+  );
+};
+
 const validateCreateFeedBack = (data) => {
   return data.topicId && data.rating && data.feedback;
 };
 module.exports = {
   validateCreationOfLiveClass,
   validateCreateFeedBack,
+  validateUpdateScheduleLiveClass,
 };
