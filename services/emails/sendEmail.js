@@ -29,7 +29,7 @@ const sendEmail = async (notificationDBObject) => {
     });
 
     const mailOptions = {
-      from: `Support Insp Test <${process.env.GOOGLE_GMAIL_USER}>`,
+      from: process.env.GOOGLE_GMAIL_USER,
       to: notificationDBObject.notificationReceiverEmail,
       subject: notificationDBObject.notificationSubject,
       text: notificationDBObject.notificationEmailText,

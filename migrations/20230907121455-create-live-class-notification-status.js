@@ -9,6 +9,10 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
+      notificationClassType: {
+        type: Sequelize.ENUM("LIVE_CLASS", "PTM"),
+        defaultValue: "LIVE_CLASS",
+      },
       liveClassNotificationStatus: {
         type: Sequelize.ENUM("PENDING", "SENT", "FAILED"),
         defaultValue: "PENDING",
@@ -20,6 +24,16 @@ module.exports = {
           key: "id",
         },
         onDelete: "CASCADE",
+      },
+      notificationType: {
+        type: Sequelize.ENUM("EMAIL", "SMS", "EMAIL+SMS"),
+        defaultValue: "EMAIL+SMS",
+      },
+      notificationSubject: {
+        type: Sequelize.TEXT,
+      },
+      notificationSendingTime: {
+        type: Sequelize.TEXT,
       },
       createdAt: {
         allowNull: false,

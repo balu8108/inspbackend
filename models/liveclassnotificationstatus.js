@@ -16,8 +16,12 @@ module.exports = (sequelize, DataTypes) => {
   }
   LiveClassNotificationStatus.init(
     {
+      // notificationClassType: DataTypes.ENUM("LIVE_CLASS", "PTM"),
       liveClassNotificationStatus: DataTypes.ENUM("PENDING", "SENT", "FAILED"),
       classRoomId: DataTypes.INTEGER,
+      notificationType: DataTypes.ENUM("EMAIL", "SMS", "EMAIL+SMS"),
+      notificationSubject: DataTypes.TEXT,
+      notificationSendingTime: DataTypes.TEXT,
     },
     {
       sequelize,

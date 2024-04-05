@@ -5,6 +5,7 @@ const {
   LiveClassRoomDetail,
   LiveClassRoomFile,
   SoloClassRoomRecording,
+  LiveClassNotificationStatus,
 } = require("../../models");
 const {
   generateRandomCharacters,
@@ -12,6 +13,8 @@ const {
   uploadFilesToS3,
 } = require("../../utils");
 const { classStatus } = require("../../constants");
+const moment = require("moment-timezone");
+moment.tz.setDefault("Asia/Kolkata");
 
 // DB FUNCTIONS START
 const createLiveClassRoom = async (randomCharacters, body, plainAuthData) => {
@@ -123,6 +126,24 @@ const createLiveClass = async (req, res) => {
           description: body.description,
           classRoomId: id,
           lectureNo: body.lectureNo,
+        });
+
+        let timestamp = moment.tz(
+          `${body.scheduledDate} ${body.scheduledStartTime}`,
+          "YYYY-MM-DD HH:mm",
+          "Asia/Kolkata"
+        );
+
+        // Subtract 15 minutes
+        let minus15mintimeStamp = timestamp.subtract(15, "minutes").format();
+
+        await LiveClassNotificationStatus.create({
+          liveClassNotificationStatus: "PENDING",
+          classRoomId: id,
+          notificationClassType: "LIVE_CLASS",
+          notificationType: "EMAIL+SMS",
+          notificationSubject: "Meeting Reminder",
+          notificationSendingTime: minus15mintimeStamp,
         });
 
         result.liveClassRoomDetail = liveClassRoomDetail; // create parent child relationship however not necessary

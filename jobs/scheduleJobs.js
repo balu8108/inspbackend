@@ -1,5 +1,4 @@
 const schedule = require("node-schedule");
-const upcomingLiveClass = require("./upcomingLiveClass");
 const notificationSender = require("./notificationSender");
 const classStatusChange = require("./classStatusChange");
 const recordingToS3 = require("./recordingToS3");
@@ -14,9 +13,8 @@ if (ENVIRON === "local") {
   recordingRule = "*/1 * * * *";
 }
 const scheduleJobs = () => {
-  schedule.scheduleJob(jobRule, upcomingLiveClass);
-  schedule.scheduleJob(jobRule, notificationSender);
-  schedule.scheduleJob(jobRule, classStatusChange);
-  schedule.scheduleJob(recordingRule, recordingToS3);
+  schedule.scheduleJob(recordingRule, notificationSender);
+  // schedule.scheduleJob(jobRule, classStatusChange);
+  // schedule.scheduleJob(recordingRule, recordingToS3);
 };
 module.exports = scheduleJobs;
