@@ -2,6 +2,7 @@ const generateRandomCharacters = require("./generateRandomCharacters");
 const {
   validateCreationOfLiveClass,
   validateCreateFeedBack,
+  validateUpdateScheduleLiveClass,
 } = require("./validators");
 const {
   uploadFilesToS3,
@@ -43,6 +44,7 @@ module.exports = {
   encryptData,
   fetchAllStudentsFromInspApi,
   validateCreateFeedBack,
+  validateUpdateScheduleLiveClass,
   isFeedbackProvided,
   generateAWSS3LocationUrl,
   isObjectExistInS3ByKey,
