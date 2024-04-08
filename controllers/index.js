@@ -10,6 +10,8 @@ const {
   generateGetPresignedUrl,
   createFeedback,
   createLiveClassNotes,
+  uploadTimeTable,
+  getAllTimeTable,
 } = require("./genericcontrollers/genericController");
 const {
   createLiveClass,
@@ -46,6 +48,8 @@ module.exports = {
   openFile,
   imageToDoc,
   createLiveClassNotes,
+  uploadTimeTable,
+  getAllTimeTable,
   createLiveClass,
   getAllLiveClasses,
   getLiveClassDetails,

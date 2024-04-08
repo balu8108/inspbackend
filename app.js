@@ -86,7 +86,7 @@ app.use(logHandler);
 if (ENVIRON !== "local") {
   scheduleJob();
 }
-scheduleJob();
+//scheduleJob();
 // Cron jobs function
 
 // let worker;

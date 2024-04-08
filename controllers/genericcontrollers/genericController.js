@@ -9,6 +9,7 @@ const {
   SoloClassRoomFiles,
   AssignmentFiles,
   LiveClassRoomNote,
+  TimeTableFile,
 } = require("../../models");
 const {
   generatePresignedUrls,
@@ -19,7 +20,9 @@ const {
   formMPDString,
   generateAWSS3LocationUrl,
   createOrUpdateLiveClassNotes,
+  uploadFilesToS3,
 } = require("../../utils");
+const uuidv4 = require("uuid").v4;
 
 const { Op } = require("sequelize");
 
@@ -389,6 +392,49 @@ const createLiveClassNotes = async (req, res) => {
   }
 };
 
+const getAllTimeTable = async (req, res) => {
+  try {
+    const timetableData = await TimeTableFile.findAll();
+    return res
+      .status(200)
+      .json({ message: "All timetable data", data: timetableData });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+const uploadTimeTable = async (req, res) => {
+  try {
+    const { files } = req;
+
+    let addFilesInArray = [];
+    if (files) {
+      addFilesInArray = Array.isArray(files?.files)
+        ? files?.files
+        : [files?.files];
+    }
+
+    if (files) {
+      const fileUploads = await uploadFilesToS3(
+        addFilesInArray,
+        `timetable/timetable_${uuidv4()}`
+      );
+      if (fileUploads) {
+        fileUploads.forEach(async (file) => {
+          await TimeTableFile.create({
+            url: file.url,
+          });
+        });
+        return res.status(200).json({ message: "Uploaded files" });
+      } else {
+        throw new Error("unable to upload files");
+      }
+    }
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   getAllSubjects,
   openFile,
@@ -400,4 +446,6 @@ module.exports = {
   getCompletedLiveClasses,
   getTopicDetails,
   updateRecordingData,
+  uploadTimeTable,
+  getAllTimeTable,
 };
