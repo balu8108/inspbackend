@@ -13,8 +13,8 @@ if (ENVIRON === "local") {
   recordingRule = "*/1 * * * *";
 }
 const scheduleJobs = () => {
-  //schedule.scheduleJob(recordingRule, notificationSender);
   schedule.scheduleJob(jobRule, classStatusChange);
+  schedule.scheduleJob(recordingRule, notificationSender);
   schedule.scheduleJob(recordingRule, recordingToS3);
 };
 module.exports = scheduleJobs;

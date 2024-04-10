@@ -265,14 +265,34 @@ const updateScheduleClassData = async (req, res) => {
     if (validateUpdateScheduleLiveClass(body)) {
       const LiveClass = await LiveClassRoom.findByPk(body.classId);
 
+      let timestamp = moment.tz(
+        `${body.scheduledDate} ${body.scheduledStartTime}`,
+        "YYYY-MM-DD HH:mm",
+        "Asia/Kolkata"
+      );
+
+      // Subtract 15 minutes
+      let minus15mintimeStamp = timestamp.subtract(15, "minutes").format();
+
+      const LiveClassNotification = await LiveClassNotificationStatus.findOne({
+        where: { classRoomId: LiveClass.id },
+      });
+
       if (!LiveClass) {
         return res.status(404).json({ error: "Live class not found" });
+      }
+      if (!LiveClassNotification) {
+        return res.status(404).json({ error: "Live class notification found" });
       }
 
       await LiveClass.update({
         scheduledDate: body.scheduledDate,
         scheduledStartTime: body.scheduledStartTime,
         scheduledEndTime: body.scheduledEndTime,
+      });
+
+      await LiveClassNotification.update({
+        notificationSendingTime: minus15mintimeStamp,
       });
 
       return res.status(200).json({ message: "Class schedule change" });
