@@ -11,10 +11,12 @@ const routesConstants = Object.freeze({
   LATEST_FEEDBACK: "/latest-feedback",
   LATEST_COMPLETEDCLASSROOM: "/latest-completed-live-classroom",
   TOPIC_FEEDBACK_RATING_DETAILS: "/topic-feedback-rating-details",
+  UPLOAD_TIMETABLE: "/upload-timetable",
+  GET_ALL_TIMETABLE: "/get-all-timetable",
   OPEN_FILE: "/open-file",
   IMAGE_TO_DOC: "/image-to-doc",
   CREATE_LIVE_CLASS_NOTES: "/create-live-class-notes",
-  UPLOAD_ASSIGNMENT_TO_CLASS_BY_ID: '/upload-assignment-to-class',
+  UPLOAD_ASSIGNMENT_TO_CLASS_BY_ID: "/upload-assignment-to-class",
   SOLO: "/solo-lecture",
   SOLO_CLASSROOM: "/create-room",
   LATEST_CLASSROOM: "/latest-room",
@@ -50,6 +52,8 @@ const routesConstants = Object.freeze({
   GET_LECTURE_NO: "/get-lecture-no",
   GET_LECTURE_BY_TOPIC_NAME: "/get-lecture-by-topic-name/:topicName",
   GET_LECTURE_BY_ID: "/get-lecture-by-id",
+
+  UPDATE_SCHEDULE_CLASS: "/update-schedule-data",
 
   STUDENT_FEEDBACK: "/student-feedback",
   CREATE_STUDENT_FEEDBACK: "/create-student-feedback",

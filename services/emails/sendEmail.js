@@ -21,33 +21,33 @@ const getAuthCredentials = (token) => {
 const sendEmail = async (notificationDBObject) => {
   try {
     const { token } = await oauthClient.getAccessToken();
-
     const authCredentials = getAuthCredentials(token);
+
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: authCredentials,
     });
 
     const mailOptions = {
-      from: `Support Insp Test <${process.env.GOOGLE_GMAIL_USER}>`,
-      to: notificationDBObject.notificationReceiverEmail,
-      subject: notificationDBObject.notificationSubject,
-      text: notificationDBObject.notificationEmailText,
+      from: "support@inspedu.in",
+      to: notificationDBObject.receiverEmail,
+      subject: `Reminder: Upcoming Class ${notificationDBObject?.subjectName} in 15 Minutes`,
+      html: `<div>
+      <strong>Hello ${notificationDBObject?.receivername}</strong>
+      <p>This is to inform you that the class <strong>${notificationDBObject?.subjectName}</strong> is going to start in 15 minutes.</p>
+      <p>Please be ready and join the class on time.</p>
+  </div>`,
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        notificationDBObject.notificationStatus = "FAILED";
-        notificationDBObject.save();
+        console.log("FAILED");
       } else {
-        notificationDBObject.notificationStatus = "SENT"; //This ensures atleast one of the notification is sent
-        notificationDBObject.save();
+        console.log("DONE");
       }
     });
   } catch (err) {
     console.log("Error in sending email", err);
-    notificationDBObject.notificationStatus = "FAILED"; // Failed to send email so notification din't send from email
-    notificationDBObject.save();
   }
 };
 

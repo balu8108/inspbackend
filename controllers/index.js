@@ -10,6 +10,8 @@ const {
   generateGetPresignedUrl,
   createFeedback,
   createLiveClassNotes,
+  uploadTimeTable,
+  getAllTimeTable,
 } = require("./genericcontrollers/genericController");
 const {
   createLiveClass,
@@ -18,6 +20,7 @@ const {
   getUpcomingClass,
   getLectureNo,
   uploadFilesToClass,
+  updateScheduleClassData,
 } = require("./scheduleliveclasses/scheduleLiveClassController");
 const {
   getRecordingsWithDetails,
@@ -30,8 +33,8 @@ const {
 const {
   getAllLecture,
   getLectureById,
-  getAllLectureByTopicName
- }= require("./lectures/lecturesController");
+  getAllLectureByTopicName,
+} = require("./lectures/lecturesController");
 
 const {
   createStudentFeedback,
@@ -45,6 +48,8 @@ module.exports = {
   openFile,
   imageToDoc,
   createLiveClassNotes,
+  uploadTimeTable,
+  getAllTimeTable,
   createLiveClass,
   getAllLiveClasses,
   getLiveClassDetails,
@@ -57,6 +62,7 @@ module.exports = {
   viewRecording,
   playRecording,
   getLectureNo,
+  updateScheduleClassData,
   uploadFilesToClass,
   getAllLecture,
   getLectureById,

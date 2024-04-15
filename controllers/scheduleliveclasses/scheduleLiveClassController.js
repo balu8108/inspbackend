@@ -5,13 +5,17 @@ const {
   LiveClassRoomDetail,
   LiveClassRoomFile,
   SoloClassRoomRecording,
+  LiveClassNotificationStatus,
 } = require("../../models");
 const {
   generateRandomCharacters,
   validateCreationOfLiveClass,
+  validateUpdateScheduleLiveClass,
   uploadFilesToS3,
 } = require("../../utils");
 const { classStatus } = require("../../constants");
+const moment = require("moment-timezone");
+moment.tz.setDefault("Asia/Kolkata");
 
 // DB FUNCTIONS START
 const createLiveClassRoom = async (randomCharacters, body, plainAuthData) => {
@@ -125,6 +129,24 @@ const createLiveClass = async (req, res) => {
           lectureNo: body.lectureNo,
         });
 
+        let timestamp = moment.tz(
+          `${body.scheduledDate} ${body.scheduledStartTime}`,
+          "YYYY-MM-DD HH:mm",
+          "Asia/Kolkata"
+        );
+
+        // Subtract 15 minutes
+        let minus15mintimeStamp = timestamp.subtract(15, "minutes").format();
+
+        await LiveClassNotificationStatus.create({
+          liveClassNotificationStatus: "PENDING",
+          classRoomId: id,
+          notificationClassType: "LIVE_CLASS",
+          notificationType: "EMAIL+SMS",
+          notificationSubject: "Meeting Reminder",
+          notificationSendingTime: minus15mintimeStamp,
+        });
+
         result.liveClassRoomDetail = liveClassRoomDetail; // create parent child relationship however not necessary
 
         const combinedData = {
@@ -194,9 +216,9 @@ const getUpcomingClass = async (req, res) => {
 
 const getLectureNo = async (req, res) => {
   try {
-    const { subjectName, classType, chapterName, topicName } = req.body;
+    const { subjectName, classType, classLevel } = req.body;
 
-    if (!subjectName || !classType || !chapterName || !topicName) {
+    if (!subjectName || !classType || !classLevel) {
       return res.status(400).json({ error: "please send is required" });
     }
 
@@ -206,14 +228,11 @@ const getLectureNo = async (req, res) => {
         where: {
           subjectName: subjectName,
           classType: classType,
+          classLevel: classLevel,
         },
         include: [
           {
             model: LiveClassRoomDetail,
-            where: {
-              chapterName: chapterName,
-              topicName: topicName,
-            },
           },
         ],
       });
@@ -236,6 +255,52 @@ const getLectureNo = async (req, res) => {
     return res.status(200).json({ data: numberOfLecture });
   } catch (err) {
     return res.status(400).json({ error: err.message });
+  }
+};
+
+const updateScheduleClassData = async (req, res) => {
+  try {
+    const { body } = req;
+
+    if (validateUpdateScheduleLiveClass(body)) {
+      const LiveClass = await LiveClassRoom.findByPk(body.classId);
+
+      let timestamp = moment.tz(
+        `${body.scheduledDate} ${body.scheduledStartTime}`,
+        "YYYY-MM-DD HH:mm",
+        "Asia/Kolkata"
+      );
+
+      // Subtract 15 minutes
+      let minus15mintimeStamp = timestamp.subtract(15, "minutes").format();
+
+      const LiveClassNotification = await LiveClassNotificationStatus.findOne({
+        where: { classRoomId: LiveClass.id },
+      });
+
+      if (!LiveClass) {
+        return res.status(404).json({ error: "Live class not found" });
+      }
+      if (!LiveClassNotification) {
+        return res.status(404).json({ error: "Live class notification found" });
+      }
+
+      await LiveClass.update({
+        scheduledDate: body.scheduledDate,
+        scheduledStartTime: body.scheduledStartTime,
+        scheduledEndTime: body.scheduledEndTime,
+      });
+
+      await LiveClassNotification.update({
+        notificationSendingTime: minus15mintimeStamp,
+      });
+
+      return res.status(200).json({ message: "Class schedule change" });
+    } else {
+      return res.status(400).json({ error: "Some fields are missing!!" });
+    }
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 };
 
@@ -350,4 +415,5 @@ module.exports = {
   getUpcomingClass,
   getLectureNo,
   uploadFilesToClass,
+  updateScheduleClassData,
 };

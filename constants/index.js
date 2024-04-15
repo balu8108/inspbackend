@@ -5,6 +5,8 @@ const utilityConstants = require("./utilityConstants");
 const externalApiEndpoints = require("./externalApiEndpoints");
 const {
   notificationType,
+  classTypeTypes,
+  classLevelType,
   classStatus,
   liveClassLogInfo,
   liveClassTestQuestionLogInfo,
@@ -16,6 +18,8 @@ module.exports = {
   utilityConstants,
   externalApiEndpoints,
   notificationType,
+  classTypeTypes,
+  classLevelType,
   classStatus,
   liveClassLogInfo,
   liveClassTestQuestionLogInfo,

@@ -920,7 +920,7 @@ class RoomManager extends EventEmitter {
     }
   }
 
-  _updateMicBlockOrUnblock(peerId, peerSocketId, value) {
+  _updateMicBlockOrUnblock(peerId, value) {
     try {
       if (peerId in this._peers) {
         const peer = this._peers[peerId];
@@ -930,6 +930,20 @@ class RoomManager extends EventEmitter {
             peer.peerDetails.isAudioEnabled = !value;
           }
 
+          return peer;
+        }
+      }
+    } catch (err) {
+      console.log("Error in RManager updating mic block or unblock", err);
+    }
+  }
+
+  _updateMicEnabledOrDisable(peerId, value) {
+    try {
+      if (peerId in this._peers) {
+        const peer = this._peers[peerId];
+        if (peer && peer?.peerDetails) {
+          peer.peerDetails.isAudioEnabled = value;
           return peer;
         }
       }
@@ -974,7 +988,7 @@ class RoomManager extends EventEmitter {
         if (peer?.recordProcess) {
           peer.recordProcess.kill();
           peer.recordProcess = null;
-          logger.info(JSON.stringify(`Command to stop recording`, null, 2))
+          logger.info(JSON.stringify(`Command to stop recording`, null, 2));
         }
       }
     } catch (err) {
@@ -1071,20 +1085,21 @@ class RoomManager extends EventEmitter {
   }
 
   _generateAlphabets(num) {
-      const alphabets = [];
-      for (let i = 0; i < num; i++) {
-        alphabets.push({ key: String.fromCharCode(65 + i), value: 0 });
-      }
-      return alphabets;
+    const alphabets = [];
+    for (let i = 0; i < num; i++) {
+      alphabets.push({ key: String.fromCharCode(65 + i), value: 0 });
+    }
+    return alphabets;
   }
 
   _increaseValueForKey(roomId, keyToFind) {
     const roomPollData = this._pollTotalOptions[roomId];
     for (let i = 0; i < roomPollData?.noOfOptions.length; i++) {
-        if (roomPollData?.noOfOptions[i].key === keyToFind) {
-           this._pollTotalOptions[roomId].noOfOptions[i].value = roomPollData?.noOfOptions[i].value + 1;
-            break; // Break the loop once the key is found and updated
-        }
+      if (roomPollData?.noOfOptions[i].key === keyToFind) {
+        this._pollTotalOptions[roomId].noOfOptions[i].value =
+          roomPollData?.noOfOptions[i].value + 1;
+        break; // Break the loop once the key is found and updated
+      }
     }
   }
 
@@ -1094,23 +1109,26 @@ class RoomManager extends EventEmitter {
     let totalPeers = 0;
     // Iterate through each peer's answers
     for (const peerId in roomData) {
-        const answers = roomData[peerId].peerAnswer;
-        if(answers){
-          totalPeers++;
-          // Count occurrences of each option
-          answers.forEach(option => {
-            this._increaseValueForKey(roomId, option)
-          });
-        }
+      const answers = roomData[peerId].peerAnswer;
+      if (answers) {
+        totalPeers++;
+        // Count occurrences of each option
+        answers.forEach((option) => {
+          this._increaseValueForKey(roomId, option);
+        });
+      }
     }
 
     for (let i = 0; i < roomPollData?.noOfOptions.length; i++) {
-      const percentage = (roomPollData?.noOfOptions[i]?.value / totalPeers) * 100;
-      this._pollTotalOptions[roomId].noOfOptions[i].value = parseFloat(percentage.toFixed(2));
+      const percentage =
+        (roomPollData?.noOfOptions[i]?.value / totalPeers) * 100;
+      this._pollTotalOptions[roomId].noOfOptions[i].value = parseFloat(
+        percentage.toFixed(2)
+      );
     }
 
     return this._pollTotalOptions[roomId]?.noOfOptions;
-}
+  }
 
   _updateLeaderBoard(authId, socketId, classPk, response) {
     try {
@@ -1120,19 +1138,21 @@ class RoomManager extends EventEmitter {
         if (!this._leaderBoard[roomId]) {
           this._leaderBoard[roomId] = {};
         }
-        if(response?.type === "tf"){
+        if (response?.type === "tf") {
           this._pollTotalOptions[roomId] = {
-            noOfOptions: [{
-              key: 'true',
-              value: 0
-            },
-            {
-              key: 'false',
-              value: 0
-            }],
+            noOfOptions: [
+              {
+                key: "true",
+                value: 0,
+              },
+              {
+                key: "false",
+                value: 0,
+              },
+            ],
             type: response?.type,
           };
-        }else{
+        } else {
           this._pollTotalOptions[roomId] = {
             noOfOptions: this._generateAlphabets(response?.noOfOptions),
             type: response?.type,
@@ -1156,7 +1176,8 @@ class RoomManager extends EventEmitter {
         } else {
           this._leaderBoard[roomId][peerDetails.id].correctAnswers +=
             isAnswersCorrect ? 1 : 0;
-          this._leaderBoard[roomId][peerDetails.id].peerAnswer = response?.answers
+          this._leaderBoard[roomId][peerDetails.id].peerAnswer =
+            response?.answers;
           this._leaderBoard[roomId][peerDetails.id].combinedResponseTime +=
             response.responseTimeInSeconds;
 
@@ -1169,7 +1190,7 @@ class RoomManager extends EventEmitter {
         }
 
         const roomLeaderBoard = this._leaderBoard[roomId];
-  
+
         const averagePeersOption = this._calculateAverageAnswers(roomId);
 
         const sortedLeaderBoard = Object.values(roomLeaderBoard).sort(
@@ -1181,7 +1202,7 @@ class RoomManager extends EventEmitter {
           }
         );
 
-        return {averagePeersOption, sortedLeaderBoard};
+        return { averagePeersOption, sortedLeaderBoard };
       }
     } catch (err) {
       console.log("Error in RManager updating _updateLeaderboard", err);

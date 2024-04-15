@@ -8,6 +8,7 @@ const {
   getUpcomingClass,
   getLectureNo,
   uploadFilesToClass,
+  updateScheduleClassData,
 } = require("../../controllers");
 const {
   isAuthenticated,
@@ -45,6 +46,12 @@ router.post(
   isAuthenticated,
   isTeacher,
   uploadFilesToClass
+);
+router.post(
+  routesConstants.UPDATE_SCHEDULE_CLASS,
+  isAuthenticated,
+  isTeacher,
+  updateScheduleClassData
 );
 
 module.exports = router;

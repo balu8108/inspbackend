@@ -11,6 +11,8 @@ const {
   generateGetPresignedUrl,
   createFeedback,
   createLiveClassNotes,
+  uploadTimeTable,
+  getAllTimeTable,
 } = require("../../controllers");
 const {
   isAuthenticated,
@@ -46,6 +48,18 @@ router.post(
   isAuthenticated,
   isTeacher,
   createLiveClassNotes
+);
+router.post(
+  `${routesConstants.UPLOAD_TIMETABLE}`,
+  isAuthenticated,
+  isTeacher,
+  uploadTimeTable
+);
+router.get(
+  `${routesConstants.GET_ALL_TIMETABLE}`,
+  isAuthenticated,
+  checkPaidStatusOrTeacher,
+  getAllTimeTable
 );
 router.post(
   routesConstants.CREATE_FEEDBACK,
