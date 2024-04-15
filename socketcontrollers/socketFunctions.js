@@ -737,7 +737,6 @@ const startRecordingSocketHandler = async (data, socket) => {
         if (recordData) {
           await LiveClassRoomRecording.create({
             key: recordData?.fileKeyName,
-            url: recordData?.url,
             classRoomId: classPk,
           });
         }

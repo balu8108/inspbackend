@@ -324,9 +324,16 @@ const updateRecordingData = async (req, res) => {
 const getAllTimeTable = async (req, res) => {
   try {
     const timetableData = await TimeTableFile.findAll();
+    const data = JSON.stringify(timetableData);
+    const TimeTableLength = JSON.parse(data);
+    const presignedArray = timetableData;
+    for (let i = 0; i < TimeTableLength.length; i++) {
+      const presignedUrl = await generatePresignedUrls(TimeTableLength[i]?.url);
+      presignedArray[i].url = presignedUrl;
+    }
     return res
       .status(200)
-      .json({ message: "All timetable data", data: timetableData });
+      .json({ message: "All timetable data", data: presignedArray });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -351,7 +358,7 @@ const uploadTimeTable = async (req, res) => {
       if (fileUploads) {
         fileUploads.forEach(async (file) => {
           await TimeTableFile.create({
-            url: file.url,
+            url: file.key,
           });
         });
         return res.status(200).json({ message: "Uploaded files" });
