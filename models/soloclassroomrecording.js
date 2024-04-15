@@ -16,7 +16,6 @@ module.exports = (sequelize, DataTypes) => {
   SoloClassRoomRecording.init(
     {
       key: DataTypes.STRING,
-      url: DataTypes.STRING,
       soloClassRoomId: DataTypes.INTEGER,
       drmKeyId: DataTypes.STRING,
       hlsDrmKey: DataTypes.STRING,

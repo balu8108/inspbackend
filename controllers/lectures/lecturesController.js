@@ -53,23 +53,35 @@ const getAllLecture = async (req, res) => {
   }
 };
 
-const getAllLectureByTopicName = async (req, res) => {
+const getAllLectureByTopicId = async (req, res) => {
   try {
-    const { topicName } = req.params;
-    const liveClassRooms = await LiveClassRoom.findAll({
-      where: {
+    const { topicId, topicType } = req.params;
+    var whereCondition = {};
+    if (topicType === "regular") {
+      whereCondition = {
         classType: "REGULARCLASS",
         classStatus: "FINISHED",
-      },
+      };
+    }
+    if (topicType === "both") {
+      whereCondition = {
+        classStatus: "FINISHED",
+      };
+    }
+    const liveClassRooms = await LiveClassRoom.findAll({
+      where: whereCondition,
       include: [
         {
           model: LiveClassRoomDetail,
           where: {
-            topicName: topicName,
+            topicId: topicId,
           },
         },
       ],
     });
+
+    console.log("DFDFDF");
+    console.log(liveClassRooms);
 
     return res.status(200).json({
       message: "Alls lecture data",
@@ -130,5 +142,5 @@ const getLectureById = async (req, res) => {
 module.exports = {
   getAllLecture,
   getLectureById,
-  getAllLectureByTopicName,
+  getAllLectureByTopicId,
 };

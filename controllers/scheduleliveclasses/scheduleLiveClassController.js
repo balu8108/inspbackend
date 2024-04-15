@@ -289,17 +289,7 @@ const uploadFilesToClass = async (req, res) => {
     const { type, classId } = req.params;
     const { files } = req;
 
-    if (
-      !type ||
-      !classId ||
-      (type !== "live" &&
-        type !== "live_specific" &&
-        type !== "live_topic" &&
-        type !== "live_lecture_specific" &&
-        type !== "solo" &&
-        type !== "solo_specific" &&
-        type !== "solo_topic")
-    ) {
+    if (!type || !classId || (type !== "live" && type !== "solo")) {
       // if not correct query params then return error
       throw new Error("Invalid parameters or no recordings available");
     }
@@ -315,12 +305,7 @@ const uploadFilesToClass = async (req, res) => {
         : [files?.files];
     }
 
-    if (
-      type === "live" ||
-      type === "live_specific" ||
-      type === "live_topic" ||
-      type === "live_lecture_specific"
-    ) {
+    if (type === "live") {
       const getLiveClassRoom = await LiveClassRoom.findOne({
         where: { id: classId },
       });
@@ -349,11 +334,7 @@ const uploadFilesToClass = async (req, res) => {
       } else {
         throw new Error("No Live Class Found with this Room Id");
       }
-    } else if (
-      type === "solo" ||
-      type === "solo_specific" ||
-      type === "solo_topic"
-    ) {
+    } else if (type === "solo") {
       // we need soloclassrecordings
       const getSoloRecording = await SoloClassRoomRecording.findOne({
         where: { id: recordId },

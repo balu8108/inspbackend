@@ -18,7 +18,6 @@ const {
   splitStringWithSlash,
   formM3U8String,
   formMPDString,
-  generateAWSS3LocationUrl,
   createOrUpdateLiveClassNotes,
   uploadFilesToS3,
 } = require("../../utils");
@@ -309,12 +308,9 @@ const updateRecordingData = async (req, res) => {
       const finalOutputKey = formMPDKey(inputFileKey, outputFolder);
       const finalHlsOutputKey = formM3U8Key(inputFileKey, outputFolder);
       if (finalOutputKey) {
-        const awsUrl = generateAWSS3LocationUrl(finalOutputKey);
-        const hlsawsUrl = generateAWSS3LocationUrl(finalHlsOutputKey);
         liveRecording.key = finalOutputKey;
-        liveRecording.url = awsUrl;
         liveRecording.hlsDrmKey = hlsDrmKeyId;
-        liveRecording.hlsDrmUrl = hlsawsUrl;
+        liveRecording.hlsDrmUrl = finalHlsOutputKey;
         liveRecording.drmKeyId = drmKeyId;
         liveRecording.save();
       }
@@ -327,12 +323,9 @@ const updateRecordingData = async (req, res) => {
       const finalOutputKey = formMPDKey(inputFileKey, outputFolder);
       const finalHlsOutputKey = formM3U8Key(inputFileKey, outputFolder);
       if (finalOutputKey) {
-        const awsUrl = generateAWSS3LocationUrl(finalOutputKey);
-        const hlsawsUrl = generateAWSS3LocationUrl(finalHlsOutputKey);
         soloRecord.key = finalOutputKey;
-        soloRecord.url = awsUrl;
         soloRecord.hlsDrmKey = hlsDrmKeyId;
-        soloRecord.hlsDrmUrl = hlsawsUrl;
+        soloRecord.hlsDrmUrl = finalHlsOutputKey;
         soloRecord.drmKeyId = drmKeyId;
         soloRecord.save();
       }

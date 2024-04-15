@@ -14,6 +14,7 @@ const {
   generatePresignedUrls,
   generateDRMJWTToken,
 } = require("../../utils");
+
 const getRecordingsWithDetails = async (req, res) => {
   try {
     const { type, id } = req.query;
@@ -128,27 +129,15 @@ const getRecordingsByTopicOnly = async (req, res) => {
 };
 const viewRecording = async (req, res) => {
   try {
-    console.log("req query", req.query);
-    const { type, id, topicId } = req.query;
+    const { type, id } = req.query;
 
     // extra query parameter -> topicId is only required if type is live_specific or solo_specific
-    if (
-      !type ||
-      !id ||
-      (type !== "live" &&
-        type !== "solo" &&
-        type !== "live_specific" &&
-        type !== "solo_specific" &&
-        type !== "live_topic" &&
-        type !== "solo_topic" &&
-        type !== "live_lecture_specific")
-    ) {
+    if (!type || !id || (type !== "live" && type !== "solo")) {
       // if not correct query params then return error
       throw new Error("Invalid parameters or no recordings available");
     }
 
     let responseData = null;
-
     if (type === "live") {
       // we are expecting to search in liveclassrecordings along with id of classRoom (majorly if user comes from view recording button from frontend )
       responseData = await LiveClassRoom.findOne({
@@ -161,52 +150,30 @@ const viewRecording = async (req, res) => {
           { model: LiveClassRoomNote },
         ],
       });
-      if (responseData?.LiveClassRoomRecordings.length > 0) {
-        const combinedData = {
-          ...responseData.dataValues, // Extract data from the Sequelize instance
-          activeRecordingToPlay:
-            responseData?.LiveClassRoomRecordings[0] ?? null, // Add the activeRecording property
-        };
+      const data = JSON.stringify(responseData.LiveClassRoomRecordings);
+      const LiveClassRecordingLength = JSON.parse(data);
 
-        responseData = combinedData;
+      if (LiveClassRecordingLength.length > 0) {
+        const presignedArray = responseData.LiveClassRoomRecordings;
+        for (let i = 0; i < LiveClassRecordingLength.length; i++) {
+          if (LiveClassRecordingLength[i]) {
+            if (LiveClassRecordingLength[i]?.key) {
+              const presignedUrl = await generatePresignedUrls(
+                LiveClassRecordingLength[i]?.key
+              );
+              presignedArray[i].key = presignedUrl;
+            }
+            if (LiveClassRecordingLength[i]?.hlsDrmUrl) {
+              const presignedUrl = await generatePresignedUrls(
+                LiveClassRecordingLength[i]?.hlsDrmUrl
+              );
+              presignedArray[i].hlsDrmUrl = presignedUrl;
+            }
+          }
+        }
+        responseData = responseData.dataValues;
       }
-    } else if (type === "live_specific") {
-      if (!topicId) {
-        throw new Error("Topic id required to view this recordings");
-      }
-      // in live specific user clicks a particular video from library now it will give the id of the liveclassrecording
-      // first we retreive the class id for that particular recording
-      const specificLiveRecording = await LiveClassRoomRecording.findOne({
-        where: { id: id },
-      });
-      if (specificLiveRecording !== null) {
-        const getClassRoomsWithTopicId = await LiveClassRoomDetail.findAll({
-          where: { topicId: topicId },
-          attributes: ["classRoomId"], // Select only the classRoomId
-          raw: true, // Get raw data as an array of objects
-        });
-        const classRoomIds = getClassRoomsWithTopicId.map(
-          (detail) => detail.classRoomId
-        );
-
-        responseData = await LiveClassRoom.findAll({
-          where: { id: classRoomIds },
-          include: [
-            { model: LiveClassRoomDetail },
-            { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
-            { model: LiveClassRoomFile },
-            { model: LiveClassRoomQNANotes },
-            { model: LiveClassRoomNote },
-          ],
-        });
-        const combinedData = {
-          responseData, // Extract data from the Sequelize instance
-          activeRecordingToPlay: specificLiveRecording, // Add the activeRecording property
-        };
-
-        responseData = combinedData;
-      }
-    } else if (type === "solo_specific") {
+    } else if (type === "solo") {
       if (!topicId) {
         throw new Error("Topic id required to view this recordings");
       }
@@ -227,51 +194,6 @@ const viewRecording = async (req, res) => {
         };
         responseData = combinedData;
       }
-    } else if (type === "live_topic") {
-      const getClassRoomsWithTopicId = await LiveClassRoomDetail.findAll({
-        where: { topicId: id },
-        attributes: ["classRoomId"], // Select only the classRoomId
-        raw: true, // Get raw data as an array of objects
-      });
-      const classRoomIds = getClassRoomsWithTopicId.map(
-        (detail) => detail.classRoomId
-      );
-
-      responseData = await LiveClassRoom.findAll({
-        where: { id: classRoomIds },
-        order: [["createdAt", "ASC"]],
-        include: [
-          { model: LiveClassRoomDetail },
-          { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
-          { model: LiveClassRoomFile },
-          { model: LiveClassRoomQNANotes },
-          { model: LiveClassRoomNote },
-        ],
-      });
-
-      const combinedData = {
-        responseData,
-        activeRecordingToPlay:
-          responseData?.[0]?.LiveClassRoomRecordings?.[0] ?? null,
-      };
-      responseData = combinedData;
-    } else if (type === "solo_topic") {
-      responseData = await SoloClassRoom.findAll({
-        where: { topicId: id },
-        order: [["createdAt", "ASC"]],
-        include: [
-          { model: SoloClassRoomRecording, order: [["createdAt", "ASC"]] },
-          { model: SoloClassRoomFiles },
-        ],
-      });
-
-      const combinedData = {
-        responseData,
-        activeRecordingToPlay:
-          responseData?.[0]?.SoloClassRoomRecordings?.[0] ?? null,
-      };
-      responseData = combinedData;
-    } else if (type === "live_lecture_specific") {
     } else {
       throw new Error("Invalid recording type");
     }
@@ -288,23 +210,14 @@ const viewRecording = async (req, res) => {
 const playRecording = async (req, res) => {
   try {
     const { type, recordId } = req.body;
-    if (
-      !type ||
-      !recordId ||
-      (type !== "live" &&
-        type !== "solo" &&
-        type !== "live_specific" &&
-        type !== "solo_specific" &&
-        type !== "live_topic" &&
-        type !== "solo_topic")
-    ) {
+    if (!type || !recordId || (type !== "live" && type !== "solo")) {
       // if not correct query params then return error
       throw new Error("Invalid parameters or no recordings available");
     }
     let jwtToken = null;
     let hlsJwtToken = null;
 
-    if (type === "live" || type === "live_specific" || type === "live_topic") {
+    if (type === "live") {
       // we need to search in LiveClassRecording table
       const getRecording = await LiveClassRoomRecording.findOne({
         where: { id: recordId },
@@ -317,11 +230,7 @@ const playRecording = async (req, res) => {
         const hlstok = generateDRMJWTToken(getRecording?.hlsDrmKey);
         hlsJwtToken = hlstok;
       }
-    } else if (
-      type === "solo" ||
-      type === "solo_specific" ||
-      type === "solo_topic"
-    ) {
+    } else if (type === "solo") {
       // we need soloclassrecordings
       const getSoloRecording = await SoloClassRoomRecording.findOne({
         where: { id: recordId },
@@ -335,12 +244,10 @@ const playRecording = async (req, res) => {
         hlsJwtToken = hlstok;
       }
     }
-    return res
-      .status(200)
-      .json({
-        status: true,
-        data: { DRMjwtToken: jwtToken, HlsDRMJwtToken: hlsJwtToken },
-      });
+    return res.status(200).json({
+      status: true,
+      data: { DRMjwtToken: jwtToken, HlsDRMJwtToken: hlsJwtToken },
+    });
   } catch (err) {
     console.log("Error in play recordings", err);
     return res.status(400).json({ status: false, data: err.message });

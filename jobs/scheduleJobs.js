@@ -14,7 +14,7 @@ if (ENVIRON === "local") {
 }
 const scheduleJobs = () => {
   //schedule.scheduleJob(recordingRule, notificationSender);
-  schedule.scheduleJob(jobRule, classStatusChange);
-  schedule.scheduleJob(recordingRule, recordingToS3);
+  // schedule.scheduleJob(jobRule, classStatusChange);
+  // schedule.scheduleJob(recordingRule, recordingToS3);
 };
 module.exports = scheduleJobs;

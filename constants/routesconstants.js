@@ -50,7 +50,7 @@ const routesConstants = Object.freeze({
   LECTURES_ENDPOINT: "/lecture",
   GET_ALL_LECTURE: "/get-all-lecture",
   GET_LECTURE_NO: "/get-lecture-no",
-  GET_LECTURE_BY_TOPIC_NAME: "/get-lecture-by-topic-name/:topicName",
+  GET_LECTURE_BY_TOPIC_NAME: "/get-lecture-by-topic-name/:topicId/:topicType",
   GET_LECTURE_BY_ID: "/get-lecture-by-id",
 
   UPDATE_SCHEDULE_CLASS: "/update-schedule-data",

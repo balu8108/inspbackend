@@ -13,7 +13,7 @@ const sequelize = require("./config/database");
   }
 })();
 
-const SERVER_PORT = PORT || 5000;
+const SERVER_PORT = 4000;
 httpServer.listen(SERVER_PORT, () =>
   console.log(`Server is running on http://localhost:${SERVER_PORT}`)
 );

@@ -33,7 +33,7 @@ const {
 const {
   getAllLecture,
   getLectureById,
-  getAllLectureByTopicName,
+  getAllLectureByTopicId,
 } = require("./lectures/lecturesController");
 
 const {
@@ -66,7 +66,7 @@ module.exports = {
   uploadFilesToClass,
   getAllLecture,
   getLectureById,
-  getAllLectureByTopicName,
+  getAllLectureByTopicId,
   loginWithIpHandler,
   createStudentFeedback,
   getAllStudentFeedback,
