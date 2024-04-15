@@ -16,7 +16,6 @@ module.exports = (sequelize, DataTypes) => {
   SoloClassRoomFiles.init(
     {
       key: DataTypes.STRING,
-      url: DataTypes.STRING,
       soloClassRoomId: DataTypes.STRING,
       isDownloadable: DataTypes.BOOLEAN,
       isShareable: DataTypes.BOOLEAN,

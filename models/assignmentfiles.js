@@ -16,7 +16,6 @@ module.exports = (sequelize, DataTypes) => {
   AssignmentFiles.init(
     {
       key: DataTypes.STRING,
-      url: DataTypes.STRING,
       isDownloadable: DataTypes.BOOLEAN,
       isShareable: DataTypes.BOOLEAN,
       assignmentId: DataTypes.INTEGER,

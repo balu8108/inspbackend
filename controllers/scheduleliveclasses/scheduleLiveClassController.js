@@ -60,7 +60,6 @@ const uploadFilesAndCreateEntries = async (
         fileUploads.forEach(async (file) => {
           const newFileToDB = await LiveClassRoomFile.create({
             key: file.key,
-            url: file.url,
             classRoomId: id,
           });
           LiveClassRoomFiles.push(newFileToDB);
@@ -321,7 +320,6 @@ const uploadFilesToClass = async (req, res) => {
             fileUploads.forEach(async (file) => {
               const newFileToDB = await LiveClassRoomFile.create({
                 key: file.key,
-                url: file.url,
                 classRoomId: classId,
               });
               LiveClassRoomFiles.push(newFileToDB);
@@ -350,7 +348,6 @@ const uploadFilesToClass = async (req, res) => {
             fileUploads.forEach(async (file) => {
               const newFileToDB = await SoloClassRoomFiles.create({
                 key: file.key,
-                url: file.url,
                 soloClassRoomId: classId,
               });
               SoloClassRoomFiles.push(newFileToDB);

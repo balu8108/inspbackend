@@ -908,7 +908,6 @@ const uploadFileSocketHandler = async (data, callback, socket) => {
           for (const file of fileUploads) {
             const newFileToDB = await LiveClassRoomFile.create({
               key: file.key,
-              url: file.url,
               classRoomId: getRoom.id,
             });
 

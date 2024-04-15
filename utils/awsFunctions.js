@@ -60,7 +60,6 @@ const uploadFilesToS3 = async (files, folderPath) => {
 };
 
 const generatePresignedUrls = async (fileKey) => {
-  console.log(fileKey);
   return new Promise((resolve, reject) => {
     const params = {
       Bucket: AWS_BUCKET_NAME,

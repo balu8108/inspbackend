@@ -108,7 +108,6 @@ const imageToDoc = async (req, res) => {
       if (!isQnaNotesExistForThisRoom) {
         await LiveClassRoomQNANotes.create({
           key: key,
-          url: url,
           classRoomId: isRoomExist.id,
         });
       }
