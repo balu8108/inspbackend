@@ -6,7 +6,6 @@ const routesConstants = Object.freeze({
   GET_UPCOMING_CLASS: "/get-upcoming-class",
   GENERIC_API: "/generic",
   GET_ALL_SUBJECTS: "/get-all-subjects",
-  GENERATE_GET_PRESIGNED_URL: "/generate-get-presigned-url",
   CREATE_FEEDBACK: "/create-feedback",
   LATEST_FEEDBACK: "/latest-feedback",
   LATEST_COMPLETEDCLASSROOM: "/latest-completed-live-classroom",
@@ -15,7 +14,6 @@ const routesConstants = Object.freeze({
   GET_ALL_TIMETABLE: "/get-all-timetable",
   OPEN_FILE: "/open-file",
   IMAGE_TO_DOC: "/image-to-doc",
-  CREATE_LIVE_CLASS_NOTES: "/create-live-class-notes",
   UPLOAD_ASSIGNMENT_TO_CLASS_BY_ID: "/upload-assignment-to-class",
   SOLO: "/solo-lecture",
   SOLO_CLASSROOM: "/create-room",
@@ -40,7 +38,6 @@ const routesConstants = Object.freeze({
   LOGIN_WITH_IP: "/login_with_ip",
   LOGIN_WITH_UNIQUE_ID: "/login_with_uid",
   RECORDING: "/recording",
-  ALL_LIVE_RECORDINGS: "/all-live-recordings",
   GET_SINGLE_RECORDING: "/get-single-recording",
   GET_RECORDING_BY_TOPIC_ONLY: "/get-recording-by-topic", // This is for INSP external website not for video portal at the moment
   UPDATE_RECORDING_DATA: "/update-recording-data",

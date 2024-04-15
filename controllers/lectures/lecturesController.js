@@ -80,9 +80,6 @@ const getAllLectureByTopicId = async (req, res) => {
       ],
     });
 
-    console.log("DFDFDF");
-    console.log(liveClassRooms);
-
     return res.status(200).json({
       message: "Alls lecture data",
       data: liveClassRooms,

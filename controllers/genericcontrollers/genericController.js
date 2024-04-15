@@ -18,7 +18,6 @@ const {
   splitStringWithSlash,
   formM3U8String,
   formMPDString,
-  createOrUpdateLiveClassNotes,
   uploadFilesToS3,
 } = require("../../utils");
 const uuidv4 = require("uuid").v4;
@@ -27,22 +26,6 @@ const { Op } = require("sequelize");
 
 const getAllSubjects = async (req, res) => {
   return res.status(200).json({ data: "No Subjects" });
-};
-
-const generateGetPresignedUrl = async (req, res) => {
-  try {
-    const { s3_key } = req.body;
-
-    if (!s3_key) {
-      throw new Error("s3 url is required");
-    }
-    const presignedUrls = await generatePresignedUrls(s3_key);
-    return res
-      .status(200)
-      .json({ status: true, data: { getUrl: presignedUrls } });
-  } catch (err) {
-    return res.status(400).json({ status: false, data: err.message });
-  }
 };
 
 const openFile = async (req, res) => {
@@ -338,52 +321,6 @@ const updateRecordingData = async (req, res) => {
     return res.status(400).json({ success: false, error: err.message });
   }
 };
-const createLiveClassNotes = async (req, res) => {
-  try {
-    const { body, files } = req;
-
-    if (!body.roomId) {
-      return res.status(400).json({ error: "Room Id is required" });
-    }
-
-    const isRoomExist = await LiveClassRoom.findOne({
-      where: { roomId: body.roomId },
-    });
-    if (!isRoomExist) {
-      return res.status(400).json({ error: "No room found with this id" });
-    }
-
-    const folderPath = `liveclassnotes`; // in AWS S3
-    const fileName = `notes_roomId_${body.roomId}.pdf`;
-
-    const { success, result, key, url } = await createOrUpdateLiveClassNotes(
-      folderPath,
-      fileName,
-      files
-    );
-
-    if (success && key && url) {
-      const isNotesExistForThisRoom = await LiveClassRoomNote.findOne({
-        where: { classRoomId: isRoomExist.id },
-      });
-      if (!isNotesExistForThisRoom) {
-        await LiveClassRoomNote.create({
-          key: key,
-          url: url,
-          classRoomId: isRoomExist.id,
-        });
-      }
-
-      return res.status(200).json({ data: result });
-    } else {
-      return res
-        .status(400)
-        .json({ error: "Some error occured while adding qna notes" });
-    }
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
-};
 
 const getAllTimeTable = async (req, res) => {
   try {
@@ -432,8 +369,6 @@ module.exports = {
   getAllSubjects,
   openFile,
   imageToDoc,
-  createLiveClassNotes,
-  generateGetPresignedUrl,
   createFeedback,
   latestfeedback,
   getCompletedLiveClasses,

@@ -15,56 +15,6 @@ const {
   generateDRMJWTToken,
 } = require("../../utils");
 
-const getRecordingsWithDetails = async (req, res) => {
-  try {
-    const { type, id } = req.query;
-    if (!type || !id || (type !== "class" && type !== "topic")) {
-      // if not correct query params then return error
-      throw new Error("Invalid parameters or no recordings available");
-    }
-    let recordings = [];
-    if (type === "class") {
-      // In type class we will expect primary key of that live class room of which we need to fetch the recording
-      recordings = await LiveClassRoom.findOne({
-        where: { id: id },
-        include: [
-          { model: LiveClassRoomDetail },
-          { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
-          { model: LiveClassRoomFile },
-          { model: LiveClassRoomQNANotes },
-          { model: LiveClassRoomNote },
-        ],
-      });
-    }
-    if (type === "topic") {
-      // If type === topic then we expect that it is coming from topics screen or library
-      // get all the recordings of that topic
-      const getClassRoomsWithTopicId = await LiveClassRoomDetail.findAll({
-        where: { topicId: id },
-        attributes: ["classRoomId"], // Select only the classRoomId
-        raw: true, // Get raw data as an array of objects
-      });
-      const classRoomIds = getClassRoomsWithTopicId.map(
-        (detail) => detail.classRoomId
-      );
-      recordings = await LiveClassRoom.findAll({
-        where: { id: classRoomIds },
-        include: [
-          { model: LiveClassRoomDetail },
-          { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
-          { model: LiveClassRoomFile },
-          { model: LiveClassRoomQNANotes },
-          { model: LiveClassRoomNote },
-        ],
-      });
-    }
-
-    return res.status(200).json({ status: true, data: recordings });
-  } catch (err) {
-    return res.status(400).json({ status: false, data: err.message });
-  }
-};
-
 const getSingleRecording = async (req, res) => {
   try {
     const { id } = req.query;
@@ -255,7 +205,6 @@ const playRecording = async (req, res) => {
 };
 
 module.exports = {
-  getRecordingsWithDetails,
   getSingleRecording,
   getRecordingsByTopicOnly,
   viewRecording,
