@@ -64,7 +64,7 @@ const generatePresignedUrls = async (fileKey) => {
     const params = {
       Bucket: AWS_BUCKET_NAME,
       Key: fileKey,
-      Expires: 18000,
+      Expires: 120,
     };
     s3.getSignedUrl("getObject", params, (err, url) => {
       if (err) {
