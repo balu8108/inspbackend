@@ -17,7 +17,6 @@ module.exports = (sequelize, DataTypes) => {
   LiveClassRoomFile.init(
     {
       key: DataTypes.STRING,
-      url: DataTypes.STRING,
       isDownloadable: DataTypes.BOOLEAN,
       isShareable: DataTypes.BOOLEAN,
       classRoomId: DataTypes.INTEGER,

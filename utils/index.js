@@ -10,7 +10,7 @@ const {
   isObjectExistInS3,
   getObjectFromS3,
   uploadToS3,
-  generateAWSS3LocationUrl,
+  getSignedDownloadUrl,
   isObjectExistInS3ByKey,
 } = require("./awsFunctions");
 const checkArraysHaveSameElements = require("./checkArrayHaveSameElement");
@@ -41,12 +41,12 @@ module.exports = {
   getObjectFromS3,
   uploadToS3,
   dbObjectConverter,
+  getSignedDownloadUrl,
   encryptData,
   fetchAllStudentsFromInspApi,
   validateCreateFeedBack,
   validateUpdateScheduleLiveClass,
   isFeedbackProvided,
-  generateAWSS3LocationUrl,
   isObjectExistInS3ByKey,
   splitStringWithSlash,
   formM3U8String,

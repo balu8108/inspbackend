@@ -18,8 +18,6 @@ const {
   splitStringWithSlash,
   formM3U8String,
   formMPDString,
-  generateAWSS3LocationUrl,
-  createOrUpdateLiveClassNotes,
   uploadFilesToS3,
 } = require("../../utils");
 const uuidv4 = require("uuid").v4;
@@ -28,22 +26,6 @@ const { Op } = require("sequelize");
 
 const getAllSubjects = async (req, res) => {
   return res.status(200).json({ data: "No Subjects" });
-};
-
-const generateGetPresignedUrl = async (req, res) => {
-  try {
-    const { s3_key } = req.body;
-
-    if (!s3_key) {
-      throw new Error("s3 url is required");
-    }
-    const presignedUrls = await generatePresignedUrls(s3_key);
-    return res
-      .status(200)
-      .json({ status: true, data: { getUrl: presignedUrls } });
-  } catch (err) {
-    return res.status(400).json({ status: false, data: err.message });
-  }
 };
 
 const openFile = async (req, res) => {
@@ -126,7 +108,6 @@ const imageToDoc = async (req, res) => {
       if (!isQnaNotesExistForThisRoom) {
         await LiveClassRoomQNANotes.create({
           key: key,
-          url: url,
           classRoomId: isRoomExist.id,
         });
       }
@@ -309,12 +290,9 @@ const updateRecordingData = async (req, res) => {
       const finalOutputKey = formMPDKey(inputFileKey, outputFolder);
       const finalHlsOutputKey = formM3U8Key(inputFileKey, outputFolder);
       if (finalOutputKey) {
-        const awsUrl = generateAWSS3LocationUrl(finalOutputKey);
-        const hlsawsUrl = generateAWSS3LocationUrl(finalHlsOutputKey);
         liveRecording.key = finalOutputKey;
-        liveRecording.url = awsUrl;
         liveRecording.hlsDrmKey = hlsDrmKeyId;
-        liveRecording.hlsDrmUrl = hlsawsUrl;
+        liveRecording.hlsDrmUrl = finalHlsOutputKey;
         liveRecording.drmKeyId = drmKeyId;
         liveRecording.save();
       }
@@ -327,12 +305,9 @@ const updateRecordingData = async (req, res) => {
       const finalOutputKey = formMPDKey(inputFileKey, outputFolder);
       const finalHlsOutputKey = formM3U8Key(inputFileKey, outputFolder);
       if (finalOutputKey) {
-        const awsUrl = generateAWSS3LocationUrl(finalOutputKey);
-        const hlsawsUrl = generateAWSS3LocationUrl(finalHlsOutputKey);
         soloRecord.key = finalOutputKey;
-        soloRecord.url = awsUrl;
         soloRecord.hlsDrmKey = hlsDrmKeyId;
-        soloRecord.hlsDrmUrl = hlsawsUrl;
+        soloRecord.hlsDrmUrl = finalHlsOutputKey;
         soloRecord.drmKeyId = drmKeyId;
         soloRecord.save();
       }
@@ -345,59 +320,20 @@ const updateRecordingData = async (req, res) => {
     return res.status(400).json({ success: false, error: err.message });
   }
 };
-const createLiveClassNotes = async (req, res) => {
-  try {
-    const { body, files } = req;
-
-    if (!body.roomId) {
-      return res.status(400).json({ error: "Room Id is required" });
-    }
-
-    const isRoomExist = await LiveClassRoom.findOne({
-      where: { roomId: body.roomId },
-    });
-    if (!isRoomExist) {
-      return res.status(400).json({ error: "No room found with this id" });
-    }
-
-    const folderPath = `liveclassnotes`; // in AWS S3
-    const fileName = `notes_roomId_${body.roomId}.pdf`;
-
-    const { success, result, key, url } = await createOrUpdateLiveClassNotes(
-      folderPath,
-      fileName,
-      files
-    );
-
-    if (success && key && url) {
-      const isNotesExistForThisRoom = await LiveClassRoomNote.findOne({
-        where: { classRoomId: isRoomExist.id },
-      });
-      if (!isNotesExistForThisRoom) {
-        await LiveClassRoomNote.create({
-          key: key,
-          url: url,
-          classRoomId: isRoomExist.id,
-        });
-      }
-
-      return res.status(200).json({ data: result });
-    } else {
-      return res
-        .status(400)
-        .json({ error: "Some error occured while adding qna notes" });
-    }
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
-};
 
 const getAllTimeTable = async (req, res) => {
   try {
     const timetableData = await TimeTableFile.findAll();
+    const data = JSON.stringify(timetableData);
+    const TimeTableLength = JSON.parse(data);
+    const presignedArray = timetableData;
+    for (let i = 0; i < TimeTableLength.length; i++) {
+      const presignedUrl = await generatePresignedUrls(TimeTableLength[i]?.url);
+      presignedArray[i].url = presignedUrl;
+    }
     return res
       .status(200)
-      .json({ message: "All timetable data", data: timetableData });
+      .json({ message: "All timetable data", data: presignedArray });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -422,7 +358,7 @@ const uploadTimeTable = async (req, res) => {
       if (fileUploads) {
         fileUploads.forEach(async (file) => {
           await TimeTableFile.create({
-            url: file.url,
+            url: file.key,
           });
         });
         return res.status(200).json({ message: "Uploaded files" });
@@ -439,8 +375,6 @@ module.exports = {
   getAllSubjects,
   openFile,
   imageToDoc,
-  createLiveClassNotes,
-  generateGetPresignedUrl,
   createFeedback,
   latestfeedback,
   getCompletedLiveClasses,

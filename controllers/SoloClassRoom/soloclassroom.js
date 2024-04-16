@@ -44,12 +44,11 @@ exports.createSoloClassRoom = async (req, res) => {
     // Create Files records for each uploaded file
     const soloLectureFiles = await Promise.all(
       filesUploading.map(async (file) => {
-        const { key, url } = file;
+        const { key } = file;
 
         // Create a new sololectureFiles record
         const sololectureFile = await SoloClassRoomFiles.create({
           key: key,
-          url: url,
           isDownloadable: false,
           isShareable: false,
           soloClassRoomId: soloclassroomlecture.id,

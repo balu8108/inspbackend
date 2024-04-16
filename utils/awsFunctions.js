@@ -1,4 +1,3 @@
-const { URL } = require("url");
 const aws = require("aws-sdk");
 const stream = require("stream");
 
@@ -65,7 +64,7 @@ const generatePresignedUrls = async (fileKey) => {
     const params = {
       Bucket: AWS_BUCKET_NAME,
       Key: fileKey,
-      Expires: 3600,
+      Expires: 18000,
     };
     s3.getSignedUrl("getObject", params, (err, url) => {
       if (err) {
@@ -218,7 +217,6 @@ module.exports = {
   isObjectExistInS3,
   getObjectFromS3,
   uploadToS3,
-  generateAWSS3LocationUrl,
   isObjectExistInS3ByKey,
   uploadRecordingToS3,
 };

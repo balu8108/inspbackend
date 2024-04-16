@@ -67,6 +67,11 @@ app.use(
   })
 );
 app.use(express.urlencoded({ limit: "200mb", extended: true }));
+app.use((req, res, next) => {
+  // Remove the 'X-Powered-By' header from all responses
+  res.removeHeader("X-Powered-By");
+  next();
+});
 
 app.use(upload()); // this is required for uploading multipart/formData
 app.use(cors());

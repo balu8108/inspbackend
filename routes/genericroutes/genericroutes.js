@@ -8,9 +8,7 @@ const {
   getAllSubjects,
   openFile,
   imageToDoc,
-  generateGetPresignedUrl,
   createFeedback,
-  createLiveClassNotes,
   uploadTimeTable,
   getAllTimeTable,
 } = require("../../controllers");
@@ -34,20 +32,10 @@ router.get(
   openFile
 );
 router.post(
-  routesConstants.GENERATE_GET_PRESIGNED_URL,
-  generateGetPresignedUrl
-); // Test api for generating presigned url with s3 key not used in prod or dev
-router.post(
   routesConstants.IMAGE_TO_DOC,
   isAuthenticated,
   isTeacher,
   imageToDoc
-);
-router.post(
-  routesConstants.CREATE_LIVE_CLASS_NOTES,
-  isAuthenticated,
-  isTeacher,
-  createLiveClassNotes
 );
 router.post(
   `${routesConstants.UPLOAD_TIMETABLE}`,

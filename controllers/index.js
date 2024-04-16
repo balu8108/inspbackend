@@ -7,9 +7,7 @@ const {
   getAllSubjects,
   openFile,
   imageToDoc,
-  generateGetPresignedUrl,
   createFeedback,
-  createLiveClassNotes,
   uploadTimeTable,
   getAllTimeTable,
 } = require("./genericcontrollers/genericController");
@@ -23,7 +21,6 @@ const {
   updateScheduleClassData,
 } = require("./scheduleliveclasses/scheduleLiveClassController");
 const {
-  getRecordingsWithDetails,
   getSingleRecording,
   getRecordingsByTopicOnly,
   viewRecording,
@@ -33,7 +30,7 @@ const {
 const {
   getAllLecture,
   getLectureById,
-  getAllLectureByTopicName,
+  getAllLectureByTopicId,
 } = require("./lectures/lecturesController");
 
 const {
@@ -47,16 +44,13 @@ module.exports = {
   getAllSubjects,
   openFile,
   imageToDoc,
-  createLiveClassNotes,
   uploadTimeTable,
   getAllTimeTable,
   createLiveClass,
   getAllLiveClasses,
   getLiveClassDetails,
   getUpcomingClass,
-  generateGetPresignedUrl,
   createFeedback,
-  getRecordingsWithDetails,
   getSingleRecording,
   getRecordingsByTopicOnly,
   viewRecording,
@@ -66,7 +60,7 @@ module.exports = {
   uploadFilesToClass,
   getAllLecture,
   getLectureById,
-  getAllLectureByTopicName,
+  getAllLectureByTopicId,
   loginWithIpHandler,
   createStudentFeedback,
   getAllStudentFeedback,
