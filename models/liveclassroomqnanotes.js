@@ -16,7 +16,6 @@ module.exports = (sequelize, DataTypes) => {
   LiveClassRoomQNANotes.init(
     {
       key: DataTypes.STRING,
-      url: DataTypes.STRING,
       classRoomId: DataTypes.INTEGER,
     },
     {

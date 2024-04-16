@@ -156,12 +156,11 @@ exports.uploadAssignment = async (req, res) => {
     // Create AssignmentFiles records for each uploaded file
     const assignmentFiles = await Promise.all(
       filesUploading.map(async (file) => {
-        const { key, url } = file;
+        const { key } = file;
 
         // Create a new AssignmentFiles record
         const assignmentFile = await AssignmentFiles.create({
           key,
-          url,
           isDownloadable: false,
           isShareable: false,
           assignmentId: assignment.id,
