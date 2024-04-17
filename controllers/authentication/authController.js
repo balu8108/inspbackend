@@ -1,3 +1,5 @@
+const { generateSignedCookies } = require("../../utils");
+
 /* THIS IS DEPRECATED API */
 const loginHandler = async (req, res) => {
   try {
@@ -10,6 +12,21 @@ const loginHandler = async (req, res) => {
         .status(400)
         .json({ status: false, data: "Invalid or No User" });
     }
+    const cookies = await generateSignedCookies();
+    // Set cookies in response headers
+    res.cookie("CloudFront-Policy", cookies["CloudFront-Policy"], {
+      path: "/",
+      secure: true,
+    });
+    res.cookie("CloudFront-Signature", cookies["CloudFront-Signature"], {
+      path: "/",
+      secure: true,
+    });
+    res.cookie("CloudFront-Key-Pair-Id", cookies["CloudFront-Key-Pair-Id"], {
+      path: "/",
+      secure: true,
+    });
+
     return res
       .status(200)
       .json({ status: true, data: { authData, secret_token } });
@@ -44,7 +61,7 @@ const loginWithIpHandler = (req, res) => {
   }
 };
 
-const loginWithUidHandler = (req, res) => {
+const loginWithUidHandler = async (req, res) => {
   try {
     // we are expecting authData within request through middleware
     // if auth data present then we can assume a valid user otherwise send status as false
@@ -55,6 +72,21 @@ const loginWithUidHandler = (req, res) => {
         .status(400)
         .json({ status: false, data: "Invalid or No User" });
     }
+    const cookies = await generateSignedCookies();
+    // Set cookies in response headers
+    res.cookie("CloudFront-Policy", cookies["CloudFront-Policy"], {
+      path: "/",
+      secure: true,
+    });
+    res.cookie("CloudFront-Signature", cookies["CloudFront-Signature"], {
+      path: "/",
+      secure: true,
+    });
+    res.cookie("CloudFront-Key-Pair-Id", cookies["CloudFront-Key-Pair-Id"], {
+      path: "/",
+      secure: true,
+    });
+
     return res
       .status(200)
       .json({ status: true, data: { authData, secret_token } });

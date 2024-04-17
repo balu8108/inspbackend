@@ -1,5 +1,9 @@
 const aws = require("aws-sdk");
 const stream = require("stream");
+const {
+  getSignedUrl,
+  getSignedCookies,
+} = require("@aws-sdk/cloudfront-signer");
 
 // These static files include to be added within files
 const {
@@ -7,6 +11,9 @@ const {
   AWS_SECRET_ACCESS_KEY,
   AWS_REGION,
   AWS_BUCKET_NAME,
+  CLOUDFRONT_PRIVATE_KEY,
+  CLOUDFRONT_KEY_PAIR_ID,
+  CLOUDFRONT_URL,
 } = require("../envvar.js");
 
 aws.config.update({
@@ -61,18 +68,46 @@ const uploadFilesToS3 = async (files, folderPath) => {
 
 const generatePresignedUrls = async (fileKey) => {
   return new Promise((resolve, reject) => {
-    const params = {
-      Bucket: AWS_BUCKET_NAME,
-      Key: fileKey,
-      Expires: 120,
-    };
-    s3.getSignedUrl("getObject", params, (err, url) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(url);
-      }
+    const url = getSignedUrl({
+      url: CLOUDFRONT_URL + fileKey,
+      dateLessThan: new Date(Date.now() + 1000 * 60 * 60),
+      privateKey: CLOUDFRONT_PRIVATE_KEY,
+      keyPairId: CLOUDFRONT_KEY_PAIR_ID,
     });
+    if (url) {
+      resolve(url);
+    } else {
+      reject("");
+    }
+  });
+};
+
+const generateSignedCookies = () => {
+  const policy = {
+    Statement: [
+      {
+        Resource: CLOUDFRONT_URL,
+        Condition: {
+          DateLessThan: {
+            "AWS:EpochTime": Math.floor(Date.now() / 1000) + 60 * 60,
+          }, // 1 hour expiry
+        },
+      },
+    ],
+  };
+  const policyString = JSON.stringify(policy);
+  return new Promise((resolve, reject) => {
+    const cookies = getSignedCookies({
+      keyPairId: CLOUDFRONT_KEY_PAIR_ID,
+      privateKey: CLOUDFRONT_PRIVATE_KEY,
+      policy: policyString,
+    });
+
+    if (cookies) {
+      resolve(cookies);
+    } else {
+      reject("");
+    }
   });
 };
 
@@ -218,6 +253,7 @@ module.exports = {
   getObjectFromS3,
   uploadToS3,
   generateAWSS3LocationUrl,
+  generateSignedCookies,
   isObjectExistInS3ByKey,
   uploadRecordingToS3,
 };

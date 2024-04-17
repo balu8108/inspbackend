@@ -2,14 +2,8 @@ const EventEmitter = require("events");
 const allRooms = new Map();
 const allPeers = new Map();
 const { getPort } = require("./port");
-const { PLATFORM, ENVIRON } = require("../envvar");
-const {
-  SOCKET_EVENTS,
-  mediaCodecs,
-  liveClassLogInfo,
-  classStatus,
-  liveClassTestQuestionLogInfo,
-} = require("../constants");
+const { PLATFORM } = require("../envvar");
+const { SOCKET_EVENTS, mediaCodecs } = require("../constants");
 const logger = require("../utils/logger");
 const { generateAWSS3LocationUrl, isObjectValid } = require("../utils");
 
