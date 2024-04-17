@@ -217,6 +217,7 @@ module.exports = {
   isObjectExistInS3,
   getObjectFromS3,
   uploadToS3,
+  generateAWSS3LocationUrl,
   isObjectExistInS3ByKey,
   uploadRecordingToS3,
 };
