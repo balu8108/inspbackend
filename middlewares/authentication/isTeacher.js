@@ -1,4 +1,3 @@
-const { encryptData } = require("../../utils");
 const isTeacher = async (req, res, next) => {
   const { authData } = req;
   if (!authData) {
@@ -7,7 +6,7 @@ const isTeacher = async (req, res, next) => {
   const { user_type } = authData;
   if (user_type === 1) {
     // Means a teacher or paid student
-    req.authData = await encryptData(authData);
+    req.authData = authData;
     next();
   } else {
     return res
