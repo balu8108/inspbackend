@@ -18,7 +18,6 @@ const updateLeaderboard = require("./updateLeaderboard");
 const createOrUpdateQnANotes = require("./qnaNotesFunction");
 const isObjectValid = require("./objectValidation");
 const dbObjectConverter = require("./dbObjectConverter");
-const { encryptData } = require("./crypticFunctions");
 const { fetchAllStudentsFromInspApi } = require("./inspexternalapis");
 const { isFeedbackProvided } = require("./dbUtilityFunctions");
 const generateDRMJWTToken = require("./generateDRMJWTToken");
@@ -42,7 +41,6 @@ module.exports = {
   uploadToS3,
   dbObjectConverter,
   getSignedDownloadUrl,
-  encryptData,
   fetchAllStudentsFromInspApi,
   validateCreateFeedBack,
   validateUpdateScheduleLiveClass,

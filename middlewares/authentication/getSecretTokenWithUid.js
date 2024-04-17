@@ -3,7 +3,6 @@ const { INSP_EXTERNAL_WEBSITE_SECRET_KEY } = require("../../envvar");
 
 const getSecretTokenWithUid = async (req, res, next) => {
   try {
-    console.log("req.params", req.params);
     if (req?.params?.unique_id) {
       const body = {
         secret_key: INSP_EXTERNAL_WEBSITE_SECRET_KEY,
