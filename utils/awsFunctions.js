@@ -1,6 +1,5 @@
 const aws = require("aws-sdk");
 const stream = require("stream");
-const { getSignedUrl } = require("@aws-sdk/cloudfront-signer");
 
 // These static files include to be added within files
 const {
@@ -69,14 +68,25 @@ const generatePresignedUrls = async (fileKey) => {
     //   Key: fileKey,
     //   Expires: 120,
     // };
-    const url = getSignedUrl({
+    // Set expiration time (in seconds)
+    const expirationTime = new Date(Date.now() + 1000 * 60 * 60);
+    console.log("REST");
+    console.log(CLOUDFRONT_PRIVATE_KEY);
+
+    // Create a CloudFront signer instance
+    const signer = new aws.CloudFront.Signer(
+      CLOUDFRONT_PRIVATE_KEY,
+      CLOUDFRONT_KEY_PAIR_ID
+    );
+
+    // Generate a signed URL
+    const signedUrl = signer.getSignedUrl({
       url: "https://d392c6q9sqisho.cloudfront.net/" + fileKey,
-      dateLessThan: new Date(Date.now() + 1000 * 60 * 60),
-      privateKey: CLOUDFRONT_PRIVATE_KEY,
-      keyPairId: CLOUDFRONT_KEY_PAIR_ID,
+      expires: expirationTime,
     });
-    if (url) {
-      resolve(url);
+
+    if (signedUrl) {
+      resolve(signedUrl);
     } else {
       reject(err);
     }
