@@ -719,14 +719,23 @@ const endMeetSocketHandler = async (socket, mediaSoupworkers, io) => {
 const startRecordingSocketHandler = async (data, socket) => {
   try {
     const { authData } = socket;
+    console.log("1");
     const socketId = socket.id;
+    console.log("2", socketId);
     const { producerScreenShare, producerAudioShare } = data;
+    console.log("3");
     if (authData && allPeers.has(authData.id)) {
+      console.log("4");
       const roomId = allPeers.get(authData.id)?.roomId;
       const classPk = allPeers.get(authData.id)?.classPk;
       const routerId = allPeers.get(authData.id)?.routerId;
+      console.log(roomId);
+      console.log(classPk);
+      console.log(routerId);
       const room = allRooms.get(roomId);
+
       if (roomId && routerId && room) {
+        console.log("5");
         const recordData = await room._startRecording(
           authData.id,
           socketId,
@@ -734,7 +743,9 @@ const startRecordingSocketHandler = async (data, socket) => {
           producerScreenShare,
           producerAudioShare
         );
+        console.log(recordData);
         if (recordData) {
+          console.log("6");
           await LiveClassRoomRecording.create({
             key: recordData?.fileKeyName,
             classRoomId: classPk,
