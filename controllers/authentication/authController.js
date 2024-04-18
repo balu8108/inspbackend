@@ -15,19 +15,22 @@ const loginHandler = async (req, res) => {
     const cookies = await generateSignedCookies();
     // Set cookies in response headers
     res.cookie("CloudFront-Policy", cookies["CloudFront-Policy"], {
-      domain: ".amplifyapp.com",
+      domain: "dev.d3bcq3pwgecy89.amplifyapp.com",
       path: "/",
-      httpOnly: true,
+      httpOnly: false,
+      maxAge: 6000000,
     });
     res.cookie("CloudFront-Signature", cookies["CloudFront-Signature"], {
-      domain: ".amplifyapp.com",
+      domain: "dev.d3bcq3pwgecy89.amplifyapp.com",
       path: "/",
-      httpOnly: true,
+      httpOnly: false,
+      maxAge: 6000000,
     });
     res.cookie("CloudFront-Key-Pair-Id", cookies["CloudFront-Key-Pair-Id"], {
-      domain: ".amplifyapp.com",
+      domain: "dev.d3bcq3pwgecy89.amplifyapp.com",
       path: "/",
-      httpOnly: true,
+      httpOnly: false,
+      maxAge: 6000000,
     });
 
     return res
@@ -78,17 +81,17 @@ const loginWithUidHandler = async (req, res) => {
     const cookies = await generateSignedCookies();
     // Set cookies in response headers
     res.cookie("CloudFront-Policy", cookies["CloudFront-Policy"], {
-      domain: ".amplifyapp.com",
+      domain: "dev.d3bcq3pwgecy89.amplifyapp.com",
       path: "/",
       httpOnly: true,
     });
     res.cookie("CloudFront-Signature", cookies["CloudFront-Signature"], {
-      domain: ".amplifyapp.com",
+      domain: "dev.d3bcq3pwgecy89.amplifyapp.com",
       path: "/",
       httpOnly: true,
     });
     res.cookie("CloudFront-Key-Pair-Id", cookies["CloudFront-Key-Pair-Id"], {
-      domain: ".amplifyapp.com",
+      domain: "dev.d3bcq3pwgecy89.amplifyapp.com",
       path: "/",
       httpOnly: true,
     });
