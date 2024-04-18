@@ -15,16 +15,19 @@ const loginHandler = async (req, res) => {
     const cookies = await generateSignedCookies();
     // Set cookies in response headers
     res.cookie("CloudFront-Policy", cookies["CloudFront-Policy"], {
+      domain: ".amplifyapp.com",
       path: "/",
-      secure: true,
+      httpOnly: true,
     });
     res.cookie("CloudFront-Signature", cookies["CloudFront-Signature"], {
+      domain: ".amplifyapp.com",
       path: "/",
-      secure: true,
+      httpOnly: true,
     });
     res.cookie("CloudFront-Key-Pair-Id", cookies["CloudFront-Key-Pair-Id"], {
+      domain: ".amplifyapp.com",
       path: "/",
-      secure: true,
+      httpOnly: true,
     });
 
     return res
@@ -75,16 +78,19 @@ const loginWithUidHandler = async (req, res) => {
     const cookies = await generateSignedCookies();
     // Set cookies in response headers
     res.cookie("CloudFront-Policy", cookies["CloudFront-Policy"], {
+      domain: ".amplifyapp.com",
       path: "/",
-      secure: true,
+      httpOnly: true,
     });
     res.cookie("CloudFront-Signature", cookies["CloudFront-Signature"], {
+      domain: ".amplifyapp.com",
       path: "/",
-      secure: true,
+      httpOnly: true,
     });
     res.cookie("CloudFront-Key-Pair-Id", cookies["CloudFront-Key-Pair-Id"], {
+      domain: ".amplifyapp.com",
       path: "/",
-      secure: true,
+      httpOnly: true,
     });
 
     return res
