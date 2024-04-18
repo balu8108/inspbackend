@@ -16,15 +16,21 @@ const loginHandler = async (req, res) => {
     // Set cookies in response headers
     res.cookie("CloudFront-Policy", cookies["CloudFront-Policy"], {
       path: "/",
+      httpOnly: true,
       secure: true,
+      maxAge: 6000000,
     });
     res.cookie("CloudFront-Signature", cookies["CloudFront-Signature"], {
       path: "/",
+      httpOnly: true,
       secure: true,
+      maxAge: 6000000,
     });
     res.cookie("CloudFront-Key-Pair-Id", cookies["CloudFront-Key-Pair-Id"], {
       path: "/",
+      httpOnly: true,
       secure: true,
+      maxAge: 6000000,
     });
 
     return res
@@ -76,15 +82,21 @@ const loginWithUidHandler = async (req, res) => {
     // Set cookies in response headers
     res.cookie("CloudFront-Policy", cookies["CloudFront-Policy"], {
       path: "/",
+      httpOnly: true,
       secure: true,
+      maxAge: 6000000,
     });
     res.cookie("CloudFront-Signature", cookies["CloudFront-Signature"], {
       path: "/",
+      httpOnly: true,
       secure: true,
+      maxAge: 6000000,
     });
     res.cookie("CloudFront-Key-Pair-Id", cookies["CloudFront-Key-Pair-Id"], {
       path: "/",
+      httpOnly: true,
       secure: true,
+      maxAge: 6000000,
     });
 
     return res

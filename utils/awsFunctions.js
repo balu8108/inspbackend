@@ -68,17 +68,11 @@ const uploadFilesToS3 = async (files, folderPath) => {
 
 const generatePresignedUrls = async (fileKey) => {
   return new Promise((resolve, reject) => {
-    const params = {
-      Bucket: AWS_BUCKET_NAME,
-      Key: fileKey,
-      Expires: 3600,
-    };
-    s3.getSignedUrl("getObject", params, (err, url) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(url);
-      }
+    const url = getSignedUrl({
+      url: `${CLOUDFRONT_URL}/${fileKey}`,
+      dateLessThan: new Date(Date.now() + 1000 * 60 * 60),
+      privateKey: CLOUDFRONT_PRIVATE_KEY,
+      keyPairId: CLOUDFRONT_KEY_PAIR_ID,
     });
 
     // const url = getSignedUrl({
@@ -99,7 +93,7 @@ const generateSignedCookies = () => {
   const policy = {
     Statement: [
       {
-        Resource: CLOUDFRONT_URL,
+        Resource: `${CLOUDFRONT_URL}/*`,
         Condition: {
           DateLessThan: {
             "AWS:EpochTime": Math.floor(Date.now() / 1000) + 60 * 60,

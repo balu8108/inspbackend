@@ -92,7 +92,6 @@ if (ENVIRON !== "local") {
   scheduleJob();
 }
 //scheduleJob();
-// Cron jobs function
 
 // let worker;
 
