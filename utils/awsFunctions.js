@@ -74,18 +74,11 @@ const generatePresignedUrls = async (fileKey) => {
       privateKey: CLOUDFRONT_PRIVATE_KEY,
       keyPairId: CLOUDFRONT_KEY_PAIR_ID,
     });
-
-    // const url = getSignedUrl({
-    //   url: CLOUDFRONT_URL + fileKey,
-    //   dateLessThan: new Date(Date.now() + 1000 * 60 * 60),
-    //   privateKey: CLOUDFRONT_PRIVATE_KEY,
-    //   keyPairId: CLOUDFRONT_KEY_PAIR_ID,
-    // });
-    // if (url) {
-    //   resolve(url);
-    // } else {
-    //   reject("");
-    // }
+    if (url) {
+      resolve(url);
+    } else {
+      reject("");
+    }
   });
 };
 
