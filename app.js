@@ -74,12 +74,7 @@ app.use((req, res, next) => {
 });
 
 app.use(upload()); // this is required for uploading multipart/formData
-app.use(
-  cors({
-    origin: ALLOWED_ORIGINS,
-    credentials: true,
-  })
-);
+app.use(cors());
 app.use(cookieParser());
 
 app.use(routesConstants.SCHEDULE_LIVE_CLASS, scheduleLiveClass);
