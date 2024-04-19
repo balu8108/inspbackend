@@ -86,22 +86,22 @@ const loginWithUidHandler = async (req, res) => {
     res.cookie("CloudFront-Policy", cookies["CloudFront-Policy"], {
       domain: ".inspedu.in",
       path: "/",
-      httpOnly: true,
-      secure: true,
+      // httpOnly: true,
+      // secure: true,
       maxAge: 86400000, // 1 day in milisecond
     });
     res.cookie("CloudFront-Signature", cookies["CloudFront-Signature"], {
       domain: ".inspedu.in",
       path: "/",
-      httpOnly: true,
-      secure: true,
+      // httpOnly: true,
+      // secure: true,
       maxAge: 86400000, // 1 day in milisecond
     });
     res.cookie("CloudFront-Key-Pair-Id", cookies["CloudFront-Key-Pair-Id"], {
       domain: ".inspedu.in",
       path: "/",
-      httpOnly: true,
-      secure: true,
+      // httpOnly: true,
+      // secure: true,
       maxAge: 86400000, // 1 day in milisecond
     });
 
