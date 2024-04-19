@@ -19,7 +19,7 @@ const studentFeedbackRoutes = require("./routes/studentfeedback/studentFeedackRo
 const lectureRoute = require("./routes/lecturesRoute/lectureRoutes");
 const config = require("./socketcontrollers/config");
 
-const { ENVIRON } = require("./envvar");
+const { ENVIRON, ALLOWED_ORIGINS } = require("./envvar");
 const logHandler = require("./utils/logHandler");
 
 const {
@@ -74,7 +74,12 @@ app.use((req, res, next) => {
 });
 
 app.use(upload()); // this is required for uploading multipart/formData
-app.use(cors());
+app.use(
+  cors({
+    origin: ALLOWED_ORIGINS,
+    credentials: true,
+  })
+);
 app.use(cookieParser());
 
 app.use(routesConstants.SCHEDULE_LIVE_CLASS, scheduleLiveClass);

@@ -1,4 +1,11 @@
 const { generateSignedCookies } = require("../../utils");
+const { COOKIES_DOMAIN } = require("../../envvar");
+
+const cookieOption = {
+  domain: COOKIES_DOMAIN,
+  path: "/",
+  maxAge: 86400000, // 1 day in milisecond
+};
 
 /* THIS IS DEPRECATED API */
 const loginHandler = async (req, res) => {
@@ -14,21 +21,17 @@ const loginHandler = async (req, res) => {
     }
     const cookies = await generateSignedCookies();
     // Set cookies in response headers
-    res.cookie("CloudFront-Policy", cookies["CloudFront-Policy"], {
-      domain: ".inspedu.in",
-      path: "/",
-      maxAge: 86400000, // 1 day in milisecond
-    });
-    res.cookie("CloudFront-Signature", cookies["CloudFront-Signature"], {
-      domain: ".inspedu.in",
-      path: "/",
-      maxAge: 86400000, // 1 day in milisecond
-    });
-    res.cookie("CloudFront-Key-Pair-Id", cookies["CloudFront-Key-Pair-Id"], {
-      domain: ".inspedu.in",
-      path: "/",
-      maxAge: 86400000, // 1 day in milisecond
-    });
+    res.cookie("CloudFront-Policy", cookies["CloudFront-Policy"], cookieOption);
+    res.cookie(
+      "CloudFront-Signature",
+      cookies["CloudFront-Signature"],
+      cookieOption
+    );
+    res.cookie(
+      "CloudFront-Key-Pair-Id",
+      cookies["CloudFront-Key-Pair-Id"],
+      cookieOption
+    );
 
     return res
       .status(200)
@@ -77,21 +80,17 @@ const loginWithUidHandler = async (req, res) => {
     }
     const cookies = await generateSignedCookies();
     // Set cookies in response headers
-    res.cookie("CloudFront-Policy", cookies["CloudFront-Policy"], {
-      domain: ".inspedu.in",
-      path: "/",
-      maxAge: 86400000, // 1 day in milisecond
-    });
-    res.cookie("CloudFront-Signature", cookies["CloudFront-Signature"], {
-      domain: ".inspedu.in",
-      path: "/",
-      maxAge: 86400000, // 1 day in milisecond
-    });
-    res.cookie("CloudFront-Key-Pair-Id", cookies["CloudFront-Key-Pair-Id"], {
-      domain: ".inspedu.in",
-      path: "/",
-      maxAge: 86400000, // 1 day in milisecond
-    });
+    res.cookie("CloudFront-Policy", cookies["CloudFront-Policy"], cookieOption);
+    res.cookie(
+      "CloudFront-Signature",
+      cookies["CloudFront-Signature"],
+      cookieOption
+    );
+    res.cookie(
+      "CloudFront-Key-Pair-Id",
+      cookies["CloudFront-Key-Pair-Id"],
+      cookieOption
+    );
 
     return res
       .status(200)
