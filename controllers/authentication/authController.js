@@ -4,6 +4,8 @@ const { COOKIES_DOMAIN } = require("../../envvar");
 const cookieOption = {
   domain: COOKIES_DOMAIN,
   path: "/",
+  httpOnly: true,
+  secure: true,
   maxAge: 86400000, // 1 day in milisecond
 };
 
