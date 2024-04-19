@@ -80,19 +80,19 @@ const loginWithUidHandler = async (req, res) => {
         .status(400)
         .json({ status: false, data: "Invalid or No User" });
     }
-    const cookies = await generateSignedCookies();
-    // Set cookies in response headers
-    res.cookie("CloudFront-Policy", cookies["CloudFront-Policy"], cookieOption);
-    res.cookie(
-      "CloudFront-Signature",
-      cookies["CloudFront-Signature"],
-      cookieOption
-    );
-    res.cookie(
-      "CloudFront-Key-Pair-Id",
-      cookies["CloudFront-Key-Pair-Id"],
-      cookieOption
-    );
+    // const cookies = await generateSignedCookies();
+    // // Set cookies in response headers
+    // res.cookie("CloudFront-Policy", cookies["CloudFront-Policy"], cookieOption);
+    // res.cookie(
+    //   "CloudFront-Signature",
+    //   cookies["CloudFront-Signature"],
+    //   cookieOption
+    // );
+    // res.cookie(
+    //   "CloudFront-Key-Pair-Id",
+    //   cookies["CloudFront-Key-Pair-Id"],
+    //   cookieOption
+    // );
 
     return res
       .status(200)
