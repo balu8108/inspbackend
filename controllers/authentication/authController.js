@@ -6,6 +6,7 @@ const cookieOption = {
   path: "/",
   httpOnly: true,
   secure: true,
+  sameSite: "None",
   maxAge: 86400000, // 1 day in milisecond
 };
 
