@@ -7,6 +7,7 @@ const {
   LiveClassRoomNote,
   LeaderBoard,
   LiveClassTestQuestionLog,
+  SoloClassRoom,
 } = require("../../models");
 
 const getAllLecture = async (req, res) => {
@@ -136,8 +137,59 @@ const getLectureById = async (req, res) => {
   }
 };
 
+const getLectureNo = async (req, res) => {
+  try {
+    const { subjectName, classType, classLevel, isSoloClass } = req.body;
+
+    if (isSoloClass) {
+      const soloClassRooms = await SoloClassRoom.findAll();
+      numberOfLecture = soloClassRooms.length;
+      return res.status(200).json({ data: numberOfLecture });
+    } else {
+      if (!subjectName || !classType || !classLevel) {
+        return res.status(400).json({ error: "please send is required" });
+      }
+
+      let numberOfLecture = 0;
+      if (classType == "REGULARCLASS") {
+        const liveClassRooms = await LiveClassRoom.findAll({
+          where: {
+            subjectName: subjectName,
+            classType: classType,
+            classLevel: classLevel,
+          },
+          include: [
+            {
+              model: LiveClassRoomDetail,
+            },
+          ],
+        });
+        numberOfLecture = liveClassRooms.length;
+      } else if (classType == "CRASHCOURSE") {
+        const liveClassRooms = await LiveClassRoom.findAll({
+          where: {
+            subjectName: subjectName,
+            classType: classType,
+          },
+          include: [
+            {
+              model: LiveClassRoomDetail,
+            },
+          ],
+        });
+        numberOfLecture = liveClassRooms.length;
+      }
+
+      return res.status(200).json({ data: numberOfLecture });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+};
+
 module.exports = {
   getAllLecture,
   getLectureById,
   getAllLectureByTopicId,
+  getLectureNo,
 };

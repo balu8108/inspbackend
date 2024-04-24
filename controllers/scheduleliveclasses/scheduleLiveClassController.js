@@ -213,49 +213,6 @@ const getUpcomingClass = async (req, res) => {
   }
 };
 
-const getLectureNo = async (req, res) => {
-  try {
-    const { subjectName, classType, classLevel } = req.body;
-
-    if (!subjectName || !classType || !classLevel) {
-      return res.status(400).json({ error: "please send is required" });
-    }
-
-    let numberOfLecture = 0;
-    if (classType == "REGULARCLASS") {
-      const liveClassRooms = await LiveClassRoom.findAll({
-        where: {
-          subjectName: subjectName,
-          classType: classType,
-          classLevel: classLevel,
-        },
-        include: [
-          {
-            model: LiveClassRoomDetail,
-          },
-        ],
-      });
-      numberOfLecture = liveClassRooms.length;
-    } else if (classType == "CRASHCOURSE") {
-      const liveClassRooms = await LiveClassRoom.findAll({
-        where: {
-          subjectName: subjectName,
-          classType: classType,
-        },
-        include: [
-          {
-            model: LiveClassRoomDetail,
-          },
-        ],
-      });
-      numberOfLecture = liveClassRooms.length;
-    }
-
-    return res.status(200).json({ data: numberOfLecture });
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
-};
 
 const updateScheduleClassData = async (req, res) => {
   try {
@@ -391,7 +348,6 @@ module.exports = {
   getAllLiveClasses,
   getLiveClassDetails,
   getUpcomingClass,
-  getLectureNo,
   uploadFilesToClass,
   updateScheduleClassData,
 };
