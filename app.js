@@ -19,7 +19,7 @@ const studentFeedbackRoutes = require("./routes/studentfeedback/studentFeedackRo
 const lectureRoute = require("./routes/lecturesRoute/lectureRoutes");
 const config = require("./socketcontrollers/config");
 
-const { ENVIRON } = require("./envvar");
+const { ENVIRON, ALLOWED_ORIGINS } = require("./envvar");
 const logHandler = require("./utils/logHandler");
 
 const {
@@ -92,7 +92,6 @@ if (ENVIRON !== "local") {
   scheduleJob();
 }
 //scheduleJob();
-// Cron jobs function
 
 // let worker;
 

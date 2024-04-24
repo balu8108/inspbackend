@@ -10,7 +10,8 @@ const {
   isObjectExistInS3,
   getObjectFromS3,
   uploadToS3,
-  getSignedDownloadUrl,
+  generateAWSS3LocationUrl,
+  generateSignedCookies,
   isObjectExistInS3ByKey,
 } = require("./awsFunctions");
 const checkArraysHaveSameElements = require("./checkArrayHaveSameElement");
@@ -18,7 +19,6 @@ const updateLeaderboard = require("./updateLeaderboard");
 const createOrUpdateQnANotes = require("./qnaNotesFunction");
 const isObjectValid = require("./objectValidation");
 const dbObjectConverter = require("./dbObjectConverter");
-const { encryptData } = require("./crypticFunctions");
 const { fetchAllStudentsFromInspApi } = require("./inspexternalapis");
 const { isFeedbackProvided } = require("./dbUtilityFunctions");
 const generateDRMJWTToken = require("./generateDRMJWTToken");
@@ -40,9 +40,8 @@ module.exports = {
   isObjectExistInS3,
   getObjectFromS3,
   uploadToS3,
+  generateAWSS3LocationUrl,
   dbObjectConverter,
-  getSignedDownloadUrl,
-  encryptData,
   fetchAllStudentsFromInspApi,
   validateCreateFeedBack,
   validateUpdateScheduleLiveClass,
@@ -53,4 +52,5 @@ module.exports = {
   formMPDString,
   generateDRMJWTToken,
   createOrUpdateLiveClassNotes,
+  generateSignedCookies,
 };

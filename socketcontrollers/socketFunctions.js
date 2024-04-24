@@ -726,6 +726,7 @@ const startRecordingSocketHandler = async (data, socket) => {
       const classPk = allPeers.get(authData.id)?.classPk;
       const routerId = allPeers.get(authData.id)?.routerId;
       const room = allRooms.get(roomId);
+
       if (roomId && routerId && room) {
         const recordData = await room._startRecording(
           authData.id,
