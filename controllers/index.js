@@ -16,7 +16,7 @@ const {
   getAllLiveClasses,
   getLiveClassDetails,
   getUpcomingClass,
-  getLectureNo,
+  // getLectureNo,
   uploadFilesToClass,
   updateScheduleClassData,
 } = require("./scheduleliveclasses/scheduleLiveClassController");
@@ -31,6 +31,7 @@ const {
   getAllLecture,
   getLectureById,
   getAllLectureByTopicId,
+  getLectureNo
 } = require("./lectures/lecturesController");
 
 const {

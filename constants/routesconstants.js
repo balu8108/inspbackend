@@ -15,6 +15,7 @@ const routesConstants = Object.freeze({
   OPEN_FILE: "/open-file",
   IMAGE_TO_DOC: "/image-to-doc",
   UPLOAD_ASSIGNMENT_TO_CLASS_BY_ID: "/upload-assignment-to-class",
+
   SOLO: "/solo-lecture",
   SOLO_CLASSROOM: "/create-room",
   LATEST_CLASSROOM: "/latest-room",
@@ -23,6 +24,8 @@ const routesConstants = Object.freeze({
   SOLO_CLASSROOM_PRESIGNED_URL: "/generate-url",
   SOLOCLASSROOM_FILES: "/open-file/solo-files",
   SOLOCLASSROOM_DETAILS: "/get-details-data-for-class",
+  GET_ALL_SOLOCLASSROOM: "/get-all-soloclassrooms",
+
   TOPIC_ASSIGNMENTS: "/assignment",
   CREATE_ASSIGNMENT: "/create",
   GET_ASSIGNMENT_TOPIC_ID: "/get-all-assignments-topic-id",

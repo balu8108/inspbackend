@@ -1,16 +1,17 @@
 const { externalApiEndpoints } = require("../constants");
 const { INSP_EXTERNAL_WEBSITE_SECRET_KEY } = require("../envvar");
-const fetchAllStudentsFromInspApi = async () => {
+const fetchAllStudentsFromInspApi = async (presentClass) => {
   try {
     const body = {
       secret_key: INSP_EXTERNAL_WEBSITE_SECRET_KEY,
+      present_class: presentClass,
     };
     const requestOptions = {
       method: "POST",
       body: JSON.stringify(body),
     };
     const response = await fetch(
-      externalApiEndpoints.allStudents,
+      externalApiEndpoints.allStudentNotification,
       requestOptions
     );
     const data = await response.json();

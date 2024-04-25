@@ -46,7 +46,7 @@ router.post(
 router.get(
   `${routesConstants.GET_ALL_TIMETABLE}`,
   isAuthenticated,
-  isTeacher,
+  checkPaidStatusOrTeacher,
   getAllTimeTable
 );
 router.post(

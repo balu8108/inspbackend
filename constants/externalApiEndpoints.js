@@ -7,6 +7,7 @@ const externalApiEndpoints = {
   subTopics: "https://inspedu.in/webservices/apis/sub_topics",
   subjects: "https://inspedu.in/webservices/apis/subjects",
   allStudents: "https://inspedu.in/webservices/apis/students",
+  allStudentNotification: "https://inspedu.in/webservices/apis/students_data",
   allTeachers: "https://inspedu.in/webservices/apis/teachers",
 };
 module.exports = externalApiEndpoints;

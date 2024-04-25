@@ -124,25 +124,40 @@ const viewRecording = async (req, res) => {
         responseData = responseData.dataValues;
       }
     } else if (type === "solo") {
-      if (!topicId) {
-        throw new Error("Topic id required to view this recordings");
-      }
-      const specificSoloRecording = await SoloClassRoomRecording.findOne({
+      // if (!topicId) {
+      //   throw new Error("Topic id required to view this recordings");
+      // }
+      const specificSoloRecording = await SoloClassRoom.findOne({
+        
         where: { id: id },
+        include: [
+          { model: SoloClassRoomRecording, order: [["createdAt", "ASC"]] },
+          { model: SoloClassRoomFiles },
+        ],
       });
-      if (specificSoloRecording !== null) {
-        responseData = await SoloClassRoom.findAll({
-          where: { topicId: topicId },
-          include: [
-            { model: SoloClassRoomRecording, order: [["createdAt", "ASC"]] },
-            { model: SoloClassRoomFiles },
-          ],
-        });
-        const combinedData = {
-          responseData,
-          activeRecordingToPlay: specificSoloRecording,
-        };
-        responseData = combinedData;
+      console.log("specific",specificSoloRecording);
+      const data = JSON.stringify(specificSoloRecording.SoloClassRoomRecordings);
+      const SoloClassRoomRecordingLength = JSON.parse(data);
+
+      if (SoloClassRoomRecordingLength.length > 0) {
+        const presignedArray = specificSoloRecording.SoloClassRoomRecordings
+        for (let i = 0; i < SoloClassRoomRecordingLength.length; i++) {
+          if (SoloClassRoomRecordingLength[i]) {
+            if (SoloClassRoomRecordingLength[i]?.key) {
+              const presignedUrl = await generatePresignedUrls(
+                SoloClassRoomRecordingLength[i]?.key
+              );
+              presignedArray[i].key = presignedUrl;
+            }
+            if (SoloClassRoomRecordingLength[i]?.hlsDrmUrl) {
+              const presignedUrl = await generatePresignedUrls(
+                SoloClassRoomRecordingLength[i]?.hlsDrmUrl
+              );
+              presignedArray[i].hlsDrmUrl = presignedUrl;
+            }
+          }
+        }
+        responseData = specificSoloRecording.dataValues;
       }
     } else {
       throw new Error("Invalid recording type");

@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
       topic: DataTypes.STRING,
       agenda: DataTypes.TEXT,
       description: DataTypes.TEXT,
+      lectureNo: DataTypes.INTEGER,
     },
     {
       sequelize,

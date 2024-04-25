@@ -3,6 +3,8 @@ dotenv.config({ path: "config/.env" });
 const PORT = process.env.PORT;
 const NODE_ENV = process.env.NODE_ENV;
 const ENVIRON = process.env.ENVIRON;
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS;
+const COOKIES_DOMAIN = process.env.COOKIES_DOMAIN;
 const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
 const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
 const AWS_REGION = process.env.AWS_REGION;
@@ -32,6 +34,8 @@ const CLOUDFRONT_URL = process.env.CLOUDFRONT_URL;
 module.exports = {
   PORT,
   NODE_ENV,
+  ALLOWED_ORIGINS,
+  COOKIES_DOMAIN,
   AWS_ACCESS_KEY_ID,
   AWS_SECRET_ACCESS_KEY,
   AWS_REGION,

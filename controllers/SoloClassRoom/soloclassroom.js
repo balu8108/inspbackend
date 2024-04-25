@@ -23,7 +23,7 @@ exports.createSoloClassRoom = async (req, res) => {
     // Extract other data from the request
     const { plainAuthData } = req;
 
-    const { subjectId, topicId, topic, agenda, description } = req.body;
+    const { subjectId, topicId, topic, agenda, description,lectureNo } = req.body;
 
     // Save solo lecture  information in the  SoloClassRoom model
     const soloclassroomlecture = await SoloClassRoom.create({
@@ -33,6 +33,7 @@ exports.createSoloClassRoom = async (req, res) => {
       mentorName: plainAuthData.name,
       agenda: agenda,
       description: description,
+      lectureNo:lectureNo
     });
 
     const soloClassRoomId = soloclassroomlecture.id;
@@ -182,10 +183,15 @@ exports.getSoloClassroomDetails = async (req, res) => {
       where: { soloClassRoomId: soloClassRoomId },
     });
 
+    const soloClassRoomRecordings = await SoloClassRoomRecording.findAll({
+      where: { soloClassRoomId: soloClassRoomId },
+    });
+
     // Combine the data into a single JSON response.
     const response = {
       soloClassroomDetails,
       soloClassRoomFile,
+      soloClassRoomRecordings
     };
 
     res.status(200).json(response);
@@ -233,3 +239,14 @@ exports.openSoloLetureFile = async (req, res) => {
     return res.status(400).json({ status: false, data: err.message });
   }
 };
+
+exports.getAllSoloClassRoom = async(req, res) => {
+  try {
+    console.log("getting  solo classes");
+    const soloClassesData = await SoloClassRoom.findAll();
+    console.log("solo",soloClassesData );
+    res.status(200).json({ data: soloClassesData });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
