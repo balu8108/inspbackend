@@ -1,13 +1,13 @@
 const { generateSignedCookies } = require("../../utils");
 const { COOKIES_DOMAIN } = require("../../envvar");
 
-const cookieOption = {
-  domain: COOKIES_DOMAIN,
-  path: "/",
-  secure: true,
-  sameSite: "None",
-  maxAge: 86400000, // 1 day in milisecond
-};
+// const cookieOption = {
+//   domain: COOKIES_DOMAIN,
+//   path: "/",
+//   secure: true,
+//   sameSite: "None",
+//   maxAge: 86400000, // 1 day in milisecond
+// };
 
 /* THIS IS DEPRECATED API */
 const loginHandler = async (req, res) => {
