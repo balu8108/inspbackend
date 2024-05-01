@@ -76,7 +76,7 @@ app.use((req, res, next) => {
 app.use(upload()); // this is required for uploading multipart/formData
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: ALLOWED_ORIGINS,
     credentials: true,
   })
 );
