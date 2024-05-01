@@ -2,7 +2,7 @@ const { generateSignedCookies } = require("../../utils");
 const { COOKIES_DOMAIN } = require("../../envvar");
 
 const cookieOption = {
-  domain: COOKIES_DOMAIN,
+  domain: "cdn.inspedu.in",
   path: "/",
   // httpOnly: true,
   // secure: true,
