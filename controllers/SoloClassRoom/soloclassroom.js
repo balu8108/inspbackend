@@ -122,6 +122,7 @@ exports.uploadSoloClassRoomRecordings = async (req, res) => {
   }
 };
 
+
 exports.getTopicDetails = async (req, res) => {
   try {
     const { topicId } = req.params;
@@ -138,16 +139,19 @@ exports.getTopicDetails = async (req, res) => {
       ],
     });
 
-    if (soloClassroomDetails.length === 0) {
+    const totalLectures = soloClassroomDetails.length; // Total number of lectures
+
+    if (totalLectures === 0) {
       res.status(201).json({ message: "No data available for this topic" });
     } else {
-      res.status(200).json(soloClassroomDetails);
+      res.status(200).json({ totalLectures, soloClassroomDetails });
     }
   } catch (error) {
     console.error("Error fetching details:", error);
     res.status(500).json({ error: "An error occurred while fetching details" });
   }
 };
+
 
 exports.getLatestSoloclassroom = async (req, res) => {
   try {
