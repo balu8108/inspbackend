@@ -13,7 +13,7 @@ const {
   isObjectExistInS3ByKey,
   generatePresignedUrls,
   generateDRMJWTToken,
-  generateAWSS3LocationUrl,
+  generateCDNUrl,
 } = require("../../utils");
 
 const getSingleRecording = async (req, res) => {
@@ -109,13 +109,13 @@ const viewRecording = async (req, res) => {
         for (let i = 0; i < LiveClassRecordingLength.length; i++) {
           if (LiveClassRecordingLength[i]) {
             if (LiveClassRecordingLength[i]?.key) {
-              const presignedUrl = await generateAWSS3LocationUrl(
+              const presignedUrl = await generateCDNUrl(
                 LiveClassRecordingLength[i]?.key
               );
               presignedArray[i].key = presignedUrl;
             }
             if (LiveClassRecordingLength[i]?.hlsDrmUrl) {
-              const presignedUrl = await generateAWSS3LocationUrl(
+              const presignedUrl = await generateCDNUrl(
                 LiveClassRecordingLength[i]?.hlsDrmUrl
               );
               presignedArray[i].hlsDrmUrl = presignedUrl;
