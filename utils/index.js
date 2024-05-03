@@ -13,6 +13,7 @@ const {
   generateAWSS3LocationUrl,
   generateSignedCookies,
   isObjectExistInS3ByKey,
+  generateCDNUrl,
 } = require("./awsFunctions");
 const checkArraysHaveSameElements = require("./checkArrayHaveSameElement");
 const updateLeaderboard = require("./updateLeaderboard");
@@ -53,4 +54,5 @@ module.exports = {
   generateDRMJWTToken,
   createOrUpdateLiveClassNotes,
   generateSignedCookies,
+  generateCDNUrl,
 };

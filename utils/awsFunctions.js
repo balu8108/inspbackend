@@ -28,6 +28,10 @@ const generateAWSS3LocationUrl = (fileKey) => {
   return `https://${AWS_BUCKET_NAME}.s3.${AWS_REGION}.amazonaws.com/${fileKey}`;
 };
 
+const generateCDNUrl = (fileKey) => {
+  return `https://cdn.inspedu.in/${fileKey}`;
+};
+
 const uploadFilesToS3 = async (files, folderPath) => {
   // folder path can be like
   // files/roomId[jhbqwdui]
@@ -253,6 +257,7 @@ module.exports = {
   getObjectFromS3,
   uploadToS3,
   generateAWSS3LocationUrl,
+  generateCDNUrl,
   generateSignedCookies,
   isObjectExistInS3ByKey,
   uploadRecordingToS3,

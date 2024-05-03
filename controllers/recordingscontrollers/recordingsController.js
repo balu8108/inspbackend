@@ -13,6 +13,7 @@ const {
   isObjectExistInS3ByKey,
   generatePresignedUrls,
   generateDRMJWTToken,
+  generateCDNUrl,
 } = require("../../utils");
 
 const getSingleRecording = async (req, res) => {
@@ -108,13 +109,13 @@ const viewRecording = async (req, res) => {
         for (let i = 0; i < LiveClassRecordingLength.length; i++) {
           if (LiveClassRecordingLength[i]) {
             if (LiveClassRecordingLength[i]?.key) {
-              const presignedUrl = await generatePresignedUrls(
+              const presignedUrl = await generateCDNUrl(
                 LiveClassRecordingLength[i]?.key
               );
               presignedArray[i].key = presignedUrl;
             }
             if (LiveClassRecordingLength[i]?.hlsDrmUrl) {
-              const presignedUrl = await generatePresignedUrls(
+              const presignedUrl = await generateCDNUrl(
                 LiveClassRecordingLength[i]?.hlsDrmUrl
               );
               presignedArray[i].hlsDrmUrl = presignedUrl;
@@ -128,19 +129,20 @@ const viewRecording = async (req, res) => {
       //   throw new Error("Topic id required to view this recordings");
       // }
       const specificSoloRecording = await SoloClassRoom.findOne({
-        
         where: { id: id },
         include: [
           { model: SoloClassRoomRecording, order: [["createdAt", "ASC"]] },
           { model: SoloClassRoomFiles },
         ],
       });
-      console.log("specific",specificSoloRecording);
-      const data = JSON.stringify(specificSoloRecording.SoloClassRoomRecordings);
+      console.log("specific", specificSoloRecording);
+      const data = JSON.stringify(
+        specificSoloRecording.SoloClassRoomRecordings
+      );
       const SoloClassRoomRecordingLength = JSON.parse(data);
 
       if (SoloClassRoomRecordingLength.length > 0) {
-        const presignedArray = specificSoloRecording.SoloClassRoomRecordings
+        const presignedArray = specificSoloRecording.SoloClassRoomRecordings;
         for (let i = 0; i < SoloClassRoomRecordingLength.length; i++) {
           if (SoloClassRoomRecordingLength[i]) {
             if (SoloClassRoomRecordingLength[i]?.key) {
