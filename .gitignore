@@ -8,5 +8,7 @@ variable.env
 /logs/info/*.log
 /recordfiles/*.webm
 /backuprecordfiles/*.webm
+/recordfiles/*.mp4
+/backuprecordfiles/*.mp4
 config.json
 cron.lock

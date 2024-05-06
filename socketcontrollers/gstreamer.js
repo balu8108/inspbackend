@@ -197,30 +197,20 @@ module.exports = class GStreamer {
   }
 
   get _sinkArgs() {
-    const commonArgs = ["webmmux name=mux", "!"];
+    const commonArgs = ["mp4mux name=mux", "!"];
     let sinks = [];
     logger.info(JSON.stringify(`Recording uploading started`, null, 2));
     if (PLATFORM === "windows") {
       sinks.push(
-        `tee name=t ! queue ! filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm t. ! queue`
+        `tee name=t ! queue ! filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.mp4 t. ! queue`
       );
-      // return [
-      //   "webmmux name=mux",
-      //   "!",
-      //   `filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm`,
-      // ];
     } else {
       sinks.push(
-        `tee name=t ! queue ! filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm t. ! queue`
+        `tee name=t ! queue ! filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.mp4 t. ! queue`
       );
       sinks.push(
-        `t. ! queue ! awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`
+        `t. ! queue ! awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.mp4`
       );
-      // return [
-      //   "webmmux name=mux",
-      //   "!",
-      //   `awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`,
-      // ];
     }
     return [...commonArgs, ...sinks];
   }
