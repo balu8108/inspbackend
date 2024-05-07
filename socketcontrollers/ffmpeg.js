@@ -65,18 +65,13 @@ module.exports = class FFmpeg {
 
   kill() {
     try {
-      console.log("killing() ffmpeg process [pid:%d]", this._process.pid);
       this._process.stdin.end();
       kill(this._process.pid, "SIGTERM");
-
-      // let killedProcess = this._process.kill();
-      // console.log("killedProcess:%o", killedProcess);
     } catch (err) {
       console.log("Error in killing ffmpeg process", err);
     }
   }
   exit() {
-    console.log("exiting process");
     this._process.disconnect();
   }
 
@@ -102,28 +97,28 @@ module.exports = class FFmpeg {
     }
 
     commandArgs = commandArgs.concat([
-      // "-flags",
-      // "+global_header",
+      "-flags",
+      "+global_header", // optional, for seeking
+      "-movflags",
+      "faststart",
       `${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.mp4`,
     ]);
-
-    console.log("commandArgs:%o", commandArgs);
 
     return commandArgs;
   }
 
   get _videoArgs() {
-    return ["-map", "0:v:0", "-c:v", "copy"];
+    return ["-map", "0:v:0", "-c:v", "libx264", "-preset", "ultrafast"];
   }
 
   get _audioArgs() {
     return [
       "-map",
       "0:a:0",
-      //   "-strict", // libvorbis is experimental
-      //   "-2",
       "-c:a",
-      "copy",
+      "aac",
+      "-strict",
+      "-2"
     ];
   }
 };

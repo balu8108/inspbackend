@@ -11,7 +11,6 @@ const {
   getObjectFromS3,
   uploadToS3,
   generateAWSS3LocationUrl,
-  generateSignedCookies,
   isObjectExistInS3ByKey,
 } = require("./awsFunctions");
 const checkArraysHaveSameElements = require("./checkArrayHaveSameElement");
@@ -52,5 +51,4 @@ module.exports = {
   formMPDString,
   generateDRMJWTToken,
   createOrUpdateLiveClassNotes,
-  generateSignedCookies,
 };

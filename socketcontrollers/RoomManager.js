@@ -4,7 +4,6 @@ const allPeers = new Map();
 const { getPort } = require("./port");
 const { PLATFORM } = require("../envvar");
 const { SOCKET_EVENTS, mediaCodecs } = require("../constants");
-const logger = require("../utils/logger");
 const { generateAWSS3LocationUrl, isObjectValid } = require("../utils");
 
 const { LiveClassRoomRecording, LeaderBoard } = require("../models");
@@ -12,7 +11,7 @@ const { LiveClassRoomRecording, LeaderBoard } = require("../models");
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
 
-const RECORD_PROCESS_NAME = "GStreamer";
+const RECORD_PROCESS_NAME = "FFmpeg";
 
 const config = require("./config");
 
@@ -69,7 +68,7 @@ class RoomManager extends EventEmitter {
             workerLoads.set(
               worker.pid,
               workerLoads.get(worker.pid) +
-                (routerLoads.has(routerId) ? routerLoads.get(routerId) : 0)
+              (routerLoads.has(routerId) ? routerLoads.get(routerId) : 0)
             );
           } else {
             workerLoads.set(
@@ -163,7 +162,7 @@ class RoomManager extends EventEmitter {
     try {
       const socketIds = Object.values(this._consumers).map((cs) => cs.socketId);
       return socketIds;
-    } catch (err) {}
+    } catch (err) { }
   }
 
   _getAllPeersInRoomStartWithPeer(peer) {
@@ -678,9 +677,6 @@ class RoomManager extends EventEmitter {
           // Close all routers and delete all routers
           this._removeAllRoutersOfRoom();
           this._removeLeaderBoardOfRoom();
-          logger.info(
-            JSON.stringify("No Peer In the Class(Class end)", null, 2)
-          );
         }
         return { peerCountInRoom, leavingPeer };
       }
@@ -696,7 +692,7 @@ class RoomManager extends EventEmitter {
       case "GStreamer":
         return new Gstreamer(recordInfo);
       default:
-        return new Gstreamer(recordInfo);
+        return new FFmpeg(recordInfo);
     }
   };
 
@@ -826,18 +822,6 @@ class RoomManager extends EventEmitter {
             }
           }, 1000);
         }
-
-        // setTimeout(async () => {
-        //   for (const key in this._consumers) {
-        //     const consumer = this._consumers[key];
-
-        //     if (consumer.userId === authId) {
-        //       await consumer.consumer.resume();
-
-        //       await consumer.consumer.requestKeyFrame();
-        //     }
-        //   }
-        // }, 1000);
 
         return { fileKeyName, url };
       }
@@ -982,7 +966,6 @@ class RoomManager extends EventEmitter {
         if (peer?.recordProcess) {
           peer.recordProcess.kill();
           peer.recordProcess = null;
-          logger.info(JSON.stringify(`Command to stop recording`, null, 2));
         }
       }
     } catch (err) {

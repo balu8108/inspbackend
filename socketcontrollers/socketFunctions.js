@@ -31,7 +31,6 @@ const { PLATFORM, ENVIRON } = require("../envvar");
 
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
-const logger = require("../utils/logger");
 
 const RECORD_PROCESS_NAME = "GStreamer";
 
@@ -598,7 +597,7 @@ const consumeSocketHandler = async (
         }
       }
     }
-  } catch (err) {}
+  } catch (err) { }
 };
 
 const consumerResumeSocketHandler = async (data, socket, mediaSoupworkers) => {
@@ -710,7 +709,6 @@ const endMeetSocketHandler = async (socket, mediaSoupworkers, io) => {
         }
       }
     }
-    logger.info(JSON.stringify("Classes ended by mentor", null, 2));
   } catch (err) {
     console.log("Error in end meet handler", err);
   }
@@ -936,7 +934,7 @@ const uploadFileSocketHandler = async (data, callback, socket) => {
         });
       }
     }
-  } catch (err) {}
+  } catch (err) { }
 };
 
 const setIsAudioStreamSocketEnabled = (data, socket, io) => {
@@ -1062,7 +1060,7 @@ const pollTimeIncreaseSocketHandler = (data, socket) => {
           .emit(SOCKET_EVENTS.POLL_TIME_INCREASE_FROM_SERVER, data);
       }
     }
-  } catch (err) {}
+  } catch (err) { }
 };
 
 const stopRecordingSocketHandler = (socket) => {

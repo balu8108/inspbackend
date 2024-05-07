@@ -20,7 +20,6 @@ const lectureRoute = require("./routes/lecturesRoute/lectureRoutes");
 const config = require("./socketcontrollers/config");
 
 const { ENVIRON, ALLOWED_ORIGINS } = require("./envvar");
-const logHandler = require("./utils/logHandler");
 
 const {
   isSocketUserAuthenticated,
@@ -85,8 +84,6 @@ app.use(routesConstants.TOPIC_ASSIGNMENTS, myUploadRoutes);
 app.use(routesConstants.RECORDING, recordingRoutes);
 app.use(routesConstants.STUDENT_FEEDBACK, studentFeedbackRoutes);
 app.use(routesConstants.LECTURES_ENDPOINT, lectureRoute);
-
-app.use(logHandler);
 // Cron jobs function
 if (ENVIRON !== "local") {
   scheduleJob();
