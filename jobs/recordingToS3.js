@@ -2,7 +2,7 @@ const moment = require("moment-timezone");
 const fs = require("fs");
 const path = require("path");
 const { uploadRecordingToS3 } = require("../utils/awsFunctions");
-const { LiveClassRoom } = require("../models");
+const { LiveClassRoom, LiveClassRoomRecording } = require("../models");
 const { classStatus } = require("../constants");
 const RECORDING_FOLDER = "./recordfiles";
 const AWSS3Folder = "liveclassrecordings"; // folder name in which to put this recording
@@ -40,8 +40,11 @@ const recordingToS3 = async () => {
 
     // Get Recording Files
     for (const fileName of files) {
+      console.log("REST", fileName);
       if (fileName !== ".keep") {
         const roomId = fileName.split("-")[0];
+
+        console.log(roomId);
 
         const liveRoom = await LiveClassRoom.findOne({
           where: {
@@ -68,7 +71,7 @@ const recordingToS3 = async () => {
             const liveRecording = await LiveClassRoomRecording.find({
               where: { key: { [Op.like]: `%${fileName}%` } },
             });
-            liveRecording.status = "Progress"
+            liveRecording.status = "Progress";
             await liveRecording.save();
             console.log("Upload successfully mirgating file to backup folder");
           }
