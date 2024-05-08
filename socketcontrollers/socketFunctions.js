@@ -597,7 +597,7 @@ const consumeSocketHandler = async (
         }
       }
     }
-  } catch (err) { }
+  } catch (err) {}
 };
 
 const consumerResumeSocketHandler = async (data, socket, mediaSoupworkers) => {
@@ -737,7 +737,6 @@ const startRecordingSocketHandler = async (data, socket) => {
           await LiveClassRoomRecording.create({
             key: recordData?.fileKeyName,
             classRoomId: classPk,
-            status: "Uploaded"
           });
         }
       }
@@ -935,7 +934,7 @@ const uploadFileSocketHandler = async (data, callback, socket) => {
         });
       }
     }
-  } catch (err) { }
+  } catch (err) {}
 };
 
 const setIsAudioStreamSocketEnabled = (data, socket, io) => {
@@ -1061,7 +1060,7 @@ const pollTimeIncreaseSocketHandler = (data, socket) => {
           .emit(SOCKET_EVENTS.POLL_TIME_INCREASE_FROM_SERVER, data);
       }
     }
-  } catch (err) { }
+  } catch (err) {}
 };
 
 const stopRecordingSocketHandler = (socket) => {

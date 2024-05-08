@@ -104,10 +104,13 @@ module.exports = class GStreamer {
       video.rtpParameters
     );
 
-    const VIDEO_CAPS = `application/x-rtp,width=1280,height=720,media=(string)video,clock-rate=(int)${videoCodecInfo.clockRate
-      },payload=(int)${videoCodecInfo.payloadType
-      },encoding-name=(string)${videoCodecInfo.codecName.toUpperCase()},ssrc=(uint)${video.rtpParameters.encodings[0].ssrc
-      }`;
+    const VIDEO_CAPS = `application/x-rtp,width=1280,height=720,media=(string)video,clock-rate=(int)${
+      videoCodecInfo.clockRate
+    },payload=(int)${
+      videoCodecInfo.payloadType
+    },encoding-name=(string)${videoCodecInfo.codecName.toUpperCase()},ssrc=(uint)${
+      video.rtpParameters.encodings[0].ssrc
+    }`;
 
     return [
       `udpsrc port=${video.remoteRtpPort} caps="${VIDEO_CAPS}"`,
@@ -130,10 +133,13 @@ module.exports = class GStreamer {
       audio.rtpParameters
     );
 
-    const AUDIO_CAPS = `application/x-rtp,media=(string)audio,clock-rate=(int)${audioCodecInfo.clockRate
-      },payload=(int)${audioCodecInfo.payloadType
-      },encoding-name=(string)${audioCodecInfo.codecName.toUpperCase()},ssrc=(uint)${audio.rtpParameters.encodings[0].ssrc
-      }`;
+    const AUDIO_CAPS = `application/x-rtp,media=(string)audio,clock-rate=(int)${
+      audioCodecInfo.clockRate
+    },payload=(int)${
+      audioCodecInfo.payloadType
+    },encoding-name=(string)${audioCodecInfo.codecName.toUpperCase()},ssrc=(uint)${
+      audio.rtpParameters.encodings[0].ssrc
+    }`;
 
     return [
       `udpsrc port=${audio.remoteRtpPort} caps="${AUDIO_CAPS}"`,

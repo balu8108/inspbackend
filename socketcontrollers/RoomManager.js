@@ -6,7 +6,7 @@ const { PLATFORM } = require("../envvar");
 const { SOCKET_EVENTS, mediaCodecs } = require("../constants");
 const { generateAWSS3LocationUrl, isObjectValid } = require("../utils");
 
-const { LiveClassRoomRecording, LeaderBoard } = require("../models");
+const { LeaderBoard } = require("../models");
 
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
@@ -68,7 +68,7 @@ class RoomManager extends EventEmitter {
             workerLoads.set(
               worker.pid,
               workerLoads.get(worker.pid) +
-              (routerLoads.has(routerId) ? routerLoads.get(routerId) : 0)
+                (routerLoads.has(routerId) ? routerLoads.get(routerId) : 0)
             );
           } else {
             workerLoads.set(
@@ -162,7 +162,7 @@ class RoomManager extends EventEmitter {
     try {
       const socketIds = Object.values(this._consumers).map((cs) => cs.socketId);
       return socketIds;
-    } catch (err) { }
+    } catch (err) {}
   }
 
   _getAllPeersInRoomStartWithPeer(peer) {
@@ -822,6 +822,18 @@ class RoomManager extends EventEmitter {
             }
           }, 1000);
         }
+
+        // setTimeout(async () => {
+        //   for (const key in this._consumers) {
+        //     const consumer = this._consumers[key];
+
+        //     if (consumer.userId === authId) {
+        //       await consumer.consumer.resume();
+
+        //       await consumer.consumer.requestKeyFrame();
+        //     }
+        //   }
+        // }, 1000);
 
         return { fileKeyName, url };
       }
