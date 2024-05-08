@@ -737,6 +737,7 @@ const startRecordingSocketHandler = async (data, socket) => {
           await LiveClassRoomRecording.create({
             key: recordData?.fileKeyName,
             classRoomId: classPk,
+            status: "Uploaded"
           });
         }
       }

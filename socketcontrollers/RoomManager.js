@@ -791,10 +791,10 @@ class RoomManager extends EventEmitter {
         let fileKeyName = "";
         let url = "";
         if (PLATFORM === "windows") {
-          fileKeyName = `recordfiles/${recordInfo?.fileName}.mp4`;
+          fileKeyName = `recordfiles/${recordInfo?.fileName}.webm`;
           url = "localhost";
         } else {
-          fileKeyName = `liveclassrecordings/${recordInfo?.fileName}.mp4`;
+          fileKeyName = `liveclassrecordings/${recordInfo?.fileName}.webm`;
           url = generateAWSS3LocationUrl(fileKeyName);
         }
         peer[recordProcess] = recordProcess;

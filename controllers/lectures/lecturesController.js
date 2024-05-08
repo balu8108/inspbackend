@@ -54,6 +54,21 @@ const getAllLecture = async (req, res) => {
   }
 };
 
+const getAllUploadedRecordingOfBothClasses = async (req, res) => {
+  try {
+    const liveClassRooms = await LiveClassRoomRecording.findAll({
+      where: {
+        status: "Uploaded"
+      }
+    });
+    return res
+      .status(200)
+      .json({ message: "All lecture data", data: liveClassRooms });
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+};
+
 const getAllLectureByTopicId = async (req, res) => {
   try {
     const { topicId, topicType } = req.params;
@@ -192,4 +207,5 @@ module.exports = {
   getLectureById,
   getAllLectureByTopicId,
   getLectureNo,
+  getAllUploadedRecordingOfBothClasses
 };

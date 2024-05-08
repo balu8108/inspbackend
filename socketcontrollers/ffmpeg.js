@@ -101,7 +101,7 @@ module.exports = class FFmpeg {
       "+global_header", // optional, for seeking
       "-movflags",
       "faststart",
-      `${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.mp4`,
+      `${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm`,
     ]);
 
     return commandArgs;

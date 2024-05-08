@@ -250,22 +250,12 @@ const formMPDKey = (inputFileKey, outputFolder) => {
   }
 };
 
-// THE BELOW IS A SPECIAL API TO UPDATE KEY AND URL OF RECORDINGS UPLOADED TO AWS
-// WHEN WEBM OR MP4 VIDEO FILE UPLOADED IN AWS S3 THEN AWS LAMBDA CONVERTS INTO m3u8 FORMAT USING MEDIACONVERT API
-// THEN AFTER SUCCESS JOB CREATION IT WILL TRIGGER THIS API TO UPDATE DATABASES
+
 const updateRecordingData = async (req, res) => {
   try {
-    const { bucketName, inputFileKey, outputFolder } =
+    const { bucketName, inputFileKey, outputFolder, tpStreamId } =
       req.body;
-    // we expect the above data from AWS lambda
-    // input file key is to search in db whether the inputFileKey is present in any of recording table means either in Live or soloRecord
-    // Example of above data:-
-    // bucketName = insp_development_bucket // bucket name where all recordings will live
-    // inputFileKey = liverecords/sample.webm // key of the input bucket , required for searching and to form .m3u8 from it
-    // outputFolder - outputvideofiles //this folder is output folder where all the m3u8 recoridng will live
-    // therefore the new key we need to form with this data is somethinglike:
-    // outputvideofiles/sample.m3u8
-    if (!bucketName || !inputFileKey || !outputFolder) {
+    if (!bucketName || !inputFileKey || !outputFolder || !tpStreamId) {
       throw new Error("Some required data missing");
     }
 
@@ -277,6 +267,8 @@ const updateRecordingData = async (req, res) => {
       const finalOutputKey = formMPDKey(inputFileKey, outputFolder);
       if (finalOutputKey) {
         liveRecording.key = finalOutputKey;
+        liveRecording.tpStreamId = tpStreamId;
+        liveRecording.status = "Completed"
         liveRecording.save();
       }
     }

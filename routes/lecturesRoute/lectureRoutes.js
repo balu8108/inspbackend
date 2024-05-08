@@ -11,12 +11,17 @@ const {
   getAllLectureByTopicId,
   getLectureById,
   getLectureNo,
+  getAllUploadedRecordingOfBothClasses
 } = require("../../controllers");
 router.get(
   `${routesConstants.GET_ALL_LECTURE}/:classType/:classLevel`,
   isAuthenticated,
   checkPaidStatusOrTeacher,
   getAllLecture
+);
+router.get(
+  `${routesConstants.GET_ALL_PENDING_LECTURE}`,
+  getAllUploadedRecordingOfBothClasses
 );
 router.post(
   `${routesConstants.GET_LECTURE_NO}`,
