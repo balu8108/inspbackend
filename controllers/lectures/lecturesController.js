@@ -58,7 +58,7 @@ const getAllUploadedRecordingOfBothClasses = async (req, res) => {
   try {
     const liveClassRooms = await LiveClassRoomRecording.findAll({
       where: {
-        status: "Uploaded"
+        status: "Progress"
       }
     });
     return res
