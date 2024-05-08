@@ -5,6 +5,7 @@ const { uploadRecordingToS3 } = require("../utils/awsFunctions");
 const { LiveClassRoom, LiveClassRoomRecording } = require("../models");
 const { classStatus } = require("../constants");
 const RECORDING_FOLDER = "./recordfiles";
+const BACKUP_RECORDING_FOLDER = "./backuprecordfiles";
 const AWSS3Folder = "liveclassrecordings"; // folder name in which to put this recording
 const LOCK_FILE = path.join(__dirname, "cron.lock");
 const util = require("util");
@@ -70,6 +71,12 @@ const recordingToS3 = async () => {
             });
             liveRecording.status = "Progress";
             await liveRecording.save();
+            const backupFilePath = path.join(BACKUP_RECORDING_FOLDER, fileName);
+            fs.rename(filePath, backupFilePath, function (err) {
+              if (err) throw err;
+              console.log("Successfully renamed - AKA moved!");
+            });
+
             console.log("Upload successfully mirgating file to backup folder");
           }
         }
