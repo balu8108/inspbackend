@@ -40,11 +40,8 @@ const recordingToS3 = async () => {
 
     // Get Recording Files
     for (const fileName of files) {
-      console.log("REST", fileName);
       if (fileName !== ".keep") {
         const roomId = fileName.split("-")[0];
-
-        console.log(roomId);
 
         const liveRoom = await LiveClassRoom.findOne({
           where: {
@@ -68,7 +65,7 @@ const recordingToS3 = async () => {
         if (fileUploadToS3) {
           // Check success
           if (fileUploadToS3?.success) {
-            const liveRecording = await LiveClassRoomRecording.find({
+            const liveRecording = await LiveClassRoomRecording.findOne({
               where: { key: { [Op.like]: `%${fileName}%` } },
             });
             liveRecording.status = "Progress";
