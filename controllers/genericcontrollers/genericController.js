@@ -238,24 +238,11 @@ const getTopicDetails = async (req, res) => {
   }
 };
 
-const formMPDKey = (inputFileKey, outputFolder) => {
-  try {
-    const splitKeyToArray = splitStringWithSlash(inputFileKey);
-    const convertToMPDformat = formMPDString(splitKeyToArray);
-    const finalOutputKey = `${outputFolder}/${convertToMPDformat}`;
-    return finalOutputKey;
-  } catch (err) {
-    console.log("Err", err);
-    throw err;
-  }
-};
-
-
 const updateRecordingData = async (req, res) => {
   try {
-    const { bucketName, inputFileKey, outputFolder, tpStreamId } =
+    const { inputFileKey, tpStreamId } =
       req.body;
-    if (!bucketName || !inputFileKey || !outputFolder || !tpStreamId) {
+    if (!inputFileKey || !tpStreamId) {
       throw new Error("Some required data missing");
     }
 
@@ -264,24 +251,18 @@ const updateRecordingData = async (req, res) => {
     });
 
     if (liveRecording) {
-      const finalOutputKey = formMPDKey(inputFileKey, outputFolder);
-      if (finalOutputKey) {
-        liveRecording.key = finalOutputKey;
-        liveRecording.tpStreamId = tpStreamId;
-        liveRecording.status = "Completed"
-        liveRecording.save();
-      }
+      liveRecording.tpStreamId = tpStreamId;
+      liveRecording.status = "Completed"
+      liveRecording.save();
     }
     // Now if above we are not able to find recording in live one then there may be possiblity we have recording under solorecord tabel
     const soloRecord = await SoloClassRoomRecording.findOne({
       where: { key: { [Op.like]: `%${inputFileKey}%` } },
     });
     if (soloRecord) {
-      const finalOutputKey = formMPDKey(inputFileKey, outputFolder);
-      if (finalOutputKey) {
-        soloRecord.key = finalOutputKey;
-        soloRecord.save();
-      }
+      soloRecord.tpStreamId = tpStreamId;
+      soloRecord.status = "Completed"
+      soloRecord.save();
     }
     return res.status(200).json({
       success: true,
