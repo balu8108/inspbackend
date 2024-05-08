@@ -16,7 +16,6 @@ const {
   createOrUpdateQnANotes,
   validateCreateFeedBack,
   splitStringWithSlash,
-  formM3U8String,
   formMPDString,
   uploadFilesToS3,
 } = require("../../utils");
@@ -251,24 +250,12 @@ const formMPDKey = (inputFileKey, outputFolder) => {
   }
 };
 
-const formM3U8Key = (inputFileKey, outputFolder) => {
-  try {
-    const splitKeyToArray = splitStringWithSlash(inputFileKey);
-    const convertToMPDformat = formM3U8String(splitKeyToArray);
-    const finalOutputKey = `${outputFolder}/${convertToMPDformat}`;
-    return finalOutputKey;
-  } catch (err) {
-    console.log("Err", err);
-    throw err;
-  }
-};
-
 // THE BELOW IS A SPECIAL API TO UPDATE KEY AND URL OF RECORDINGS UPLOADED TO AWS
 // WHEN WEBM OR MP4 VIDEO FILE UPLOADED IN AWS S3 THEN AWS LAMBDA CONVERTS INTO m3u8 FORMAT USING MEDIACONVERT API
 // THEN AFTER SUCCESS JOB CREATION IT WILL TRIGGER THIS API TO UPDATE DATABASES
 const updateRecordingData = async (req, res) => {
   try {
-    const { bucketName, inputFileKey, outputFolder, drmKeyId, hlsDrmKeyId } =
+    const { bucketName, inputFileKey, outputFolder } =
       req.body;
     // we expect the above data from AWS lambda
     // input file key is to search in db whether the inputFileKey is present in any of recording table means either in Live or soloRecord
@@ -278,7 +265,7 @@ const updateRecordingData = async (req, res) => {
     // outputFolder - outputvideofiles //this folder is output folder where all the m3u8 recoridng will live
     // therefore the new key we need to form with this data is somethinglike:
     // outputvideofiles/sample.m3u8
-    if (!bucketName || !inputFileKey || !outputFolder || !hlsDrmKeyId) {
+    if (!bucketName || !inputFileKey || !outputFolder) {
       throw new Error("Some required data missing");
     }
 
@@ -288,12 +275,8 @@ const updateRecordingData = async (req, res) => {
 
     if (liveRecording) {
       const finalOutputKey = formMPDKey(inputFileKey, outputFolder);
-      const finalHlsOutputKey = formM3U8Key(inputFileKey, outputFolder);
       if (finalOutputKey) {
         liveRecording.key = finalOutputKey;
-        liveRecording.hlsDrmKey = hlsDrmKeyId;
-        liveRecording.hlsDrmUrl = finalHlsOutputKey;
-        liveRecording.drmKeyId = drmKeyId;
         liveRecording.save();
       }
     }
@@ -303,12 +286,8 @@ const updateRecordingData = async (req, res) => {
     });
     if (soloRecord) {
       const finalOutputKey = formMPDKey(inputFileKey, outputFolder);
-      const finalHlsOutputKey = formM3U8Key(inputFileKey, outputFolder);
       if (finalOutputKey) {
         soloRecord.key = finalOutputKey;
-        soloRecord.hlsDrmKey = hlsDrmKeyId;
-        soloRecord.hlsDrmUrl = finalHlsOutputKey;
-        soloRecord.drmKeyId = drmKeyId;
         soloRecord.save();
       }
     }

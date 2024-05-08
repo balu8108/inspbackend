@@ -20,10 +20,8 @@ const isObjectValid = require("./objectValidation");
 const dbObjectConverter = require("./dbObjectConverter");
 const { fetchAllStudentsFromInspApi } = require("./inspexternalapis");
 const { isFeedbackProvided } = require("./dbUtilityFunctions");
-const generateDRMJWTToken = require("./generateDRMJWTToken");
 const {
   splitStringWithSlash,
-  formM3U8String,
   formMPDString,
 } = require("./stringFunctions");
 const { createOrUpdateLiveClassNotes } = require("./liveClassNotes");
@@ -47,8 +45,6 @@ module.exports = {
   isFeedbackProvided,
   isObjectExistInS3ByKey,
   splitStringWithSlash,
-  formM3U8String,
   formMPDString,
-  generateDRMJWTToken,
   createOrUpdateLiveClassNotes,
 };

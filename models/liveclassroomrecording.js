@@ -18,9 +18,8 @@ module.exports = (sequelize, DataTypes) => {
     {
       key: DataTypes.STRING,
       classRoomId: DataTypes.INTEGER,
-      drmKeyId: DataTypes.STRING,
-      hlsDrmKey: DataTypes.STRING,
-      hlsDrmUrl: DataTypes.STRING,
+      tpStreamId: DataTypes.STRING,
+      status: DataTypes.ENUM("Uploaded", "Progress", "Completed"),
     },
     {
       sequelize,

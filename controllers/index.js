@@ -24,7 +24,6 @@ const {
   getSingleRecording,
   getRecordingsByTopicOnly,
   viewRecording,
-  playRecording,
 } = require("./recordingscontrollers/recordingsController");
 
 const {
@@ -55,7 +54,6 @@ module.exports = {
   getSingleRecording,
   getRecordingsByTopicOnly,
   viewRecording,
-  playRecording,
   getLectureNo,
   updateScheduleClassData,
   uploadFilesToClass,

@@ -54,6 +54,11 @@ module.exports = class GStreamer {
     );
 
     this._process.on("error", (error) => {
+      console.error(
+        "gstreamer::process::error [pid:%d, error:%o]",
+        this._process.pid,
+        error
+      );
     });
     this._process.once("close", () => {
       console.log("gstreamer::process::close [pid:%d]", this._process.pid);
@@ -165,20 +170,30 @@ module.exports = class GStreamer {
   }
 
   get _sinkArgs() {
-    const commonArgs = ["mp4mux name=mux", "!"];
+    const commonArgs = ["webmmux name=mux", "!"];
     let sinks = [];
     if (PLATFORM === "windows") {
       sinks.push(
-        `tee name=t ! queue ! mp4mux name=mux ! filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.mp4 t. ! queue`
+        `tee name=t ! queue ! filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm t. ! queue`
       );
+      // return [
+      //   "webmmux name=mux",
+      //   "!",
+      //   `filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm`,
+      // ];
     } else {
       sinks.push(
-        `tee name=t ! queue ! mp4mux name=mux ! filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.mp4 t. ! queue`
+        `tee name=t ! queue ! filesink location=${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm t. ! queue`
       );
       sinks.push(
-        `t. ! queue ! awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.mp4`
+        `t. ! queue ! awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`
       );
+      // return [
+      //   "webmmux name=mux",
+      //   "!",
+      //   `awss3sink access-key=${AWS_ACCESS_KEY_ID} secret-access-key=${AWS_SECRET_ACCESS_KEY} region=${AWS_REGION} bucket=${AWS_BUCKET_NAME} key=${AWS_S3_RECORD_FILES}/${this._rtpParameters.fileName}.webm`,
+      // ];
     }
     return [...commonArgs, ...sinks];
   }
-}
+};
