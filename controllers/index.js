@@ -6,7 +6,6 @@ const {
 const {
   getAllSubjects,
   openFile,
-  imageToDoc,
   createFeedback,
   uploadTimeTable,
   getAllTimeTable,
@@ -30,7 +29,7 @@ const {
   getLectureById,
   getAllLectureByTopicId,
   getLectureNo,
-  getAllUploadedRecordingOfBothClasses
+  getAllUploadedRecordingOfBothClasses,
 } = require("./lectures/lecturesController");
 
 const {
@@ -43,7 +42,6 @@ module.exports = {
   loginHandler,
   getAllSubjects,
   openFile,
-  imageToDoc,
   uploadTimeTable,
   getAllTimeTable,
   createLiveClass,

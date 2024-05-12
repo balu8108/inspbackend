@@ -3,8 +3,6 @@ const {
   LiveClassRoomRecording,
   LiveClassRoomFile,
   LiveClassRoomDetail,
-  LiveClassRoomQNANotes,
-  LiveClassRoomNote,
   SoloClassRoomRecording,
   SoloClassRoom,
   SoloClassRoomFiles,
@@ -94,8 +92,6 @@ const viewRecording = async (req, res) => {
           { model: LiveClassRoomDetail },
           { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
           { model: LiveClassRoomFile },
-          { model: LiveClassRoomQNANotes },
-          { model: LiveClassRoomNote },
         ],
       });
       responseData = responseData.dataValues;

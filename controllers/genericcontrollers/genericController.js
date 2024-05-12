@@ -1,22 +1,17 @@
 const {
   LiveClassRoomFile,
   LiveClassRoom,
-  LiveClassRoomQNANotes,
   LiveClassRoomDetail,
   Rating,
   LiveClassRoomRecording,
   SoloClassRoomRecording,
   SoloClassRoomFiles,
   AssignmentFiles,
-  LiveClassRoomNote,
   TimeTableFile,
 } = require("../../models");
 const {
   generatePresignedUrls,
-  createOrUpdateQnANotes,
   validateCreateFeedBack,
-  splitStringWithSlash,
-  formMPDString,
   uploadFilesToS3,
 } = require("../../utils");
 const uuidv4 = require("uuid").v4;
@@ -36,13 +31,7 @@ const openFile = async (req, res) => {
     }
     if (
       docType &&
-      !(
-        docType === "live" ||
-        docType === "solo" ||
-        docType === "assignment" ||
-        docType === "qna" ||
-        docType === "note"
-      )
+      !(docType === "live" || docType === "solo" || docType === "assignment")
     ) {
       return res
         .status(400)
@@ -56,10 +45,6 @@ const openFile = async (req, res) => {
       file = await SoloClassRoomFiles.findOne({ where: { id: docId } });
     } else if (docType === "assignment") {
       file = await AssignmentFiles.findOne({ where: { id: docId } });
-    } else if (docType === "qna") {
-      file = await LiveClassRoomQNANotes.findOne({ where: { id: docId } });
-    } else if (docType === "note") {
-      file = await LiveClassRoomNote.findOne({ where: { id: docId } });
     }
 
     if (!file) {
@@ -72,53 +57,6 @@ const openFile = async (req, res) => {
     }
   } catch (err) {
     return res.status(400).json({ status: false, data: err.message });
-  }
-};
-
-const imageToDoc = async (req, res) => {
-  try {
-    const { body, files } = req;
-
-    if (!body.roomId) {
-      return res.status(400).json({ error: "Room Id is required" });
-    }
-
-    const isRoomExist = await LiveClassRoom.findOne({
-      where: { roomId: body.roomId },
-    });
-    if (!isRoomExist) {
-      return res.status(400).json({ error: "No room found with this id" });
-    }
-
-    const folderPath = `qnaNotes`; // in AWS S3
-    const fileName = `qnaNotes_roomId_${body.roomId}.pdf`;
-
-    const { success, result, key, url } = await createOrUpdateQnANotes(
-      folderPath,
-      fileName,
-      body,
-      files
-    );
-
-    if (success && key && url) {
-      const isQnaNotesExistForThisRoom = await LiveClassRoomQNANotes.findOne({
-        where: { classRoomId: isRoomExist.id },
-      });
-      if (!isQnaNotesExistForThisRoom) {
-        await LiveClassRoomQNANotes.create({
-          key: key,
-          classRoomId: isRoomExist.id,
-        });
-      }
-
-      return res.status(200).json({ data: result });
-    } else {
-      return res
-        .status(400)
-        .json({ error: "Some error occured while adding qna notes" });
-    }
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
   }
 };
 
@@ -240,8 +178,7 @@ const getTopicDetails = async (req, res) => {
 
 const updateRecordingData = async (req, res) => {
   try {
-    const { inputFileKey, tpStreamId } =
-      req.body;
+    const { inputFileKey, tpStreamId } = req.body;
     if (!inputFileKey || !tpStreamId) {
       throw new Error("Some required data missing");
     }
@@ -252,7 +189,7 @@ const updateRecordingData = async (req, res) => {
 
     if (liveRecording) {
       liveRecording.tpStreamId = tpStreamId;
-      liveRecording.status = "Completed"
+      liveRecording.status = "Completed";
       liveRecording.save();
     }
     // Now if above we are not able to find recording in live one then there may be possiblity we have recording under solorecord tabel
@@ -261,7 +198,7 @@ const updateRecordingData = async (req, res) => {
     });
     if (soloRecord) {
       soloRecord.tpStreamId = tpStreamId;
-      soloRecord.status = "Completed"
+      soloRecord.status = "Completed";
       soloRecord.save();
     }
     return res.status(200).json({
@@ -326,7 +263,6 @@ const uploadTimeTable = async (req, res) => {
 module.exports = {
   getAllSubjects,
   openFile,
-  imageToDoc,
   createFeedback,
   latestfeedback,
   getCompletedLiveClasses,

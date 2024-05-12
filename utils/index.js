@@ -15,16 +15,10 @@ const {
 } = require("./awsFunctions");
 const checkArraysHaveSameElements = require("./checkArrayHaveSameElement");
 const updateLeaderboard = require("./updateLeaderboard");
-const createOrUpdateQnANotes = require("./qnaNotesFunction");
 const isObjectValid = require("./objectValidation");
 const dbObjectConverter = require("./dbObjectConverter");
 const { fetchAllStudentsFromInspApi } = require("./inspexternalapis");
 const { isFeedbackProvided } = require("./dbUtilityFunctions");
-const {
-  splitStringWithSlash,
-  formMPDString,
-} = require("./stringFunctions");
-const { createOrUpdateLiveClassNotes } = require("./liveClassNotes");
 module.exports = {
   generateRandomCharacters,
   validateCreationOfLiveClass,
@@ -32,7 +26,6 @@ module.exports = {
   checkArraysHaveSameElements,
   generatePresignedUrls,
   updateLeaderboard,
-  createOrUpdateQnANotes,
   isObjectValid,
   isObjectExistInS3,
   getObjectFromS3,
@@ -44,7 +37,4 @@ module.exports = {
   validateUpdateScheduleLiveClass,
   isFeedbackProvided,
   isObjectExistInS3ByKey,
-  splitStringWithSlash,
-  formMPDString,
-  createOrUpdateLiveClassNotes,
 };
