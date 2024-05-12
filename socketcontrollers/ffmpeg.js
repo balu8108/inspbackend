@@ -102,9 +102,11 @@ module.exports = class FFmpeg {
     }
 
     commandArgs = commandArgs.concat([
-      // "-flags",
-      // "+global_header",
-      `${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.webm`,
+      "-flags",
+      "+global_header",
+      "-movflags",
+      "faststart",
+      `${RECORD_FILE_LOCATION_PATH}/${this._rtpParameters.fileName}.mp4`,
     ]);
 
     console.log("commandArgs:%o", commandArgs);
@@ -113,17 +115,17 @@ module.exports = class FFmpeg {
   }
 
   get _videoArgs() {
-    return ["-map", "0:v:0", "-c:v", "copy"];
+    return ["-map", "0:v:0", "-c:v", "libx264", "-preset", "ultrafast", "-vf", "scale=854:480"];
   }
 
   get _audioArgs() {
     return [
       "-map",
       "0:a:0",
-      //   "-strict", // libvorbis is experimental
-      //   "-2",
       "-c:a",
-      "copy",
+      "aac",
+      "-strict",
+      "-2"
     ];
   }
 };

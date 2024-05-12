@@ -11,7 +11,7 @@ const { LeaderBoard } = require("../models");
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
 
-const RECORD_PROCESS_NAME = "GStreamer";
+const RECORD_PROCESS_NAME = "FFmpeg";
 
 const config = require("./config");
 
@@ -68,7 +68,7 @@ class RoomManager extends EventEmitter {
             workerLoads.set(
               worker.pid,
               workerLoads.get(worker.pid) +
-                (routerLoads.has(routerId) ? routerLoads.get(routerId) : 0)
+              (routerLoads.has(routerId) ? routerLoads.get(routerId) : 0)
             );
           } else {
             workerLoads.set(
@@ -162,7 +162,7 @@ class RoomManager extends EventEmitter {
     try {
       const socketIds = Object.values(this._consumers).map((cs) => cs.socketId);
       return socketIds;
-    } catch (err) {}
+    } catch (err) { }
   }
 
   _getAllPeersInRoomStartWithPeer(peer) {
@@ -692,7 +692,7 @@ class RoomManager extends EventEmitter {
       case "GStreamer":
         return new Gstreamer(recordInfo);
       default:
-        return new Gstreamer(recordInfo);
+        return new FFmpeg(recordInfo);
     }
   };
 
@@ -791,10 +791,10 @@ class RoomManager extends EventEmitter {
         let fileKeyName = "";
         let url = "";
         if (PLATFORM === "windows") {
-          fileKeyName = `recordfiles/${recordInfo?.fileName}.webm`;
+          fileKeyName = `recordfiles/${recordInfo?.fileName}.mp4`;
           url = "localhost";
         } else {
-          fileKeyName = `liveclassrecordings/${recordInfo?.fileName}.webm`;
+          fileKeyName = `liveclassrecordings/${recordInfo?.fileName}.mp4`;
           url = generateAWSS3LocationUrl(fileKeyName);
         }
         peer[recordProcess] = recordProcess;
@@ -822,18 +822,6 @@ class RoomManager extends EventEmitter {
             }
           }, 1000);
         }
-
-        // setTimeout(async () => {
-        //   for (const key in this._consumers) {
-        //     const consumer = this._consumers[key];
-
-        //     if (consumer.userId === authId) {
-        //       await consumer.consumer.resume();
-
-        //       await consumer.consumer.requestKeyFrame();
-        //     }
-        //   }
-        // }, 1000);
 
         return { fileKeyName, url };
       }
