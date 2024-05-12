@@ -84,6 +84,7 @@ const recordingToS3 = async () => {
               );
               fs.rename(filePath, backupFilePath, function (err) {
                 if (err) throw err;
+                fs.unlinkSync(backupFilePath);
                 console.log("Successfully renamed - AKA moved!");
               });
               console.log(

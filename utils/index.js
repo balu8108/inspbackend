@@ -15,17 +15,14 @@ const {
   isObjectExistInS3ByKey,
 } = require("./awsFunctions");
 const { getTpStreamId } = require("./tpStreamFunction");
-const checkArraysHaveSameElements = require("./checkArrayHaveSameElement");
 const updateLeaderboard = require("./updateLeaderboard");
 const isObjectValid = require("./objectValidation");
-const dbObjectConverter = require("./dbObjectConverter");
 const { fetchAllStudentsFromInspApi } = require("./inspexternalapis");
 const { isFeedbackProvided } = require("./dbUtilityFunctions");
 module.exports = {
   generateRandomCharacters,
   validateCreationOfLiveClass,
   uploadFilesToS3,
-  checkArraysHaveSameElements,
   generatePresignedUrls,
   updateLeaderboard,
   isObjectValid,
@@ -33,7 +30,6 @@ module.exports = {
   getObjectFromS3,
   uploadToS3,
   generateAWSS3LocationUrl,
-  dbObjectConverter,
   fetchAllStudentsFromInspApi,
   validateCreateFeedBack,
   validateUpdateScheduleLiveClass,

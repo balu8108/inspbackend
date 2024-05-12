@@ -1,6 +1,5 @@
 const {
   loginHandler,
-  loginWithIpHandler,
   loginWithUidHandler,
 } = require("./authentication/authController");
 const {
@@ -57,7 +56,6 @@ module.exports = {
   getAllLecture,
   getLectureById,
   getAllLectureByTopicId,
-  loginWithIpHandler,
   createStudentFeedback,
   getAllStudentFeedback,
   deleteFeedbackById,
