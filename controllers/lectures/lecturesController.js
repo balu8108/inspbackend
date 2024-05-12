@@ -7,7 +7,6 @@ const {
   LeaderBoard,
   LiveClassTestQuestionLog,
   SoloClassRoom,
-  SoloClassRoomRecording,
 } = require("../../models");
 
 const getAllLecture = async (req, res) => {
@@ -49,27 +48,6 @@ const getAllLecture = async (req, res) => {
     return res
       .status(200)
       .json({ message: "All lecture data", data: liveClassRooms });
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
-};
-
-const getAllUploadedRecordingOfBothClasses = async (req, res) => {
-  try {
-    const liveClassRooms = await LiveClassRoomRecording.findAll({
-      where: {
-        status: "Progress",
-      },
-    });
-    const soloClassRooms = await SoloClassRoomRecording.findAll({
-      where: {
-        status: "Progress",
-      },
-    });
-    return res.status(200).json({
-      message: "All lecture data",
-      data: [...liveClassRooms, ...soloClassRooms],
-    });
   } catch (err) {
     return res.status(400).json({ error: err.message });
   }
@@ -210,5 +188,4 @@ module.exports = {
   getLectureById,
   getAllLectureByTopicId,
   getLectureNo,
-  getAllUploadedRecordingOfBothClasses,
 };

@@ -115,17 +115,19 @@ module.exports = class FFmpeg {
   }
 
   get _videoArgs() {
-    return ["-map", "0:v:0", "-c:v", "libx264", "-preset", "ultrafast", "-vf", "scale=854:480"];
+    return [
+      "-map",
+      "0:v:0",
+      "-c:v",
+      "libx264",
+      "-preset",
+      "ultrafast",
+      "-vf",
+      "scale=1280:720",
+    ];
   }
 
   get _audioArgs() {
-    return [
-      "-map",
-      "0:a:0",
-      "-c:a",
-      "aac",
-      "-strict",
-      "-2"
-    ];
+    return ["-map", "0:a:0", "-c:a", "aac", "-strict", "-2"];
   }
 };

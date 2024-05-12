@@ -6,7 +6,8 @@ const {
 const {
   uploadFilesToS3,
   generatePresignedUrls,
-} = require("../../utils/awsFunctions");
+  getTpStreamId,
+} = require("../../utils");
 
 exports.createSoloClassRoom = async (req, res) => {
   try {
@@ -23,7 +24,8 @@ exports.createSoloClassRoom = async (req, res) => {
     // Extract other data from the request
     const { plainAuthData } = req;
 
-    const { subjectId, topicId, topic, agenda, description,lectureNo } = req.body;
+    const { subjectId, topicId, topic, agenda, description, lectureNo } =
+      req.body;
 
     // Save solo lecture  information in the  SoloClassRoom model
     const soloclassroomlecture = await SoloClassRoom.create({
@@ -33,7 +35,7 @@ exports.createSoloClassRoom = async (req, res) => {
       mentorName: plainAuthData.name,
       agenda: agenda,
       description: description,
-      lectureNo:lectureNo
+      lectureNo: lectureNo,
     });
 
     const soloClassRoomId = soloclassroomlecture.id;
@@ -74,7 +76,6 @@ exports.uploadSoloClassRoomRecordings = async (req, res) => {
   try {
     const { files } = req;
     const { soloClassRoomId } = req.params;
-    console.log("record files", files);
 
     if (!files?.files) {
       return res.status(400).json({ message: "No files were uploaded." });
@@ -87,28 +88,31 @@ exports.uploadSoloClassRoomRecordings = async (req, res) => {
         ? files?.files
         : [files?.files];
     }
-    console.log("fies in array", addFilesInArray);
 
     // Upload files to S3 or your desired storage
     const filesUploading = await uploadFilesToS3(
       addFilesInArray,
       "soloclassroom-recordings"
     );
-    console.log("file uploaded?", filesUploading);
-
     // Create  records for each uploaded file
     const solorecordings = await Promise.all(
       filesUploading.map(async (file) => {
         const { key, url } = file;
 
-        // Create a new solo lecture record
-        const soloClassRoomFile = await SoloClassRoomRecording.create({
-          key: key,
-          url: url,
-          soloClassRoomId: soloClassRoomId,
-        });
+        const tpStreamResponse = await getTpStreamId(key, url);
+        if (tpStreamResponse) {
+          // Create a new solo lecture record
+          const soloClassRoomFile = await SoloClassRoomRecording.create({
+            key: key,
+            soloClassRoomId: soloClassRoomId,
+            tpStreamId: tpStreamResponse,
+            status: "Completed",
+          });
 
-        return soloClassRoomFile;
+          return soloClassRoomFile;
+        } else {
+          return [];
+        }
       })
     );
 
@@ -121,7 +125,6 @@ exports.uploadSoloClassRoomRecordings = async (req, res) => {
     res.status(500).json({ error: "An error occurred while uploading files" });
   }
 };
-
 
 exports.getTopicDetails = async (req, res) => {
   try {
@@ -151,7 +154,6 @@ exports.getTopicDetails = async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching details" });
   }
 };
-
 
 exports.getLatestSoloclassroom = async (req, res) => {
   try {
@@ -195,7 +197,7 @@ exports.getSoloClassroomDetails = async (req, res) => {
     const response = {
       soloClassroomDetails,
       soloClassRoomFile,
-      soloClassRoomRecordings
+      soloClassRoomRecordings,
     };
 
     res.status(200).json(response);
@@ -244,13 +246,13 @@ exports.openSoloLetureFile = async (req, res) => {
   }
 };
 
-exports.getAllSoloClassRoom = async(req, res) => {
+exports.getAllSoloClassRoom = async (req, res) => {
   try {
     console.log("getting  solo classes");
     const soloClassesData = await SoloClassRoom.findAll();
-    console.log("solo",soloClassesData );
+    console.log("solo", soloClassesData);
     res.status(200).json({ data: soloClassesData });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-}
+};

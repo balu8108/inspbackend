@@ -1,8 +1,6 @@
 const aws = require("aws-sdk");
 const stream = require("stream");
-const {
-  getSignedUrl,
-} = require("@aws-sdk/cloudfront-signer");
+const { getSignedUrl } = require("@aws-sdk/cloudfront-signer");
 
 // These static files include to be added within files
 const {
@@ -54,7 +52,7 @@ const uploadFilesToS3 = async (files, folderPath) => {
             const modifiedData = {
               ...data,
               Key: fileKey,
-              Location: generateAWSS3LocationUrl(`${folderPath}/${fileName}`),
+              Location: generatePresignedUrls(`${folderPath}/${fileName}`),
             };
 
             resolve({ key: modifiedData.Key, url: modifiedData.Location });
@@ -80,7 +78,6 @@ const generatePresignedUrls = async (fileKey) => {
     }
   });
 };
-
 
 const isObjectExistInS3 = async (folderPath, fileName) => {
   return new Promise((resolve, reject) => {
@@ -158,7 +155,7 @@ const uploadToS3 = async (folderPath, fileName, body) => {
         const modifiedData = {
           ...data,
           Key: fileKey,
-          Location: generateAWSS3LocationUrl(`${folderPath}/${fileUrl}`),
+          Location: generatePresignedUrls(`${folderPath}/${fileUrl}`),
         };
         resolve(modifiedData);
       }

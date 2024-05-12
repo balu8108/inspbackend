@@ -29,7 +29,6 @@ const {
   getLectureById,
   getAllLectureByTopicId,
   getLectureNo,
-  getAllUploadedRecordingOfBothClasses,
 } = require("./lectures/lecturesController");
 
 const {
@@ -53,7 +52,6 @@ module.exports = {
   getRecordingsByTopicOnly,
   viewRecording,
   getLectureNo,
-  getAllUploadedRecordingOfBothClasses,
   updateScheduleClassData,
   uploadFilesToClass,
   getAllLecture,

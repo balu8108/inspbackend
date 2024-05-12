@@ -1,16 +1,11 @@
 const { allRooms, allPeers, RoomManager } = require("./RoomManager");
-
 const uuidv4 = require("uuid").v4;
-
 const {
   SOCKET_EVENTS,
-  mediaCodecs,
   liveClassLogInfo,
   classStatus,
   liveClassTestQuestionLogInfo,
 } = require("../constants");
-const config = require("./config");
-const { getPort } = require("./port");
 const {
   LiveClassRoomFile,
   LiveClassRoom,
@@ -20,21 +15,10 @@ const {
   LiveClassRoomRecording,
   LeaderBoard,
 } = require("../models");
-const {
-  uploadFilesToS3,
-  updateLeaderboard,
-  isFeedbackProvided,
-  generateAWSS3LocationUrl,
-  isObjectValid,
-} = require("../utils");
-const { PLATFORM, ENVIRON } = require("../envvar");
+const { uploadFilesToS3, isFeedbackProvided } = require("../utils");
+const { ENVIRON } = require("../envvar");
 
-const FFmpeg = require("./ffmpeg");
-const Gstreamer = require("./gstreamer");
-
-const RECORD_PROCESS_NAME = "GStreamer";
-
-const joinRoomPreviewSocketHandler = async (data, callback, socket, io) => {
+const joinRoomPreviewSocketHandler = async (data, callback, socket) => {
   try {
     const { roomId } = data;
     if (roomId) {
@@ -233,7 +217,6 @@ const joinRoomSocketHandler = async (
   data,
   callback,
   socket,
-  io,
   mediaSoupworkers
 ) => {
   try {
@@ -292,7 +275,7 @@ const joinRoomSocketHandler = async (
   }
 };
 
-const addTransportIdInAllPeers = (authId, socketId, transport) => {
+const addTransportIdInAllPeers = (authId, transport) => {
   try {
     if (allPeers.has(authId)) {
       const peer = allPeers.get(authId);
@@ -303,13 +286,7 @@ const addTransportIdInAllPeers = (authId, socketId, transport) => {
   }
 };
 
-const createWebRtcTransportSocketHandler = async (
-  data,
-  callback,
-  socket,
-  io,
-  mediaSoupworkers
-) => {
+const createWebRtcTransportSocketHandler = async (data, callback, socket) => {
   try {
     const { consumer } = data;
     const { authData } = socket;
@@ -336,7 +313,7 @@ const createWebRtcTransportSocketHandler = async (
             },
           };
           callback(dtlsData);
-          addTransportIdInAllPeers(authData.id, socketId, transport); // May be not required later on
+          addTransportIdInAllPeers(authData.id, transport); // May be not required later on
         }
       }
     }
@@ -345,11 +322,7 @@ const createWebRtcTransportSocketHandler = async (
   }
 };
 
-const getProducersSocketHandler = async (
-  callback,
-  socket,
-  mediaSoupworkers
-) => {
+const getProducersSocketHandler = async (callback, socket) => {
   try {
     const socketId = socket.id;
     const { authData } = socket;
@@ -366,11 +339,7 @@ const getProducersSocketHandler = async (
   }
 };
 
-const connectWebRTCTransportSendSocketHandler = (
-  data,
-  socket,
-  mediaSoupworkers
-) => {
+const connectWebRTCTransportSendSocketHandler = (data, socket) => {
   try {
     const { authData } = socket;
     const { dtlsParameters } = data;
@@ -393,7 +362,7 @@ const connectWebRTCTransportSendSocketHandler = (
   }
 };
 
-const addProducerIdInAllPeers = (authId, socketId, producer) => {
+const addProducerIdInAllPeers = (authId, producer) => {
   try {
     if (allPeers.has(authId)) {
       const peer = allPeers.get(authId);
@@ -404,7 +373,7 @@ const addProducerIdInAllPeers = (authId, socketId, producer) => {
   }
 };
 
-const addConsumerIdInAllPeers = (authId, socketId, consumer) => {
+const addConsumerIdInAllPeers = (authId, consumer) => {
   try {
     if (allPeers.has(authId)) {
       const peer = allPeers.get(authId);
@@ -415,12 +384,7 @@ const addConsumerIdInAllPeers = (authId, socketId, consumer) => {
   }
 };
 
-const transportProduceSocketHandler = async (
-  data,
-  callback,
-  socket,
-  mediaSoupworkers
-) => {
+const transportProduceSocketHandler = async (data, callback, socket) => {
   try {
     const { authData } = socket;
     const { kind, rtpParameters, appData } = data;
@@ -441,7 +405,7 @@ const transportProduceSocketHandler = async (
           appData
         );
         // Adding Producer id in allPeers list
-        addProducerIdInAllPeers(authData.id, socketId, producer);
+        addProducerIdInAllPeers(authData.id, producer);
         socket.to(roomId).emit(SOCKET_EVENTS.NEW_PRODUCER, {
           producerId: producer.id,
           appData: appData,
@@ -494,11 +458,7 @@ const producerResumeSocketHandler = (data, socket) => {
   }
 };
 
-const connectWebRTCTransportRecvSocketHandler = async (
-  data,
-  socket,
-  mediaSoupworkers
-) => {
+const connectWebRTCTransportRecvSocketHandler = async (data, socket) => {
   try {
     const { authData } = socket;
     const { dtlsParameters, serverConsumerTransportId } = data;
@@ -522,12 +482,7 @@ const connectWebRTCTransportRecvSocketHandler = async (
   }
 };
 
-const consumeSocketHandler = async (
-  data,
-  callback,
-  socket,
-  mediaSoupworkers
-) => {
+const consumeSocketHandler = async (data, callback, socket) => {
   try {
     const { authData } = socket;
     const socketId = socket.id;
@@ -556,7 +511,7 @@ const consumeSocketHandler = async (
         );
         // Adding Producer id in allPeers list
         if (consumer) {
-          addConsumerIdInAllPeers(authData.id, socketId, consumer);
+          addConsumerIdInAllPeers(authData.id, consumer);
 
           consumer.on(SOCKET_EVENTS.PRODUCERPAUSE, () => {
             console.log("Producer paused hence consumer paused");
@@ -600,10 +555,9 @@ const consumeSocketHandler = async (
   } catch (err) {}
 };
 
-const consumerResumeSocketHandler = async (data, socket, mediaSoupworkers) => {
+const consumerResumeSocketHandler = async (data, socket) => {
   try {
     const { authData } = socket;
-    const socketId = socket.id;
     const { serverConsumerId } = data;
     if (authData && allPeers.has(authData.id)) {
       const roomId = allPeers.get(authData.id)?.roomId;
@@ -617,7 +571,7 @@ const consumerResumeSocketHandler = async (data, socket, mediaSoupworkers) => {
   }
 };
 
-const disconnectSocketHandler = async (socket, mediaSoupworkers, io) => {
+const disconnectSocketHandler = async (socket, io) => {
   try {
     const { authData } = socket;
     const socketId = socket.id;
@@ -647,12 +601,7 @@ const disconnectSocketHandler = async (socket, mediaSoupworkers, io) => {
   }
 };
 
-const leaveRoomSocketHandler = async (
-  callback,
-  socket,
-  mediaSoupworkers,
-  io
-) => {
+const leaveRoomSocketHandler = async (callback, socket, io) => {
   try {
     const { authData } = socket;
     const socketId = socket.id;
@@ -690,10 +639,9 @@ const leaveRoomSocketHandler = async (
   }
 };
 
-const endMeetSocketHandler = async (socket, mediaSoupworkers, io) => {
+const endMeetSocketHandler = async (socket, io) => {
   try {
     const { authData } = socket;
-    const socketId = socket.id;
     if (authData && allPeers.has(authData.id)) {
       const roomId = allPeers.get(authData.id)?.roomId;
 
@@ -770,7 +718,6 @@ const chatMsgSocketHandler = (data, socket) => {
 const questionMsgSentByStudentSocketHandler = (data, callback, socket, io) => {
   try {
     const { authData } = socket;
-    const socketId = socket.id;
     const { questionMsg } = data;
     if (authData && allPeers.has(authData.id)) {
       const roomId = allPeers.get(authData.id)?.roomId;
@@ -799,7 +746,6 @@ const questionMsgSentByStudentSocketHandler = (data, callback, socket, io) => {
 const kickOutFromClassSocketHandler = async (data, socket, io) => {
   try {
     const { authData } = socket;
-    const socketId = socket.id;
     const { peerSocketId, peerId } = data;
     if (authData && allPeers.has(authData.id)) {
       const classPk = allPeers.get(authData.id)?.classPk;

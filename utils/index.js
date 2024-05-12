@@ -10,9 +10,11 @@ const {
   isObjectExistInS3,
   getObjectFromS3,
   uploadToS3,
+  uploadRecordingToS3,
   generateAWSS3LocationUrl,
   isObjectExistInS3ByKey,
 } = require("./awsFunctions");
+const { getTpStreamId } = require("./tpStreamFunction");
 const checkArraysHaveSameElements = require("./checkArrayHaveSameElement");
 const updateLeaderboard = require("./updateLeaderboard");
 const isObjectValid = require("./objectValidation");
@@ -37,4 +39,6 @@ module.exports = {
   validateUpdateScheduleLiveClass,
   isFeedbackProvided,
   isObjectExistInS3ByKey,
+  uploadRecordingToS3,
+  getTpStreamId,
 };

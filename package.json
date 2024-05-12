@@ -15,6 +15,7 @@
   "dependencies": {
     "@aws-sdk/cloudfront-signer": "^3.567.0",
     "aws-sdk": "^2.1446.0",
+    "axios": "^1.6.8",
     "body-parser": "^1.20.2",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",

@@ -1,7 +1,7 @@
 const moment = require("moment-timezone");
 const fs = require("fs");
 const path = require("path");
-const { uploadRecordingToS3 } = require("../utils/awsFunctions");
+const { uploadRecordingToS3, getTpStreamId } = require("../utils");
 const { LiveClassRoom, LiveClassRoomRecording } = require("../models");
 const { classStatus } = require("../constants");
 const RECORDING_FOLDER = "./recordfiles";
@@ -30,6 +30,7 @@ const releaseLock = () => {
   fs.unlinkSync(LOCK_FILE);
   console.log("Lock released successfully.");
 };
+
 const recordingToS3 = async () => {
   try {
     if (!acquireLock()) {
@@ -66,18 +67,31 @@ const recordingToS3 = async () => {
         if (fileUploadToS3) {
           // Check success
           if (fileUploadToS3?.success) {
-            const liveRecording = await LiveClassRoomRecording.findOne({
-              where: { key: { [Op.like]: `%${fileName}%` } },
-            });
-            liveRecording.status = "Progress";
-            await liveRecording.save();
-            const backupFilePath = path.join(BACKUP_RECORDING_FOLDER, fileName);
-            fs.rename(filePath, backupFilePath, function (err) {
-              if (err) throw err;
-              console.log("Successfully renamed - AKA moved!");
-            });
-
-            console.log("Upload successfully mirgating file to backup folder");
+            const tpStreamResponse = await getTpStreamId(
+              fileName,
+              fileUploadToS3?.Location
+            );
+            if (tpStreamResponse) {
+              const liveRecording = await LiveClassRoomRecording.findOne({
+                where: { key: { [Op.like]: `%${fileName}%` } },
+              });
+              liveRecording.status = "Completed";
+              liveRecording.tpStreamId = tpStreamResponse;
+              await liveRecording.save();
+              const backupFilePath = path.join(
+                BACKUP_RECORDING_FOLDER,
+                fileName
+              );
+              fs.rename(filePath, backupFilePath, function (err) {
+                if (err) throw err;
+                console.log("Successfully renamed - AKA moved!");
+              });
+              console.log(
+                "Upload successfully mirgating file to backup folder"
+              );
+            } else {
+              console.log("Upload unsuccessfully");
+            }
           }
         }
       }
