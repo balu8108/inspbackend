@@ -39,7 +39,7 @@ const uploadFilesToS3 = async (files, folderPath) => {
       };
 
       return new Promise((resolve, reject) => {
-        s3.upload(params, (err, data) => {
+        s3.upload(params, async (err, data) => {
           if (err) {
             console.log("error in uploading file", err);
             reject(err);
@@ -49,10 +49,13 @@ const uploadFilesToS3 = async (files, folderPath) => {
 
             const fileName = encodeURIComponent(file.name).replace(/%20/g, "+");
             const fileKey = `${folderPath}/${file.name}`;
+            const getPresignedUrl = await generatePresignedUrls(
+              `${folderPath}/${fileName}`
+            );
             const modifiedData = {
               ...data,
               Key: fileKey,
-              Location: generatePresignedUrls(`${folderPath}/${fileName}`),
+              Location: getPresignedUrl,
             };
 
             resolve({ key: modifiedData.Key, url: modifiedData.Location });
@@ -146,16 +149,19 @@ const uploadToS3 = async (folderPath, fileName, body) => {
       Body: body.modifiedPdfBytes,
       ContentType: body.mimetype,
     };
-    s3.putObject(params, (err, data) => {
+    s3.putObject(params, async (err, data) => {
       if (err) {
         reject(err);
       } else {
         const fileUrl = encodeURIComponent(fileName).replace(/%20/g, "+");
         const fileKey = `${folderPath}/${fileName}`;
+        const getPresignedUrl = await generatePresignedUrls(
+          `${folderPath}/${fileUrl}`
+        );
         const modifiedData = {
           ...data,
           Key: fileKey,
-          Location: generatePresignedUrls(`${folderPath}/${fileUrl}`),
+          Location: getPresignedUrl,
         };
         resolve(modifiedData);
       }
@@ -174,17 +180,20 @@ const uploadRecordingToS3 = async (folderPath, fileName, fileStream) => {
       Body: pass,
       ContentType: "video/webm",
     };
-    const uploadRequest = s3.upload(params, (err, data) => {
+    const uploadRequest = s3.upload(params, async (err, data) => {
       if (err) {
         reject({ success: false, err });
       } else {
         const fileUrl = encodeURIComponent(fileName).replace(/%20/g, "+");
         const fileKey = `${folderPath}/${fileName}`;
+        const getPresignedUrl = await generatePresignedUrls(
+          `${folderPath}/${fileUrl}`
+        );
         const modifiedData = {
           ...data,
           success: true,
           Key: fileKey,
-          Location: generateAWSS3LocationUrl(`${folderPath}/${fileUrl}`),
+          Location: getPresignedUrl,
         };
         resolve(modifiedData);
       }
