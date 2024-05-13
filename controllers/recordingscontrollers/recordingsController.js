@@ -96,17 +96,17 @@ const viewRecording = async (req, res) => {
           { model: LiveClassRoomFile },
         ],
       });
-      if (
-        responseData.LiveClassRoomRecordings?.DRMType ===
-        drmTypeConstant.AXINOM__TYPE
-      ) {
-        const data = JSON.stringify(responseData.LiveClassRoomRecordings);
-        const LiveClassRecordingLength = JSON.parse(data);
+      const data = JSON.stringify(responseData.LiveClassRoomRecordings);
+      const LiveClassRecordingLength = JSON.parse(data);
 
-        if (LiveClassRecordingLength.length > 0) {
-          const presignedArray = responseData.LiveClassRoomRecordings;
-          for (let i = 0; i < LiveClassRecordingLength.length; i++) {
-            if (LiveClassRecordingLength[i]) {
+      if (LiveClassRecordingLength.length > 0) {
+        const presignedArray = responseData.LiveClassRoomRecordings;
+        for (let i = 0; i < LiveClassRecordingLength.length; i++) {
+          if (LiveClassRecordingLength[i]) {
+            if (
+              LiveClassRecordingLength[i]?.DRMType ===
+              drmTypeConstant.AXINOM__TYPE
+            ) {
               if (LiveClassRecordingLength[i]?.key) {
                 const presignedUrl = await generatePresignedUrls(
                   LiveClassRecordingLength[i]?.key
@@ -133,12 +133,7 @@ const viewRecording = async (req, res) => {
               }
             }
           }
-          responseData = responseData.dataValues;
         }
-      } else if (
-        responseData.LiveClassRoomRecordings?.DRMType ===
-        drmTypeConstant.TPSTREAM_TYPE
-      ) {
         responseData = responseData.dataValues;
       }
     } else if (type === "solo") {
