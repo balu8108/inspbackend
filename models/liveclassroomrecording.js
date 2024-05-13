@@ -18,7 +18,11 @@ module.exports = (sequelize, DataTypes) => {
     {
       key: DataTypes.STRING,
       classRoomId: DataTypes.INTEGER,
+      drmKeyId: DataTypes.STRING,
+      hlsDrmKey: DataTypes.STRING,
+      hlsDrmUrl: DataTypes.STRING,
       tpStreamId: DataTypes.STRING,
+      DRMType: DataTypes.ENUM("Axinom", "TPStream"),
       status: DataTypes.ENUM("Uploaded", "Progress", "Completed"),
     },
     {
