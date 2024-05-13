@@ -108,16 +108,21 @@ const viewRecording = async (req, res) => {
               drmTypeConstant.AXINOM__TYPE
             ) {
               if (LiveClassRecordingLength[i]?.key) {
-                const presignedUrl = await generatePresignedUrls(
-                  LiveClassRecordingLength[i]?.key
-                );
-                presignedArray[i].key = presignedUrl;
+                // const presignedUrl = await generatePresignedUrls(
+                //   LiveClassRecordingLength[i]?.key
+                // );
+                presignedArray[
+                  i
+                ].key = `https://cdn.inspedu.in/${LiveClassRecordingLength[i]?.key}`;
               }
               if (LiveClassRecordingLength[i]?.hlsDrmUrl) {
-                const presignedUrl = await generatePresignedUrls(
-                  LiveClassRecordingLength[i]?.hlsDrmUrl
-                );
-                presignedArray[i].hlsDrmUrl = presignedUrl;
+                // const presignedUrl = await generatePresignedUrls(
+                //   LiveClassRecordingLength[i]?.hlsDrmUrl
+                // );
+                presignedArray[
+                  i
+                ].hlsDrmUrl = `https://cdn.inspedu.in/${LiveClassRecordingLength[i]?.hlsDrmUrl}`;
+                // presignedArray[i].hlsDrmUrl = presignedUrl;
               }
               if (LiveClassRecordingLength[i]?.drmKeyId) {
                 const tok = await generateDRMJWTToken(
