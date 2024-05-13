@@ -20,7 +20,6 @@ const lectureRoute = require("./routes/lecturesRoute/lectureRoutes");
 const config = require("./socketcontrollers/config");
 
 const { ENVIRON, ALLOWED_ORIGINS } = require("./envvar");
-const logHandler = require("./utils/logHandler");
 
 const {
   isSocketUserAuthenticated,
@@ -77,7 +76,6 @@ app.use(upload()); // this is required for uploading multipart/formData
 app.use(
   cors({
     origin: ALLOWED_ORIGINS,
-    credentials: true,
   })
 );
 
@@ -91,8 +89,6 @@ app.use(routesConstants.TOPIC_ASSIGNMENTS, myUploadRoutes);
 app.use(routesConstants.RECORDING, recordingRoutes);
 app.use(routesConstants.STUDENT_FEEDBACK, studentFeedbackRoutes);
 app.use(routesConstants.LECTURES_ENDPOINT, lectureRoute);
-
-app.use(logHandler);
 // Cron jobs function
 if (ENVIRON !== "local") {
   scheduleJob();
@@ -220,37 +216,31 @@ io.use(socketPaidStatusOrTeacher);
 
 io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   socket.on(SOCKET_EVENTS.JOIN_ROOM_PREVIEW, (data, callback) => {
-    joinRoomPreviewSocketHandler(data, callback, socket, io);
+    joinRoomPreviewSocketHandler(data, callback, socket);
   });
   socket.on(SOCKET_EVENTS.JOIN_ROOM, (data, callback) => {
-    joinRoomSocketHandler(data, callback, socket, io, mediaSoupWorkers);
+    joinRoomSocketHandler(data, callback, socket, mediaSoupWorkers);
   });
   socket.on(SOCKET_EVENTS.CREATE_WEB_RTC_TRANSPORT, (data, callback) => {
-    createWebRtcTransportSocketHandler(
-      data,
-      callback,
-      socket,
-      io,
-      mediaSoupWorkers
-    );
+    createWebRtcTransportSocketHandler(data, callback, socket);
   });
   socket.on(SOCKET_EVENTS.TRANSPORT_SEND_CONNECT, (data) => {
-    connectWebRTCTransportSendSocketHandler(data, socket, mediaSoupWorkers);
+    connectWebRTCTransportSendSocketHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.TRANSPORT_PRODUCE, (data, callback) => {
-    transportProduceSocketHandler(data, callback, socket, mediaSoupWorkers);
+    transportProduceSocketHandler(data, callback, socket);
   });
   socket.on(SOCKET_EVENTS.GET_PRODUCERS, (callback) => {
-    getProducersSocketHandler(callback, socket, mediaSoupWorkers);
+    getProducersSocketHandler(callback, socket);
   });
   socket.on(SOCKET_EVENTS.TRANSPORT_RECV_CONNECT, (data) => {
-    connectWebRTCTransportRecvSocketHandler(data, socket, mediaSoupWorkers);
+    connectWebRTCTransportRecvSocketHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.CONSUME, (data, callback) => {
-    consumeSocketHandler(data, callback, socket, mediaSoupWorkers);
+    consumeSocketHandler(data, callback, socket);
   });
   socket.on(SOCKET_EVENTS.CONSUMER_RESUME, (data) => {
-    consumerResumeSocketHandler(data, socket, mediaSoupWorkers);
+    consumerResumeSocketHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.CHAT_MSG_TO_SERVER, (data) => {
     chatMsgSocketHandler(data, socket);
@@ -298,16 +288,16 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
     questionMsgSentByStudentSocketHandler(data, callback, socket, io);
   });
   socket.on(SOCKET_EVENTS.LEAVE_ROOM, (callback) => {
-    leaveRoomSocketHandler(callback, socket, mediaSoupWorkers, io);
+    leaveRoomSocketHandler(callback, socket, io);
   });
   socket.on(SOCKET_EVENTS.END_MEET_TO_SERVER, () => {
-    endMeetSocketHandler(socket, mediaSoupWorkers, io);
+    endMeetSocketHandler(socket, io);
   });
   socket.on(SOCKET_EVENTS.POLL_TIME_INCREASE_TO_SERVER, (data) => {
     pollTimeIncreaseSocketHandler(data, socket);
   });
   socket.on(SOCKET_EVENTS.DISCONNECT, () => {
-    disconnectSocketHandler(socket, mediaSoupWorkers, io);
+    disconnectSocketHandler(socket, io);
   });
 });
 

@@ -4,7 +4,6 @@ const {
   LiveClassRoomDetail,
   LiveClassRoomFile,
   LiveClassRoomRecording,
-  LiveClassRoomNote,
   LeaderBoard,
   LiveClassTestQuestionLog,
   SoloClassRoom,
@@ -109,9 +108,6 @@ const getLectureById = async (req, res) => {
         },
         {
           model: LiveClassRoomRecording,
-        },
-        {
-          model: LiveClassRoomNote,
         },
         {
           model: LeaderBoard,

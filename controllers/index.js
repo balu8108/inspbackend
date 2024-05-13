@@ -1,12 +1,10 @@
 const {
   loginHandler,
-  loginWithIpHandler,
   loginWithUidHandler,
 } = require("./authentication/authController");
 const {
   getAllSubjects,
   openFile,
-  imageToDoc,
   createFeedback,
   uploadTimeTable,
   getAllTimeTable,
@@ -16,7 +14,6 @@ const {
   getAllLiveClasses,
   getLiveClassDetails,
   getUpcomingClass,
-  // getLectureNo,
   uploadFilesToClass,
   updateScheduleClassData,
 } = require("./scheduleliveclasses/scheduleLiveClassController");
@@ -24,14 +21,13 @@ const {
   getSingleRecording,
   getRecordingsByTopicOnly,
   viewRecording,
-  playRecording,
 } = require("./recordingscontrollers/recordingsController");
 
 const {
   getAllLecture,
   getLectureById,
   getAllLectureByTopicId,
-  getLectureNo
+  getLectureNo,
 } = require("./lectures/lecturesController");
 
 const {
@@ -44,7 +40,6 @@ module.exports = {
   loginHandler,
   getAllSubjects,
   openFile,
-  imageToDoc,
   uploadTimeTable,
   getAllTimeTable,
   createLiveClass,
@@ -55,14 +50,12 @@ module.exports = {
   getSingleRecording,
   getRecordingsByTopicOnly,
   viewRecording,
-  playRecording,
   getLectureNo,
   updateScheduleClassData,
   uploadFilesToClass,
   getAllLecture,
   getLectureById,
   getAllLectureByTopicId,
-  loginWithIpHandler,
   createStudentFeedback,
   getAllStudentFeedback,
   deleteFeedbackById,

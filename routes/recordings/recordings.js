@@ -10,7 +10,6 @@ const {
   getSingleRecording,
   getRecordingsByTopicOnly,
   viewRecording,
-  playRecording,
 } = require("../../controllers");
 
 router.get(routesConstants.GET_SINGLE_RECORDING, getSingleRecording);
@@ -23,12 +22,6 @@ router.get(
   isAuthenticated,
   checkPaidStatusOrTeacher,
   viewRecording
-);
-router.post(
-  routesConstants.PLAY_RECORDING,
-  isAuthenticated,
-  checkPaidStatusOrTeacher,
-  playRecording
 );
 
 module.exports = router;

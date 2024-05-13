@@ -1,6 +1,5 @@
 const { Assignment } = require("../../models");
-const { uploadFilesToS3 } = require("../../utils/awsFunctions");
-const { isObjectValid } = require("../../utils");
+const { uploadFilesToS3 } = require("../../utils");
 const { AssignmentFiles } = require("../../models");
 exports.createAssignment = async (req, res) => {
   try {

@@ -1,15 +1,15 @@
 const moment = require("moment-timezone");
 const fs = require("fs");
 const path = require("path");
-const { uploadRecordingToS3 } = require("../utils/awsFunctions");
-const { LiveClassRoom } = require("../models");
+const { uploadRecordingToS3, getTpStreamId } = require("../utils");
+const { LiveClassRoom, LiveClassRoomRecording } = require("../models");
 const { classStatus } = require("../constants");
 const RECORDING_FOLDER = "./recordfiles";
 const BACKUP_RECORDING_FOLDER = "./backuprecordfiles";
 const AWSS3Folder = "liveclassrecordings"; // folder name in which to put this recording
-const elapsedTime = 2; // more than this minutes elapsed after class ends
 const LOCK_FILE = path.join(__dirname, "cron.lock");
 const util = require("util");
+const { Op } = require("sequelize");
 const readdir = util.promisify(fs.readdir);
 moment.tz.setDefault("Asia/Kolkata");
 const acquireLock = () => {
@@ -30,18 +30,17 @@ const releaseLock = () => {
   fs.unlinkSync(LOCK_FILE);
   console.log("Lock released successfully.");
 };
+
 const recordingToS3 = async () => {
   try {
     if (!acquireLock()) {
       console.log("already locked");
       return; // Exit if unable to acquire lock
     }
-    const asof = moment();
 
     const files = await readdir(RECORDING_FOLDER);
 
     // Get Recording Files
-
     for (const fileName of files) {
       if (fileName !== ".keep") {
         const roomId = fileName.split("-")[0];
@@ -56,7 +55,6 @@ const recordingToS3 = async () => {
         if (!liveRoom) {
           // Means there is no corresponding class or may be it is not finished yet
           console.log("room  doesn't existed or class not finished");
-
           break; // break from this loop
         }
         const filePath = path.join(RECORDING_FOLDER, fileName);
@@ -69,14 +67,32 @@ const recordingToS3 = async () => {
         if (fileUploadToS3) {
           // Check success
           if (fileUploadToS3?.success) {
-            console.log("Upload successfully mirgating file to backup folder");
-            const backupFilePath = path.join(BACKUP_RECORDING_FOLDER, fileName);
-            fs.rename(filePath, backupFilePath, function (err) {
-              if (err) throw err;
-              console.log("Successfully renamed - AKA moved!");
-            });
-            // Move this file to backup folder
-            // TODO: we delete this file
+            const tpStreamResponse = await getTpStreamId(
+              fileName,
+              fileUploadToS3?.Location
+            );
+            if (tpStreamResponse) {
+              const liveRecording = await LiveClassRoomRecording.findOne({
+                where: { key: { [Op.like]: `%${fileName}%` } },
+              });
+              liveRecording.status = "Completed";
+              liveRecording.tpStreamId = tpStreamResponse;
+              await liveRecording.save();
+              const backupFilePath = path.join(
+                BACKUP_RECORDING_FOLDER,
+                fileName
+              );
+              fs.rename(filePath, backupFilePath, function (err) {
+                if (err) throw err;
+                fs.unlinkSync(backupFilePath);
+                console.log("Successfully renamed - AKA moved!");
+              });
+              console.log(
+                "Upload successfully mirgating file to backup folder"
+              );
+            } else {
+              console.log("Upload unsuccessfully");
+            }
           }
         }
       }
