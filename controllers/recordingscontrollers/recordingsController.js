@@ -10,7 +10,9 @@ const {
 const {
   isObjectExistInS3ByKey,
   generatePresignedUrls,
+  generateDRMJWTToken,
 } = require("../../utils");
+const { drmTypeConstant } = require("../../constants");
 
 const getSingleRecording = async (req, res) => {
   try {
@@ -94,7 +96,51 @@ const viewRecording = async (req, res) => {
           { model: LiveClassRoomFile },
         ],
       });
-      responseData = responseData.dataValues;
+      if (
+        responseData.LiveClassRoomRecordings?.DRMType ===
+        drmTypeConstant.AXINOM__TYPE
+      ) {
+        const data = JSON.stringify(responseData.LiveClassRoomRecordings);
+        const LiveClassRecordingLength = JSON.parse(data);
+
+        if (LiveClassRecordingLength.length > 0) {
+          const presignedArray = responseData.LiveClassRoomRecordings;
+          for (let i = 0; i < LiveClassRecordingLength.length; i++) {
+            if (LiveClassRecordingLength[i]) {
+              if (LiveClassRecordingLength[i]?.key) {
+                const presignedUrl = await generatePresignedUrls(
+                  LiveClassRecordingLength[i]?.key
+                );
+                presignedArray[i].key = presignedUrl;
+              }
+              if (LiveClassRecordingLength[i]?.hlsDrmUrl) {
+                const presignedUrl = await generatePresignedUrls(
+                  LiveClassRecordingLength[i]?.hlsDrmUrl
+                );
+                presignedArray[i].hlsDrmUrl = presignedUrl;
+              }
+              if (LiveClassRecordingLength[i]?.drmKeyId) {
+                const tok = await generateDRMJWTToken(
+                  LiveClassRecordingLength[i]?.drmKeyId
+                );
+                presignedArray[i].drmKeyId = tok;
+              }
+              if (LiveClassRecordingLength[i]?.hlsDrmKey) {
+                const hlstok = await generateDRMJWTToken(
+                  LiveClassRecordingLength[i]?.hlsDrmKey
+                );
+                presignedArray[i].hlsDrmUrl = hlstok;
+              }
+            }
+          }
+          responseData = responseData.dataValues;
+        }
+      } else if (
+        responseData.LiveClassRoomRecordings?.DRMType ===
+        drmTypeConstant.TPSTREAM_TYPE
+      ) {
+        responseData = responseData.dataValues;
+      }
     } else if (type === "solo") {
       const specificSoloRecording = await SoloClassRoom.findOne({
         where: { id: id },
