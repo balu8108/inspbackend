@@ -129,7 +129,7 @@ const viewRecording = async (req, res) => {
                 const hlstok = await generateDRMJWTToken(
                   LiveClassRecordingLength[i]?.hlsDrmKey
                 );
-                presignedArray[i].hlsDrmUrl = hlstok;
+                presignedArray[i].hlsDrmKey = hlstok;
               }
             }
           }
