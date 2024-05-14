@@ -4,7 +4,7 @@ const allPeers = new Map();
 const { getPort } = require("./port");
 const { PLATFORM } = require("../envvar");
 const { SOCKET_EVENTS, mediaCodecs } = require("../constants");
-const { generateAWSS3LocationUrl, isObjectValid } = require("../utils");
+const { isObjectValid } = require("../utils");
 
 const { LeaderBoard } = require("../models");
 
@@ -68,7 +68,7 @@ class RoomManager extends EventEmitter {
             workerLoads.set(
               worker.pid,
               workerLoads.get(worker.pid) +
-              (routerLoads.has(routerId) ? routerLoads.get(routerId) : 0)
+                (routerLoads.has(routerId) ? routerLoads.get(routerId) : 0)
             );
           } else {
             workerLoads.set(
@@ -162,7 +162,7 @@ class RoomManager extends EventEmitter {
     try {
       const socketIds = Object.values(this._consumers).map((cs) => cs.socketId);
       return socketIds;
-    } catch (err) { }
+    } catch (err) {}
   }
 
   _getAllPeersInRoomStartWithPeer(peer) {
@@ -789,13 +789,10 @@ class RoomManager extends EventEmitter {
       let recordProcess = this._getProcess(recordInfo);
       if (recordProcess) {
         let fileKeyName = "";
-        let url = "";
         if (PLATFORM === "windows") {
           fileKeyName = `recordfiles/${recordInfo?.fileName}.mp4`;
-          url = "localhost";
         } else {
           fileKeyName = `liveclassrecordings/${recordInfo?.fileName}.mp4`;
-          url = generateAWSS3LocationUrl(fileKeyName);
         }
         peer[recordProcess] = recordProcess;
 
@@ -823,7 +820,7 @@ class RoomManager extends EventEmitter {
           }, 1000);
         }
 
-        return { fileKeyName, url };
+        return { fileKeyName };
       }
     } catch (err) {
       console.log("Error in RManager in Start record", err);

@@ -22,11 +22,7 @@ aws.config.update({
 const s3 = new aws.S3();
 
 const generateAWSS3LocationUrl = (fileKey) => {
-  return `https://${AWS_BUCKET_NAME}.s3.${AWS_REGION}.amazonaws.com/${fileKey}`;
-};
-
-const generateCDNUrl = (fileKey) => {
-  return `https://cdn.inspedu.in/${fileKey}`;
+  return `https://insp-production-video-bucket.s3.ap-south-1.amazonaws.com/${fileKey}`;
 };
 
 const uploadFilesToS3 = async (files, folderPath) => {

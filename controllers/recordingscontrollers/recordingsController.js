@@ -11,6 +11,7 @@ const {
   isObjectExistInS3ByKey,
   generatePresignedUrls,
   generateDRMJWTToken,
+  generateAWSS3LocationUrl,
 } = require("../../utils");
 const { drmTypeConstant } = require("../../constants");
 
@@ -108,21 +109,16 @@ const viewRecording = async (req, res) => {
               drmTypeConstant.AXINOM__TYPE
             ) {
               if (LiveClassRecordingLength[i]?.key) {
-                // const presignedUrl = await generatePresignedUrls(
-                //   LiveClassRecordingLength[i]?.key
-                // );
-                presignedArray[
-                  i
-                ].key = `https://insp-production-video-bucket.s3.ap-south-1.amazonaws.com/${LiveClassRecordingLength[i]?.key}`;
+                const presignedUrl = await generateAWSS3LocationUrl(
+                  LiveClassRecordingLength[i]?.key
+                );
+                presignedArray[i].key = presignedUrl;
               }
               if (LiveClassRecordingLength[i]?.hlsDrmUrl) {
-                // const presignedUrl = await generatePresignedUrls(
-                //   LiveClassRecordingLength[i]?.hlsDrmUrl
-                // );
-                presignedArray[
-                  i
-                ].hlsDrmUrl = `https://insp-production-video-bucket.s3.ap-south-1.amazonaws.com/${LiveClassRecordingLength[i]?.hlsDrmUrl}`;
-                // presignedArray[i].hlsDrmUrl = presignedUrl;
+                const presignedUrl = await generateAWSS3LocationUrl(
+                  LiveClassRecordingLength[i]?.hlsDrmUrl
+                );
+                presignedArray[i].hlsDrmUrl = presignedUrl;
               }
               if (LiveClassRecordingLength[i]?.drmKeyId) {
                 const tok = await generateDRMJWTToken(
