@@ -87,7 +87,7 @@ app.use(routesConstants.STUDENT_FEEDBACK, studentFeedbackRoutes);
 app.use(routesConstants.LECTURES_ENDPOINT, lectureRoute);
 // Cron jobs function
 if (ENVIRON !== "local") {
-  scheduleJob();
+  //scheduleJob();
 }
 //scheduleJob();
 
