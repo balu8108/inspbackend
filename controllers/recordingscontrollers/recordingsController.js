@@ -113,7 +113,7 @@ const viewRecording = async (req, res) => {
                 // );
                 presignedArray[
                   i
-                ].key = `https://cdn.inspedu.in/${LiveClassRecordingLength[i]?.key}`;
+                ].key = `https://insp-production-video-bucket.s3.ap-south-1.amazonaws.com/${LiveClassRecordingLength[i]?.key}`;
               }
               if (LiveClassRecordingLength[i]?.hlsDrmUrl) {
                 // const presignedUrl = await generatePresignedUrls(
@@ -121,7 +121,7 @@ const viewRecording = async (req, res) => {
                 // );
                 presignedArray[
                   i
-                ].hlsDrmUrl = `https://cdn.inspedu.in/${LiveClassRecordingLength[i]?.hlsDrmUrl}`;
+                ].hlsDrmUrl = `https://insp-production-video-bucket.s3.ap-south-1.amazonaws.com/${LiveClassRecordingLength[i]?.hlsDrmUrl}`;
                 // presignedArray[i].hlsDrmUrl = presignedUrl;
               }
               if (LiveClassRecordingLength[i]?.drmKeyId) {
