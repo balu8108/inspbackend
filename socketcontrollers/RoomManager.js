@@ -11,7 +11,7 @@ const { LeaderBoard } = require("../models");
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
 
-const RECORD_PROCESS_NAME = "FFmpeg";
+const RECORD_PROCESS_NAME = "GStreamer";
 
 const config = require("./config");
 
@@ -692,7 +692,7 @@ class RoomManager extends EventEmitter {
       case "GStreamer":
         return new Gstreamer(recordInfo);
       default:
-        return new FFmpeg(recordInfo);
+        return new Gstreamer(recordInfo);
     }
   };
 
@@ -790,9 +790,9 @@ class RoomManager extends EventEmitter {
       if (recordProcess) {
         let fileKeyName = "";
         if (PLATFORM === "windows") {
-          fileKeyName = `recordfiles/${recordInfo?.fileName}.mp4`;
+          fileKeyName = `recordfiles/${recordInfo?.fileName}.webm`;
         } else {
-          fileKeyName = `liveclassrecordings/${recordInfo?.fileName}.mp4`;
+          fileKeyName = `liveclassrecordings/${recordInfo?.fileName}.webm`;
         }
         peer[recordProcess] = recordProcess;
 
