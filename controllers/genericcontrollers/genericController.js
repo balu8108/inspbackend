@@ -28,6 +28,7 @@ const getAllSubjects = async (req, res) => {
   return res.status(200).json({ data: "No Subjects" });
 };
 
+
 const openFile = async (req, res) => {
   try {
     const { docId, docType } = req.query;
