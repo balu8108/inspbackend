@@ -73,7 +73,9 @@ app.use((req, res, next) => {
 });
 
 app.use(upload()); // this is required for uploading multipart/formData
-app.use(cors());
+app.use(
+  cors()
+);
 
 app.use(cookieParser());
 

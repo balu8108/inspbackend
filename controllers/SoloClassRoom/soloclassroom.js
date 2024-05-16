@@ -141,13 +141,24 @@ exports.getTopicDetails = async (req, res) => {
         },
       ],
     });
+    const transformedData = {
+      subjectId: soloClassroomDetails[0].subjectId,
+      topicId: soloClassroomDetails[0].topicId,
+      topic: soloClassroomDetails[0].topic,
+      SoloClassRoomRecordings: soloClassroomDetails.flatMap(
+        (detail) => detail.SoloClassRoomRecordings
+      ),
+      SoloClassRoomFiles: soloClassroomDetails.flatMap(
+        (detail) => detail.SoloClassRoomFiles
+      ),
+    };
 
     const totalLectures = soloClassroomDetails.length; // Total number of lectures
 
     if (totalLectures === 0) {
       res.status(201).json({ message: "No data available for this topic" });
     } else {
-      res.status(200).json({ totalLectures, soloClassroomDetails });
+      res.status(200).json({ totalLectures, transformedData });
     }
   } catch (error) {
     console.error("Error fetching details:", error);
