@@ -114,20 +114,25 @@ const getLectureById = async (req, res) => {
           order: [["correctAnswers", "DESC"]], // Order by correctAnswers in descending order
           limit: 10, // Limit the number of LeaderBoard records to 10
         },
-        {
-          model: LiveClassTestQuestionLog,
-          attributes: [
-            [Sequelize.fn("COUNT", Sequelize.col("*")), "questionLogCount"],
-          ],
-        },
       ],
     });
 
     if (!liveClassRoom) return res.status(400).json({ error: "No data found" });
 
-    return res
-      .status(200)
-      .json({ message: "Lecture details by id success ", data: liveClassRoom });
+    // Subquery for the question log count
+    const questionLogCount = await LiveClassTestQuestionLog.count({
+      where: {
+        classRoomId: liveClassRoom?.id,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Lecture details by id success ",
+      data: {
+        liveClassRoom,
+        questionLogCount,
+      },
+    });
   } catch (err) {
     return res.status(400).json({ error: err.message });
   }
