@@ -3,8 +3,6 @@ const {
   LiveClassRoomRecording,
   LiveClassRoomFile,
   LiveClassRoomDetail,
-  LiveClassRoomQNANotes,
-  LiveClassRoomNote,
   SoloClassRoomRecording,
   SoloClassRoom,
   SoloClassRoomFiles,
@@ -13,8 +11,9 @@ const {
   isObjectExistInS3ByKey,
   generatePresignedUrls,
   generateDRMJWTToken,
-  generateCDNUrl,
+  generateAWSS3LocationUrl,
 } = require("../../utils");
+const { drmTypeConstant } = require("../../constants");
 
 const getSingleRecording = async (req, res) => {
   try {
@@ -82,7 +81,6 @@ const viewRecording = async (req, res) => {
   try {
     const { type, id } = req.query;
 
-    // extra query parameter -> topicId is only required if type is live_specific or solo_specific
     if (!type || !id || (type !== "live" && type !== "solo")) {
       // if not correct query params then return error
       throw new Error("Invalid parameters or no recordings available");
@@ -97,8 +95,6 @@ const viewRecording = async (req, res) => {
           { model: LiveClassRoomDetail },
           { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
           { model: LiveClassRoomFile },
-          { model: LiveClassRoomQNANotes },
-          { model: LiveClassRoomNote },
         ],
       });
       const data = JSON.stringify(responseData.LiveClassRoomRecordings);
@@ -108,26 +104,40 @@ const viewRecording = async (req, res) => {
         const presignedArray = responseData.LiveClassRoomRecordings;
         for (let i = 0; i < LiveClassRecordingLength.length; i++) {
           if (LiveClassRecordingLength[i]) {
-            if (LiveClassRecordingLength[i]?.key) {
-              const presignedUrl = await generateCDNUrl(
-                LiveClassRecordingLength[i]?.key
-              );
-              presignedArray[i].key = presignedUrl;
-            }
-            if (LiveClassRecordingLength[i]?.hlsDrmUrl) {
-              const presignedUrl = await generateCDNUrl(
-                LiveClassRecordingLength[i]?.hlsDrmUrl
-              );
-              presignedArray[i].hlsDrmUrl = presignedUrl;
+            if (
+              LiveClassRecordingLength[i]?.DRMType ===
+              drmTypeConstant.AXINOM__TYPE
+            ) {
+              if (LiveClassRecordingLength[i]?.key) {
+                const presignedUrl = await generateAWSS3LocationUrl(
+                  LiveClassRecordingLength[i]?.key
+                );
+                presignedArray[i].key = presignedUrl;
+              }
+              if (LiveClassRecordingLength[i]?.hlsDrmUrl) {
+                const presignedUrl = await generateAWSS3LocationUrl(
+                  LiveClassRecordingLength[i]?.hlsDrmUrl
+                );
+                presignedArray[i].hlsDrmUrl = presignedUrl;
+              }
+              if (LiveClassRecordingLength[i]?.drmKeyId) {
+                const tok = await generateDRMJWTToken(
+                  LiveClassRecordingLength[i]?.drmKeyId
+                );
+                presignedArray[i].drmKeyId = tok;
+              }
+              if (LiveClassRecordingLength[i]?.hlsDrmKey) {
+                const hlstok = await generateDRMJWTToken(
+                  LiveClassRecordingLength[i]?.hlsDrmKey
+                );
+                presignedArray[i].hlsDrmKey = hlstok;
+              }
             }
           }
         }
         responseData = responseData.dataValues;
       }
     } else if (type === "solo") {
-      // if (!topicId) {
-      //   throw new Error("Topic id required to view this recordings");
-      // }
       const specificSoloRecording = await SoloClassRoom.findOne({
         where: { id: id },
         include: [
@@ -135,32 +145,7 @@ const viewRecording = async (req, res) => {
           { model: SoloClassRoomFiles },
         ],
       });
-      console.log("specific", specificSoloRecording);
-      const data = JSON.stringify(
-        specificSoloRecording.SoloClassRoomRecordings
-      );
-      const SoloClassRoomRecordingLength = JSON.parse(data);
-
-      if (SoloClassRoomRecordingLength.length > 0) {
-        const presignedArray = specificSoloRecording.SoloClassRoomRecordings;
-        for (let i = 0; i < SoloClassRoomRecordingLength.length; i++) {
-          if (SoloClassRoomRecordingLength[i]) {
-            if (SoloClassRoomRecordingLength[i]?.key) {
-              const presignedUrl = await generatePresignedUrls(
-                SoloClassRoomRecordingLength[i]?.key
-              );
-              presignedArray[i].key = presignedUrl;
-            }
-            if (SoloClassRoomRecordingLength[i]?.hlsDrmUrl) {
-              const presignedUrl = await generatePresignedUrls(
-                SoloClassRoomRecordingLength[i]?.hlsDrmUrl
-              );
-              presignedArray[i].hlsDrmUrl = presignedUrl;
-            }
-          }
-        }
-        responseData = specificSoloRecording.dataValues;
-      }
+      responseData = specificSoloRecording.dataValues;
     } else {
       throw new Error("Invalid recording type");
     }
@@ -174,56 +159,8 @@ const viewRecording = async (req, res) => {
   }
 };
 
-const playRecording = async (req, res) => {
-  try {
-    const { type, recordId } = req.body;
-    if (!type || !recordId || (type !== "live" && type !== "solo")) {
-      // if not correct query params then return error
-      throw new Error("Invalid parameters or no recordings available");
-    }
-    let jwtToken = null;
-    let hlsJwtToken = null;
-
-    if (type === "live") {
-      // we need to search in LiveClassRecording table
-      const getRecording = await LiveClassRoomRecording.findOne({
-        where: { id: recordId },
-      });
-      if (getRecording?.drmKeyId) {
-        const tok = generateDRMJWTToken(getRecording?.drmKeyId);
-        jwtToken = tok;
-      }
-      if (getRecording?.hlsDrmKey) {
-        const hlstok = generateDRMJWTToken(getRecording?.hlsDrmKey);
-        hlsJwtToken = hlstok;
-      }
-    } else if (type === "solo") {
-      // we need soloclassrecordings
-      const getSoloRecording = await SoloClassRoomRecording.findOne({
-        where: { id: recordId },
-      });
-      if (getSoloRecording?.drmKeyId) {
-        const tok = generateDRMJWTToken(getSoloRecording?.drmKeyId);
-        jwtToken = tok;
-      }
-      if (getSoloRecording?.hlsDrmKey) {
-        const hlstok = generateDRMJWTToken(getSoloRecording?.hlsDrmKey);
-        hlsJwtToken = hlstok;
-      }
-    }
-    return res.status(200).json({
-      status: true,
-      data: { DRMjwtToken: jwtToken, HlsDRMJwtToken: hlsJwtToken },
-    });
-  } catch (err) {
-    console.log("Error in play recordings", err);
-    return res.status(400).json({ status: false, data: err.message });
-  }
-};
-
 module.exports = {
   getSingleRecording,
   getRecordingsByTopicOnly,
   viewRecording,
-  playRecording,
 };

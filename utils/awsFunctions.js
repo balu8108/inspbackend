@@ -1,9 +1,6 @@
 const aws = require("aws-sdk");
 const stream = require("stream");
-const {
-  getSignedUrl,
-  getSignedCookies,
-} = require("@aws-sdk/cloudfront-signer");
+const { getSignedUrl } = require("@aws-sdk/cloudfront-signer");
 
 // These static files include to be added within files
 const {
@@ -25,11 +22,7 @@ aws.config.update({
 const s3 = new aws.S3();
 
 const generateAWSS3LocationUrl = (fileKey) => {
-  return `https://${AWS_BUCKET_NAME}.s3.${AWS_REGION}.amazonaws.com/${fileKey}`;
-};
-
-const generateCDNUrl = (fileKey) => {
-  return `https://cdn.inspedu.in/${fileKey}`;
+  return `https://insp-production-video-bucket.s3.ap-south-1.amazonaws.com/${fileKey}`;
 };
 
 const uploadFilesToS3 = async (files, folderPath) => {
@@ -46,7 +39,7 @@ const uploadFilesToS3 = async (files, folderPath) => {
       };
 
       return new Promise((resolve, reject) => {
-        s3.upload(params, (err, data) => {
+        s3.upload(params, async (err, data) => {
           if (err) {
             console.log("error in uploading file", err);
             reject(err);
@@ -56,10 +49,13 @@ const uploadFilesToS3 = async (files, folderPath) => {
 
             const fileName = encodeURIComponent(file.name).replace(/%20/g, "+");
             const fileKey = `${folderPath}/${file.name}`;
+            const getPresignedUrl = await generatePresignedUrls(
+              `${folderPath}/${fileName}`
+            );
             const modifiedData = {
               ...data,
               Key: fileKey,
-              Location: generateAWSS3LocationUrl(`${folderPath}/${fileName}`),
+              Location: getPresignedUrl,
             };
 
             resolve({ key: modifiedData.Key, url: modifiedData.Location });
@@ -80,35 +76,6 @@ const generatePresignedUrls = async (fileKey) => {
     });
     if (url) {
       resolve(url);
-    } else {
-      reject("");
-    }
-  });
-};
-
-const generateSignedCookies = () => {
-  const policy = {
-    Statement: [
-      {
-        Resource: `${CLOUDFRONT_URL}/*`,
-        Condition: {
-          DateLessThan: {
-            "AWS:EpochTime": Math.floor(Date.now() / 1000) + 60 * 60,
-          }, // 1 hour expiry
-        },
-      },
-    ],
-  };
-  const policyString = JSON.stringify(policy);
-  return new Promise((resolve, reject) => {
-    const cookies = getSignedCookies({
-      keyPairId: CLOUDFRONT_KEY_PAIR_ID,
-      privateKey: CLOUDFRONT_PRIVATE_KEY,
-      policy: policyString,
-    });
-
-    if (cookies) {
-      resolve(cookies);
     } else {
       reject("");
     }
@@ -182,16 +149,19 @@ const uploadToS3 = async (folderPath, fileName, body) => {
       Body: body.modifiedPdfBytes,
       ContentType: body.mimetype,
     };
-    s3.putObject(params, (err, data) => {
+    s3.putObject(params, async (err, data) => {
       if (err) {
         reject(err);
       } else {
         const fileUrl = encodeURIComponent(fileName).replace(/%20/g, "+");
         const fileKey = `${folderPath}/${fileName}`;
+        const getPresignedUrl = await generatePresignedUrls(
+          `${folderPath}/${fileUrl}`
+        );
         const modifiedData = {
           ...data,
           Key: fileKey,
-          Location: generateAWSS3LocationUrl(`${folderPath}/${fileUrl}`),
+          Location: getPresignedUrl,
         };
         resolve(modifiedData);
       }
@@ -210,17 +180,20 @@ const uploadRecordingToS3 = async (folderPath, fileName, fileStream) => {
       Body: pass,
       ContentType: "video/webm",
     };
-    const uploadRequest = s3.upload(params, (err, data) => {
+    const uploadRequest = s3.upload(params, async (err, data) => {
       if (err) {
         reject({ success: false, err });
       } else {
         const fileUrl = encodeURIComponent(fileName).replace(/%20/g, "+");
         const fileKey = `${folderPath}/${fileName}`;
+        const getPresignedUrl = await generatePresignedUrls(
+          `${folderPath}/${fileUrl}`
+        );
         const modifiedData = {
           ...data,
           success: true,
           Key: fileKey,
-          Location: generateAWSS3LocationUrl(`${folderPath}/${fileUrl}`),
+          Location: getPresignedUrl,
         };
         resolve(modifiedData);
       }
@@ -257,8 +230,6 @@ module.exports = {
   getObjectFromS3,
   uploadToS3,
   generateAWSS3LocationUrl,
-  generateCDNUrl,
-  generateSignedCookies,
   isObjectExistInS3ByKey,
   uploadRecordingToS3,
 };

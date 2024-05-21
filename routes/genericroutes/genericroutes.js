@@ -7,7 +7,6 @@ const { routesConstants } = require("../../constants");
 const {
   getAllSubjects,
   openFile,
-  imageToDoc,
   createFeedback,
   uploadTimeTable,
   getAllTimeTable,
@@ -30,12 +29,6 @@ router.get(
   isAuthenticated,
   checkPaidStatusOrTeacher,
   openFile
-);
-router.post(
-  routesConstants.IMAGE_TO_DOC,
-  isAuthenticated,
-  isTeacher,
-  imageToDoc
 );
 router.post(
   `${routesConstants.UPLOAD_TIMETABLE}`,

@@ -1,6 +1,5 @@
 const { externalApiEndpoints } = require("../../constants");
-const { INSP_EXTERNAL_WEBSITE_SECRET_KEY, ENVIRON } = require("../../envvar");
-const generateRandomCharacters = require("../../utils/generateRandomCharacters");
+const { INSP_EXTERNAL_WEBSITE_SECRET_KEY } = require("../../envvar");
 
 const isSocketUserAuthenticated = async (socket, next) => {
   try {
