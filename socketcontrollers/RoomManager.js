@@ -11,7 +11,7 @@ const { LeaderBoard } = require("../models");
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
 
-const RECORD_PROCESS_NAME = ENVIRON !== "production" ? "GStreamer" : "FFmpeg";
+const RECORD_PROCESS_NAME = ENVIRON === "production" ? "GStreamer" : "FFmpeg";
 
 const config = require("./config");
 
