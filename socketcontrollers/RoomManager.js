@@ -2,7 +2,7 @@ const EventEmitter = require("events");
 const allRooms = new Map();
 const allPeers = new Map();
 const { getPort } = require("./port");
-const { PLATFORM } = require("../envvar");
+const { PLATFORM, ENVIRON } = require("../envvar");
 const { SOCKET_EVENTS, mediaCodecs } = require("../constants");
 const { isObjectValid } = require("../utils");
 
@@ -11,7 +11,7 @@ const { LeaderBoard } = require("../models");
 const FFmpeg = require("./ffmpeg");
 const Gstreamer = require("./gstreamer");
 
-const RECORD_PROCESS_NAME = "GStreamer";
+const RECORD_PROCESS_NAME = ENVIRON !== "production" ? "GStreamer" : "FFmpeg";
 
 const config = require("./config");
 

@@ -16,7 +16,6 @@ const kill = require("tree-kill");
 const GSTREAMER_DEBUG_LEVEL = 3;
 const GSTREAMER_COMMAND = "gst-launch-1.0";
 const GSTREAMER_OPTIONS = "-v -e";
-const getGStreamerPIDs = require("./gstreamerPids");
 module.exports = class GStreamer {
   constructor(rtpParameters) {
     this._rtpParameters = rtpParameters;
