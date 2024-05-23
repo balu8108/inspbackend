@@ -16,6 +16,7 @@ const {
   openSoloLetureFile,
   getSoloClassroomDetails,
   getAllSoloClassRoom,
+  getSoloClassForTopicBasedRecording
 } = require("../../controllers/SoloClassRoom/soloclassroom");
 
 router.post(
@@ -59,6 +60,13 @@ router.get(
   isAuthenticated,
   checkPaidStatusOrTeacher,
   getAllSoloClassRoom
+);
+
+router.get(
+  `${routesConstants.GET_SOLOCLASS_FOR_TOPICBASEDRECORDING}/:topicId`,
+  isAuthenticated,
+  checkPaidStatusOrTeacher,
+  getSoloClassForTopicBasedRecording
 );
 
 module.exports = router;

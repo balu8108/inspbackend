@@ -166,6 +166,21 @@ exports.getTopicDetails = async (req, res) => {
   }
 };
 
+// this is the api for library where student will get cards related to topic bases recordings.
+exports.getSoloClassForTopicBasedRecording = async (req, res) => {
+  try {
+    const { topicId } = req.params;
+    const soloClassroomDetails = await SoloClassRoom.findAll({
+      where: { topicId },
+    });
+    res.status(200).json({ data: soloClassroomDetails });
+  } catch (error) {
+    res.status(500).json({
+      error: "An error occurred while fetching the  solo class rooms",
+    });
+  }
+};
+
 exports.getLatestSoloclassroom = async (req, res) => {
   try {
     // Fetch the latest two solo class room records
