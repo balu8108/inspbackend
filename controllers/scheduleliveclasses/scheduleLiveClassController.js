@@ -4,7 +4,7 @@ const {
   LiveClassRoom,
   LiveClassRoomDetail,
   LiveClassRoomFile,
-  SoloClassRoomRecording,
+  SoloClassRoom,
   LiveClassNotificationStatus,
 } = require("../../models");
 const {
@@ -311,15 +311,15 @@ const uploadFilesToClass = async (req, res) => {
       }
     } else if (type === "solo") {
       // we need soloclassrecordings
-      const getSoloRecording = await SoloClassRoomRecording.findOne({
-        where: { id: recordId },
+      const getSoloRecording = await SoloClassRoom.findOne({
+        where: { id: classId },
       });
       if (getSoloRecording) {
         let SoloClassRoomFiles = [];
         if (files) {
           const fileUploads = await uploadFilesToS3(
             addFilesInArray,
-            `files/soloRoomId_${getSoloRecording.roomId}`
+            `files/soloRoomId_${classId}`
           );
           if (fileUploads) {
             fileUploads.forEach(async (file) => {
@@ -339,7 +339,9 @@ const uploadFilesToClass = async (req, res) => {
       }
     }
   } catch (err) {
+    console.log("Error",err);
     return res.status(500).json({ error: err.message });
+    
   }
 };
 
