@@ -6,6 +6,7 @@ const {
   LiveClassRoomFile,
   SoloClassRoom,
   LiveClassNotificationStatus,
+  SoloClassRoomFiles
 } = require("../../models");
 const {
   generateRandomCharacters,
@@ -315,7 +316,7 @@ const uploadFilesToClass = async (req, res) => {
         where: { id: classId },
       });
       if (getSoloRecording) {
-        let SoloClassRoomFiles = [];
+        let SoloClassRoomFile = [];
         if (files) {
           const fileUploads = await uploadFilesToS3(
             addFilesInArray,
@@ -327,7 +328,7 @@ const uploadFilesToClass = async (req, res) => {
                 key: file.key,
                 soloClassRoomId: classId,
               });
-              SoloClassRoomFiles.push(newFileToDB);
+              SoloClassRoomFile.push(newFileToDB);
             });
             return res.status(200).json({ message: "Uploaded files" });
           } else {
@@ -335,7 +336,7 @@ const uploadFilesToClass = async (req, res) => {
           }
         }
       } else {
-        throw new Error("No Live Class Found with this Room Id");
+        throw new Error("No Solo Class Found with this Room Id");
       }
     }
   } catch (err) {
