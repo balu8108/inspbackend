@@ -319,7 +319,7 @@ const uploadFilesToClass = async (req, res) => {
         if (files) {
           const fileUploads = await uploadFilesToS3(
             addFilesInArray,
-            `files/soloRoomId_${classId}`
+            `soloclassroomfiles/soloclassId_${classId}`
           );
           if (fileUploads) {
             fileUploads.forEach(async (file) => {
