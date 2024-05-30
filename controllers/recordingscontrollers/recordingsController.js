@@ -77,6 +77,88 @@ const getRecordingsByTopicOnly = async (req, res) => {
     return res.status(400).json({ status: false, data: err.message });
   }
 };
+// const viewRecording = async (req, res) => {
+//   try {
+//     const { type, id } = req.query;
+
+//     if (!type || !id || (type !== "live" && type !== "solo")) {
+//       // if not correct query params then return error
+//       throw new Error("Invalid parameters or no recordings available");
+//     }
+
+//     let responseData = null;
+//     if (type === "live") {
+//       // we are expecting to search in liveclassrecordings along with id of classRoom (majorly if user comes from view recording button from frontend )
+//       responseData = await LiveClassRoom.findOne({
+//         where: { id: id },
+//         include: [
+//           { model: LiveClassRoomDetail },
+//           { model: LiveClassRoomRecording, order: [["createdAt", "ASC"]] },
+//           { model: LiveClassRoomFile },
+//         ],
+//       });
+//       const data = JSON.stringify(responseData.LiveClassRoomRecordings);
+//       const LiveClassRecordingLength = JSON.parse(data);
+
+//       if (LiveClassRecordingLength.length > 0) {
+//         const presignedArray = responseData.LiveClassRoomRecordings;
+//         for (let i = 0; i < LiveClassRecordingLength.length; i++) {
+//           if (LiveClassRecordingLength[i]) {
+//             if (
+//               LiveClassRecordingLength[i]?.DRMType ===
+//               drmTypeConstant.AXINOM__TYPE
+//             ) {
+//               if (LiveClassRecordingLength[i]?.key) {
+//                 const presignedUrl = await generateAWSS3LocationUrl(
+//                   LiveClassRecordingLength[i]?.key
+//                 );
+//                 presignedArray[i].key = presignedUrl;
+//               }
+//               if (LiveClassRecordingLength[i]?.hlsDrmUrl) {
+//                 const presignedUrl = await generateAWSS3LocationUrl(
+//                   LiveClassRecordingLength[i]?.hlsDrmUrl
+//                 );
+//                 presignedArray[i].hlsDrmUrl = presignedUrl;
+//               }
+//               if (LiveClassRecordingLength[i]?.drmKeyId) {
+//                 const tok = await generateDRMJWTToken(
+//                   LiveClassRecordingLength[i]?.drmKeyId
+//                 );
+//                 presignedArray[i].drmKeyId = tok;
+//               }
+//               if (LiveClassRecordingLength[i]?.hlsDrmKey) {
+//                 const hlstok = await generateDRMJWTToken(
+//                   LiveClassRecordingLength[i]?.hlsDrmKey
+//                 );
+//                 presignedArray[i].hlsDrmKey = hlstok;
+//               }
+//             }
+//           }
+//         }
+//         responseData = responseData.dataValues;
+//       }
+//     } else if (type === "solo") {
+//       const specificSoloRecording = await SoloClassRoom.findOne({
+//         where: { id: id },
+//         include: [
+//           { model: SoloClassRoomRecording, order: [["createdAt", "ASC"]] },
+//           { model: SoloClassRoomFiles },
+//         ],
+//       });
+//       responseData = specificSoloRecording.dataValues;
+//     } else {
+//       throw new Error("Invalid recording type");
+//     }
+//     return res.status(200).json({
+//       status: true,
+//       data: responseData,
+//     });
+//   } catch (err) {
+//     console.log("Error in view recordings", err);
+//     return res.status(400).json({ status: false, data: err.message });
+//   }
+// };
+
 const viewRecording = async (req, res) => {
   try {
     const { type, id } = req.query;
@@ -88,7 +170,6 @@ const viewRecording = async (req, res) => {
 
     let responseData = null;
     if (type === "live") {
-      // we are expecting to search in liveclassrecordings along with id of classRoom (majorly if user comes from view recording button from frontend )
       responseData = await LiveClassRoom.findOne({
         where: { id: id },
         include: [
@@ -97,46 +178,22 @@ const viewRecording = async (req, res) => {
           { model: LiveClassRoomFile },
         ],
       });
-      const data = JSON.stringify(responseData.LiveClassRoomRecordings);
-      const LiveClassRecordingLength = JSON.parse(data);
 
-      if (LiveClassRecordingLength.length > 0) {
-        const presignedArray = responseData.LiveClassRoomRecordings;
-        for (let i = 0; i < LiveClassRecordingLength.length; i++) {
-          if (LiveClassRecordingLength[i]) {
-            if (
-              LiveClassRecordingLength[i]?.DRMType ===
-              drmTypeConstant.AXINOM__TYPE
-            ) {
-              if (LiveClassRecordingLength[i]?.key) {
-                const presignedUrl = await generateAWSS3LocationUrl(
-                  LiveClassRecordingLength[i]?.key
-                );
-                presignedArray[i].key = presignedUrl;
-              }
-              if (LiveClassRecordingLength[i]?.hlsDrmUrl) {
-                const presignedUrl = await generateAWSS3LocationUrl(
-                  LiveClassRecordingLength[i]?.hlsDrmUrl
-                );
-                presignedArray[i].hlsDrmUrl = presignedUrl;
-              }
-              if (LiveClassRecordingLength[i]?.drmKeyId) {
-                const tok = await generateDRMJWTToken(
-                  LiveClassRecordingLength[i]?.drmKeyId
-                );
-                presignedArray[i].drmKeyId = tok;
-              }
-              if (LiveClassRecordingLength[i]?.hlsDrmKey) {
-                const hlstok = await generateDRMJWTToken(
-                  LiveClassRecordingLength[i]?.hlsDrmKey
-                );
-                presignedArray[i].hlsDrmKey = hlstok;
-              }
-            }
-          }
-        }
-        responseData = responseData.dataValues;
+      // Label the recordings as "Part X" based on their order
+      let tempArray = [];
+      if (responseData && responseData.LiveClassRoomRecordings.length > 0) {
+        responseData.LiveClassRoomRecordings.forEach((recording, index) => {
+          let partWiseRecording = {
+            ...recording.dataValues,
+            part: `Part ${index + 1}`,
+          };
+
+          tempArray.push(partWiseRecording);
+        });
       }
+      responseData.dataValues.LiveClassRoomRecordings = tempArray;
+
+      responseData = responseData.dataValues;
     } else if (type === "solo") {
       const specificSoloRecording = await SoloClassRoom.findOne({
         where: { id: id },
@@ -145,10 +202,30 @@ const viewRecording = async (req, res) => {
           { model: SoloClassRoomFiles },
         ],
       });
-      responseData = specificSoloRecording.dataValues;
+
+    
+
+      let tempArray = [];
+      if (
+        responseData &&
+        specificSoloRecording.SoloClassRoomRecordings.length > 0
+      ) {
+        specificSoloRecording.SoloClassRoomRecordings.forEach(
+          (recording, index) => {
+            let partWiseRecording = {
+              ...recording.dataValues,
+              part: `Part ${index + 1}`,
+            };
+
+            tempArray.push(partWiseRecording);
+          }
+        );
+      }
+      responseData.dataValues.SoloClassRoomRecording = tempArray;
     } else {
       throw new Error("Invalid recording type");
     }
+
     return res.status(200).json({
       status: true,
       data: responseData,
