@@ -195,7 +195,7 @@ const viewRecording = async (req, res) => {
 
       responseData = responseData.dataValues;
     } else if (type === "solo") {
-      const specificSoloRecording = await SoloClassRoom.findOne({
+      responseData = await SoloClassRoom.findOne({
         where: { id: id },
         include: [
           { model: SoloClassRoomRecording, order: [["createdAt", "ASC"]] },
@@ -208,9 +208,9 @@ const viewRecording = async (req, res) => {
       let tempArray = [];
       if (
         responseData &&
-        specificSoloRecording.SoloClassRoomRecordings.length > 0
+        responseData.SoloClassRoomRecordings.length > 0
       ) {
-        specificSoloRecording.SoloClassRoomRecordings.forEach(
+        responseData.SoloClassRoomRecordings.forEach(
           (recording, index) => {
             let partWiseRecording = {
               ...recording.dataValues,
@@ -221,7 +221,7 @@ const viewRecording = async (req, res) => {
           }
         );
       }
-      responseData.dataValues.SoloClassRoomRecording = tempArray;
+     responseData.dataValues.SoloClassRoomRecording = tempArray;
     } else {
       throw new Error("Invalid recording type");
     }
