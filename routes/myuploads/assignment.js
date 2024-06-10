@@ -5,14 +5,13 @@ const { routesConstants } = require("../../constants");
 const {
   uploadAssignment,
   createAssignment,
-  allAssignments,
   deleteAssignment,
   latestAssignments,
   allAssignmentsWithFiles,
   allAssignmentsbytopicid,
   recentOneAssignments,
   getSubjectsAssignments,
-  getAssignmentsBySubjectName,
+  getAssignmentsByTopicId,
 } = require("../../controllers/MyUploads/assignments");
 
 const {
@@ -46,10 +45,10 @@ router.get(
   getSubjectsAssignments
 );
 router.get(
-  `${routesConstants.GET_ASSIGNMENT_BY_SUBJECTNAME}/:subjectName`,
+  `${routesConstants.GET_ASSIGNMENT_BY_TOPICID}/:topicId`,
   isAuthenticated,
   checkPaidStatusOrTeacher,
-  getAssignmentsBySubjectName
+  getAssignmentsByTopicId
 );
 router.post(
   routesConstants.UPLOAD_ASSIGNMENT,

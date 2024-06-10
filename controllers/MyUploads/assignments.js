@@ -204,13 +204,13 @@ exports.getSubjectsAssignments = async (req, res) => {
 };
 
 // fetching the assignment by giving subjectName..
-exports.getAssignmentsBySubjectName = async (req, res) => {
+exports.getAssignmentsByTopicId = async (req, res) => {
   try {
-    const { subjectName } = req.params;
+    const { topicId } = req.params;
 
     // Find assignments by subjectName
     const assignments = await Assignment.findAll({
-      where: { subjectName },
+      where: { topicId },
       include: AssignmentFiles,
     });
 

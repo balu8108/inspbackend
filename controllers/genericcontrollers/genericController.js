@@ -13,6 +13,7 @@ const {
   generatePresignedUrls,
   validateCreateFeedBack,
   uploadFilesToS3,
+  getTpStreamId,
 } = require("../../utils");
 const uuidv4 = require("uuid").v4;
 
@@ -21,7 +22,6 @@ const { Op } = require("sequelize");
 const getAllSubjects = async (req, res) => {
   return res.status(200).json({ data: "No Subjects" });
 };
-
 
 const openFile = async (req, res) => {
   try {
@@ -179,17 +179,29 @@ const getTopicDetails = async (req, res) => {
 
 const updateRecordingData = async (req, res) => {
   try {
-    const { inputFileKey, tpStreamId } = req.body;
-    if (!inputFileKey || !tpStreamId) {
+    const { inputFileKey } = req.body;
+    if (!inputFileKey) {
       throw new Error("Some required data missing");
     }
+
+    //convert/4Bt1RnUams-1715768877159_output1.mp4
+    const fileNameWithExtension = inputFileKey.split("/")[1]; // 4Bt1RnUams-1715768877159.webm
+    const fileNameWithoutExtension = fileNameWithExtension.split(".")[0]; // 4Bt1RnUams-1715768877159
+    const finalOutputFileKey = `convert/${fileNameWithoutExtension}_output.mp4`;
+
+    const presignedUrls = await generatePresignedUrls(finalOutputFileKey);
+
+    const tpStreamResponse = await getTpStreamId(
+      `${fileNameWithoutExtension}.mp4`,
+      presignedUrls
+    );
 
     const liveRecording = await LiveClassRoomRecording.findOne({
       where: { key: { [Op.like]: `%${inputFileKey}%` } },
     });
 
     if (liveRecording) {
-      liveRecording.tpStreamId = tpStreamId;
+      liveRecording.tpStreamId = tpStreamResponse;
       liveRecording.status = "Completed";
       liveRecording.save();
     }
@@ -198,7 +210,7 @@ const updateRecordingData = async (req, res) => {
       where: { key: { [Op.like]: `%${inputFileKey}%` } },
     });
     if (soloRecord) {
-      soloRecord.tpStreamId = tpStreamId;
+      soloRecord.tpStreamId = tpStreamResponse;
       soloRecord.status = "Completed";
       soloRecord.save();
     }

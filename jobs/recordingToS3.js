@@ -1,15 +1,14 @@
 const moment = require("moment-timezone");
 const fs = require("fs");
 const path = require("path");
-const { uploadRecordingToS3, getTpStreamId } = require("../utils");
-const { LiveClassRoom, LiveClassRoomRecording } = require("../models");
+const { uploadRecordingToS3 } = require("../utils");
+const { LiveClassRoom } = require("../models");
 const { classStatus } = require("../constants");
 const RECORDING_FOLDER = "./recordfiles";
 const BACKUP_RECORDING_FOLDER = "./backuprecordfiles";
 const AWSS3Folder = "liveclassrecordings"; // folder name in which to put this recording
 const LOCK_FILE = path.join(__dirname, "cron.lock");
 const util = require("util");
-const { Op } = require("sequelize");
 const readdir = util.promisify(fs.readdir);
 moment.tz.setDefault("Asia/Kolkata");
 const acquireLock = () => {
@@ -67,32 +66,13 @@ const recordingToS3 = async () => {
         if (fileUploadToS3) {
           // Check success
           if (fileUploadToS3?.success) {
-            const tpStreamResponse = await getTpStreamId(
-              fileName,
-              fileUploadToS3?.Location
-            );
-            if (tpStreamResponse) {
-              const liveRecording = await LiveClassRoomRecording.findOne({
-                where: { key: { [Op.like]: `%${fileName}%` } },
-              });
-              liveRecording.status = "Completed";
-              liveRecording.tpStreamId = tpStreamResponse;
-              await liveRecording.save();
-              const backupFilePath = path.join(
-                BACKUP_RECORDING_FOLDER,
-                fileName
-              );
-              fs.rename(filePath, backupFilePath, function (err) {
-                if (err) throw err;
-                fs.unlinkSync(backupFilePath);
-                console.log("Successfully renamed - AKA moved!");
-              });
-              console.log(
-                "Upload successfully mirgating file to backup folder"
-              );
-            } else {
-              console.log("Upload unsuccessfully");
-            }
+            const backupFilePath = path.join(BACKUP_RECORDING_FOLDER, fileName);
+            fs.rename(filePath, backupFilePath, function (err) {
+              if (err) throw err;
+              fs.unlinkSync(backupFilePath);
+              console.log("Successfully renamed - AKA moved!");
+            });
+            console.log("Upload successfully mirgating file to backup folder");
           }
         }
       }
