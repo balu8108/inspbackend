@@ -25,6 +25,7 @@ const getTpStreamId = (fileName, fileUrl) => {
     inputs: [{ url: fileUrl }],
     resolutions: ["480p", "720p", "1080p"],
     enable_drm: true,
+    folder: "8jHFSygG4QA",
   };
   const headers = {
     "Content-Type": "application/json",
