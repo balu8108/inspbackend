@@ -25,7 +25,8 @@ const routesConstants = Object.freeze({
   SOLOCLASSROOM_FILES: "/open-file/solo-files",
   SOLOCLASSROOM_DETAILS: "/get-details-data-for-class",
   GET_ALL_SOLOCLASSROOM: "/get-all-soloclassrooms",
-  GET_SOLOCLASS_FOR_TOPICBASEDRECORDING:"/get-soloclass-for-topicbasedrecording",
+  GET_SOLOCLASS_FOR_TOPICBASEDRECORDING:
+    "/get-soloclass-for-topicbasedrecording",
 
   TOPIC_ASSIGNMENTS: "/assignment",
   CREATE_ASSIGNMENT: "/create",
@@ -36,7 +37,7 @@ const routesConstants = Object.freeze({
   ALL_ASSIGNMENT_WITH_FILES: "/all-assignment-with-files",
   UPLOAD_ASSIGNMENT: "/upload-assignments",
   GET_ASSIGNMENTS_BY_SUBJECTS: "/get-assignment-by-subject-id",
-  GET_ASSIGNMENT_BY_SUBJECTNAME: "/get-assignment-by-subject-name",
+  GET_ASSIGNMENT_BY_TOPICID: "/get-assignment-by-topic-id",
   AUTH: "/auth",
   LOGIN: "/login",
   LOGIN_WITH_IP: "/login_with_ip",
