@@ -70,7 +70,7 @@ const generatePresignedUrls = async (fileKey) => {
   return new Promise((resolve, reject) => {
     const url = getSignedUrl({
       url: `${CLOUDFRONT_URL}/${fileKey}`,
-      dateLessThan: new Date(Date.now() + 1000 * 60),
+      dateLessThan: new Date(Date.now() + 1000 * 60).toISOString(),
       privateKey: CLOUDFRONT_PRIVATE_KEY,
       keyPairId: CLOUDFRONT_KEY_PAIR_ID,
     });
