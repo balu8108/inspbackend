@@ -12,6 +12,7 @@ const {
 const {
   createLiveClass,
   getAllLiveClasses,
+  getAllCalenderClasses,
   getLiveClassDetails,
   getUpcomingClass,
   uploadFilesToClass,
@@ -44,6 +45,7 @@ module.exports = {
   getAllTimeTable,
   createLiveClass,
   getAllLiveClasses,
+  getAllCalenderClasses,
   getLiveClassDetails,
   getUpcomingClass,
   createFeedback,

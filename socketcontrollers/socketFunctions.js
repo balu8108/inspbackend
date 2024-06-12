@@ -425,14 +425,12 @@ const transportProduceSocketHandler = async (data, callback, socket) => {
 const producerPauseSocketHandler = (data, socket) => {
   try {
     const { authData } = socket;
-    const socketId = socket.id;
-    const { appData, producerId } = data;
+    const { producerId } = data;
     if (authData && allPeers.has(authData.id)) {
       const roomId = allPeers.get(authData.id)?.roomId;
       const room = allRooms.get(roomId);
       if (roomId && room) {
         room._pausingProducer(producerId);
-        console.log("paused producer");
       }
     }
   } catch (err) {
@@ -443,14 +441,12 @@ const producerPauseSocketHandler = (data, socket) => {
 const producerResumeSocketHandler = (data, socket) => {
   try {
     const { authData } = socket;
-    const socketId = socket.id;
-    const { appData, producerId } = data;
+    const { producerId } = data;
     if (authData && allPeers.has(authData.id)) {
       const roomId = allPeers.get(authData.id)?.roomId;
       const room = allRooms.get(roomId);
       if (roomId && room) {
         room._resumingProducer(producerId);
-        console.log("paused producer");
       }
     }
   } catch (err) {

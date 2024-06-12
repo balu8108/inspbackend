@@ -4,6 +4,7 @@ const { routesConstants } = require("../../constants");
 const {
   createLiveClass,
   getAllLiveClasses,
+  getAllCalenderClasses,
   getLiveClassDetails,
   getUpcomingClass,
   uploadFilesToClass,
@@ -21,6 +22,12 @@ router.post(
   isTeacher,
   createLiveClass
 ); // This route will create a new Live Class/room in db
+router.get(
+  routesConstants.GET_ALL_CALENDER_CLASSES,
+  isAuthenticated,
+  checkPaidStatusOrTeacher,
+  getAllCalenderClasses
+);
 router.get(
   routesConstants.GET_ALL_LIVE_CLASSES,
   isAuthenticated,
