@@ -2,6 +2,7 @@ const routesConstants = Object.freeze({
   SCHEDULE_LIVE_CLASS: "/schedule-live-class",
   CREATE_LIVE_CLASS: "/create",
   GET_ALL_LIVE_CLASSES: "/get-all",
+  GET_ALL_CALENDER_CLASSES: "/get-all-calender-data",
   GET_LIVE_CLASS_DETAILS: "/get-details",
   GET_UPCOMING_CLASS: "/get-upcoming-class",
   GENERIC_API: "/generic",

@@ -407,7 +407,6 @@ class RoomManager extends EventEmitter {
       if (peerTransportIds.length > 0) {
         for (const id of peerTransportIds) {
           if (id in this._transports) {
-            console.log("id", id);
             const transportWithMeta = this._transports[id];
 
             if (

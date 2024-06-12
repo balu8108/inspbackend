@@ -19,9 +19,6 @@ function getMyIPSync() {
 
 // Example usage
 const myIP = getMyIPSync();
-if (myIP) {
-  console.log(`Your public IP address is: ${myIP}`);
-}
 
 module.exports = Object.freeze({
   plainRtpTransport: {

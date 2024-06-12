@@ -274,9 +274,7 @@ exports.openSoloLetureFile = async (req, res) => {
 
 exports.getAllSoloClassRoom = async (req, res) => {
   try {
-    console.log("getting  solo classes");
     const soloClassesData = await SoloClassRoom.findAll();
-    console.log("solo", soloClassesData);
     res.status(200).json({ data: soloClassesData });
   } catch (err) {
     res.status(500).json({ error: err.message });

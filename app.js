@@ -108,8 +108,6 @@ async function runMediasoupWorkers() {
       });
 
       worker.observer.on("newrouter", (router) => {
-        console.log("new router created with id", router.id);
-
         router.appData.transports = new Map();
         router.appData.producers = new Map();
         router.appData.consumers = new Map();
@@ -117,34 +115,25 @@ async function runMediasoupWorkers() {
         worker.appData.routers.set(router.id, router);
 
         router.observer.on("close", () => {
-          console.log("Router closed with id", router.id);
           worker.appData.routers.delete(router.id);
         });
         router.observer.on("newtransport", (transport) => {
-          console.log("transport created", transport.id);
           transport.appData.producers = new Map();
           transport.appData.consumers = new Map();
           transport.appData.router = router;
           router.appData.transports.set(transport.id, transport);
 
           transport.observer.on("close", () => {
-            console.log("transport closed id = ", transport.id);
             router.appData.transports.delete(transport.id);
           });
 
           transport.observer.on("newproducer", (producer) => {
-            console.log("New Producer created", producer.id);
             producer.appData.transport = transport;
             transport.appData.producers.set(producer.id, producer);
             router.appData.producers.set(producer.id, producer);
             worker.appData.producers.set(producer.id, producer);
-            console.log(
-              "after creating router app data",
-              router.appData.producers
-            );
 
             producer.observer.on("close", () => {
-              console.log("Producer closed id = ", producer.id);
               transport.appData.producers.delete(producer.id);
               router.appData.producers.delete(producer.id);
               worker.appData.producers.delete(producer.id);
@@ -152,14 +141,12 @@ async function runMediasoupWorkers() {
           });
 
           transport.observer.on("newconsumer", (consumer) => {
-            console.log("new Consumer created", consumer.id);
             consumer.appData.transport = transport;
             transport.appData.consumers.set(consumer.id, consumer);
             router.appData.consumers.set(consumer.id, consumer);
             worker.appData.consumers.set(consumer.id, consumer);
 
             consumer.observer.on("close", () => {
-              console.log("consumer closed id = ", consumer.id);
               transport.appData.consumers.delete(consumer.id);
               router.appData.consumers.delete(consumer.id);
               worker.appData.consumers.delete(consumer.id);
@@ -184,9 +171,7 @@ async function runMediasoupWorkers() {
             : rtcMinPort + (i + 1) * portInterval - 1,
       });
 
-      worker.on("died", () => {
-        console.log("Worker died with id", worker.id);
-      });
+      worker.on("died", () => {});
 
       mediaSoupWorkers.set(worker.pid, worker);
       console.log(`Worker ${i + 1} successfully created with id ${worker.pid}`);

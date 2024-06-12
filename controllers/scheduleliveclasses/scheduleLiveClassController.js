@@ -6,13 +6,14 @@ const {
   LiveClassRoomFile,
   SoloClassRoom,
   LiveClassNotificationStatus,
-  SoloClassRoomFiles
+  SoloClassRoomFiles,
 } = require("../../models");
 const {
   generateRandomCharacters,
   validateCreationOfLiveClass,
   validateUpdateScheduleLiveClass,
   uploadFilesToS3,
+  categoriseClass,
 } = require("../../utils");
 const { classStatus } = require("../../constants");
 const moment = require("moment-timezone");
@@ -75,15 +76,77 @@ const uploadFilesAndCreateEntries = async (
   }
 };
 
+const extractDateInYYYMMDD = (date) => {
+  return date.split("T")[0];
+};
+
+const getAllCalenderClasses = async (req, res) => {
+  try {
+    const liveClassesData = await LiveClassRoom.findAll({
+      include: [{ model: LiveClassRoomDetail }],
+    });
+    const finalResult = [];
+    if (liveClassesData) {
+      liveClassesData.forEach((obj) => {
+        const filteredData = {
+          id: obj?.id,
+          title: obj?.LiveClassRoomDetail?.topicName,
+          classType: obj?.classType,
+          classLevel: obj?.classLevel,
+          start: `${extractDateInYYYMMDD(obj?.scheduledDate.toISOString())}T${
+            obj?.scheduledStartTime
+          }`,
+          end: `${extractDateInYYYMMDD(obj?.scheduledDate.toISOString())}T${
+            obj?.scheduledEndTime
+          }`,
+        };
+        finalResult.push(filteredData);
+      });
+    }
+    res.status(200).json({ data: finalResult });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // DB FUNCTIONS END
 const getAllLiveClasses = async (req, res) => {
+  const currentDate = moment();
+  const startOfWeek = currentDate.startOf("week").toISOString();
+  const endOfWeek = currentDate.endOf("week").toISOString();
+  let scheduledClasses = { Ongoing: [], Today: [], Week: [], Completed: [] };
   try {
-    console.log("getting live classes");
     const liveClassesData = await LiveClassRoom.findAll({
+      where: {
+        scheduledDate: {
+          [Op.between]: [startOfWeek, endOfWeek],
+        },
+      },
       include: [{ model: LiveClassRoomDetail }, { model: LiveClassRoomFile }],
     });
-    console.log("live", liveClassesData);
-    res.status(200).json({ data: liveClassesData });
+    if (liveClassesData) {
+      liveClassesData.forEach((obj) => {
+        const categorisedClass = categoriseClass(obj);
+        const filteredData = {
+          id: obj?.id,
+          roomId: obj?.roomId,
+          topicName: obj?.LiveClassRoomDetail?.topicName,
+          scheduledStartTime: obj?.scheduledStartTime,
+          scheduledEndTime: obj?.scheduledEndTime,
+          mentorName: obj?.mentorName,
+          scheduledDate: obj?.scheduledDate,
+          classLevel: obj?.classLevel,
+          LiveClassRoomFiles: obj?.LiveClassRoomFiles,
+          description: obj?.LiveClassRoomDetail?.description,
+          classStatus: obj?.classStatus,
+        };
+        if (scheduledClasses[categorisedClass]) {
+          scheduledClasses[categorisedClass].push(filteredData);
+        }
+      });
+    }
+
+    res.status(200).json({ data: scheduledClasses });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -154,7 +217,25 @@ const createLiveClass = async (req, res) => {
           LiveClassRoomDetail: liveClassRoomDetail.toJSON(),
           LiveClassRoomFiles: LiveClassRoomFiles,
         };
-        return res.status(200).json({ data: combinedData });
+
+        const categorisedClass = categoriseClass(combinedData);
+
+        const filteredData = {
+          id: combinedData?.id,
+          roomId: combinedData?.roomId,
+          topicName: combinedData?.LiveClassRoomDetail?.topicName,
+          scheduledStartTime: combinedData?.scheduledStartTime,
+          scheduledEndTime: combinedData?.scheduledEndTime,
+          mentorName: combinedData?.mentorName,
+          scheduledDate: combinedData?.scheduledDate,
+          classLevel: combinedData?.classLevel,
+          LiveClassRoomFiles: combinedData?.LiveClassRoomFiles,
+          description: combinedData?.LiveClassRoomDetail?.description,
+          classStatus: combinedData?.classStatus,
+          category: categorisedClass,
+        };
+
+        return res.status(200).json({ data: filteredData });
       } else {
         return res.status(400).json({ error: "Unable to create new class" });
       }
@@ -213,7 +294,6 @@ const getUpcomingClass = async (req, res) => {
     return res.status(400).json({ error: err.message });
   }
 };
-
 
 const updateScheduleClassData = async (req, res) => {
   try {
@@ -340,15 +420,15 @@ const uploadFilesToClass = async (req, res) => {
       }
     }
   } catch (err) {
-    console.log("Error",err);
+    console.log("Error", err);
     return res.status(500).json({ error: err.message });
-    
   }
 };
 
 module.exports = {
   createLiveClass,
   getAllLiveClasses,
+  getAllCalenderClasses,
   getLiveClassDetails,
   getUpcomingClass,
   uploadFilesToClass,

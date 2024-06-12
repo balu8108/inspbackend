@@ -20,8 +20,10 @@ const isObjectValid = require("./objectValidation");
 const { fetchAllStudentsFromInspApi } = require("./inspexternalapis");
 const { isFeedbackProvided } = require("./dbUtilityFunctions");
 const generateDRMJWTToken = require("./generateDRMJWTToken");
+const categoriseClass = require("./categoriseClass");
 module.exports = {
   generateRandomCharacters,
+  categoriseClass,
   validateCreationOfLiveClass,
   uploadFilesToS3,
   generatePresignedUrls,
