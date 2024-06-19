@@ -145,12 +145,10 @@ const getLectureNo = async (req, res) => {
     if (isSoloClass) {
       const soloClassRooms = await SoloClassRoom.findAll();
       numberOfLecture = soloClassRooms.length;
-      return res
-        .status(200)
-        .json({
-          message: "Total number of lecture for soloclass is",
-          data: numberOfLecture,
-        });
+      return res.status(200).json({
+        message: "Total number of lecture for soloclass is",
+        data: numberOfLecture,
+      });
     } else {
       if (!subjectName || !classType || !classLevel) {
         return res.status(400).json({ error: "please send is required" });
@@ -164,11 +162,6 @@ const getLectureNo = async (req, res) => {
             classType: classType,
             classLevel: classLevel,
           },
-          include: [
-            {
-              model: LiveClassRoomDetail,
-            },
-          ],
         });
         numberOfLecture = liveClassRooms.length;
       } else if (classType == "CRASHCOURSE") {
@@ -177,11 +170,6 @@ const getLectureNo = async (req, res) => {
             subjectName: subjectName,
             classType: classType,
           },
-          include: [
-            {
-              model: LiveClassRoomDetail,
-            },
-          ],
         });
         numberOfLecture = liveClassRooms.length;
       }

@@ -35,8 +35,8 @@ const createLiveClassRoom = async (randomCharacters, body, plainAuthData) => {
       mentorMobile: plainAuthData.mobile || "1234567890",
       subjectId: JSON.parse(body.subject).value,
       subjectName: JSON.parse(body.subject).label,
-      classType: JSON.parse(body.classType).value,
-      classLevel: JSON.parse(body.classLevel).value,
+      classType: body.classType,
+      classLevel: body.classLevel,
       classStatus: classStatus.SCHEDULED,
     });
     return { success: true, result: newLiveClass };
@@ -127,21 +127,8 @@ const getAllLiveClasses = async (req, res) => {
     if (liveClassesData) {
       liveClassesData.forEach((obj) => {
         const categorisedClass = categoriseClass(obj);
-        const filteredData = {
-          id: obj?.id,
-          roomId: obj?.roomId,
-          topicName: obj?.LiveClassRoomDetail?.topicName,
-          scheduledStartTime: obj?.scheduledStartTime,
-          scheduledEndTime: obj?.scheduledEndTime,
-          mentorName: obj?.mentorName,
-          scheduledDate: obj?.scheduledDate,
-          classLevel: obj?.classLevel,
-          LiveClassRoomFiles: obj?.LiveClassRoomFiles,
-          description: obj?.LiveClassRoomDetail?.description,
-          classStatus: obj?.classStatus,
-        };
         if (scheduledClasses[categorisedClass]) {
-          scheduledClasses[categorisedClass].push(filteredData);
+          scheduledClasses[categorisedClass].push(obj);
         }
       });
     }
@@ -322,10 +309,28 @@ const updateScheduleClassData = async (req, res) => {
         return res.status(404).json({ error: "Live class notification found" });
       }
 
+      const LiveClassRoomD = await LiveClassRoomDetail.findOne({
+        where: { classRoomId: LiveClass.id },
+      });
+
       await LiveClass.update({
+        subjectId: JSON.parse(body.subject).value,
+        subjectName: JSON.parse(body.subject).label,
+        classType: body.classType,
+        classLevel: body.classLevel,
         scheduledDate: body.scheduledDate,
         scheduledStartTime: body.scheduledStartTime,
         scheduledEndTime: body.scheduledEndTime,
+      });
+
+      await LiveClassRoomD.update({
+        chapterId: JSON.parse(body.chapter).value,
+        chapterName: JSON.parse(body.chapter).label,
+        topicId: JSON.parse(body.topic).value,
+        topicName: JSON.parse(body.topic).label,
+        agenda: body.agenda,
+        description: body.description,
+        lectureNo: body.lectureNo,
       });
 
       await LiveClassNotification.update({
