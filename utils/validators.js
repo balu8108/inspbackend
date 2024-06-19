@@ -19,6 +19,7 @@ const validateUpdateScheduleLiveClass = (data) => {
     data.agenda &&
     data.classType &&
     data.classLevel &&
+    data.lectureNo &&
     data.description &&
     data.scheduledDate &&
     data.scheduledStartTime &&

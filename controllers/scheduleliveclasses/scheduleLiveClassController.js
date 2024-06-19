@@ -208,17 +208,7 @@ const createLiveClass = async (req, res) => {
         const categorisedClass = categoriseClass(combinedData);
 
         const filteredData = {
-          id: combinedData?.id,
-          roomId: combinedData?.roomId,
-          topicName: combinedData?.LiveClassRoomDetail?.topicName,
-          scheduledStartTime: combinedData?.scheduledStartTime,
-          scheduledEndTime: combinedData?.scheduledEndTime,
-          mentorName: combinedData?.mentorName,
-          scheduledDate: combinedData?.scheduledDate,
-          classLevel: combinedData?.classLevel,
-          LiveClassRoomFiles: combinedData?.LiveClassRoomFiles,
-          description: combinedData?.LiveClassRoomDetail?.description,
-          classStatus: combinedData?.classStatus,
+          ...combinedData,
           category: categorisedClass,
         };
 

@@ -142,44 +142,38 @@ const getLectureNo = async (req, res) => {
   try {
     const { subjectName, classType, classLevel, isSoloClass } = req.body;
 
-    if (isSoloClass) {
-      const soloClassRooms = await SoloClassRoom.findAll();
-      numberOfLecture = soloClassRooms.length;
-      return res.status(200).json({
-        message: "Total number of lecture for soloclass is",
-        data: numberOfLecture,
-      });
-    } else {
-      if (!subjectName || !classType || !classLevel) {
-        return res.status(400).json({ error: "please send is required" });
-      }
-
-      let numberOfLecture = 0;
-      if (classType == "REGULARCLASS") {
-        const liveClassRooms = await LiveClassRoom.findAll({
-          where: {
-            subjectName: subjectName,
-            classType: classType,
-            classLevel: classLevel,
-          },
-        });
-        numberOfLecture = liveClassRooms.length;
-      } else if (classType == "CRASHCOURSE") {
-        const liveClassRooms = await LiveClassRoom.findAll({
-          where: {
-            subjectName: subjectName,
-            classType: classType,
-          },
-        });
-        numberOfLecture = liveClassRooms.length;
-      }
-
-      return res
-        .status(200)
-        .json({ message: "Total no of lecture are", data: numberOfLecture });
+    // Validate required fields for non-solo classes
+    if (
+      !isSoloClass &&
+      (!subjectName ||
+        !classType ||
+        (classType === "REGULARCLASS" && !classLevel))
+    ) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
+
+    let numberOfLecture = 0;
+
+    if (isSoloClass) {
+      const soloClassRooms = await SoloClassRoom.count();
+      numberOfLecture = soloClassRooms;
+    } else {
+      const query = { subjectName, classType };
+      if (classType === "REGULARCLASS") {
+        query.classLevel = classLevel;
+      }
+      const liveClassRooms = await LiveClassRoom.count({ where: query });
+      numberOfLecture = liveClassRooms;
+    }
+
+    return res.status(200).json({
+      message: `Total number of lectures for ${
+        isSoloClass ? "solo class" : "live class"
+      } is ${numberOfLecture}`,
+      data: numberOfLecture,
+    });
   } catch (err) {
-    return res.status(400).json({ error: err.message });
+    return res.status(500).json({ error: `Server error: ${err.message}` });
   }
 };
 
