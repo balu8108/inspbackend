@@ -274,35 +274,87 @@ const getUpcomingClass = async (req, res) => {
 
 const updateScheduleClassData = async (req, res) => {
   try {
-    const { body } = req;
+    const { body, files } = req;
 
-    if (validateUpdateScheduleLiveClass(body)) {
-      const LiveClass = await LiveClassRoom.findByPk(body.classId);
+    // Initialize the files array
+    let addFilesInArray = [];
+    if (files && files.files) {
+      addFilesInArray = Array.isArray(files.files)
+        ? files.files
+        : [files.files];
+    }
 
-      let timestamp = moment.tz(
-        `${body.scheduledDate} ${body.scheduledStartTime}`,
-        "YYYY-MM-DD HH:mm",
-        "Asia/Kolkata"
-      );
+    // Validate all form data values
+    if (!validateUpdateScheduleLiveClass(body)) {
+      return res.status(400).json({ error: "Some fields are missing!!" });
+    }
 
-      // Subtract 15 minutes
-      let minus15mintimeStamp = timestamp.subtract(15, "minutes").format();
+    // Find the LiveClass using the provided classId
+    const LiveClass = await LiveClassRoom.findByPk(body.classId);
 
-      const LiveClassNotification = await LiveClassNotificationStatus.findOne({
-        where: { classRoomId: LiveClass.id },
-      });
+    if (!LiveClass) {
+      return res.status(404).json({ error: "Live class not found" });
+    }
 
-      if (!LiveClass) {
-        return res.status(404).json({ error: "Live class not found" });
+    // Create a timestamp for the scheduled start time in the specified timezone
+    let timestamp = moment.tz(
+      `${body.scheduledDate} ${body.scheduledStartTime}`,
+      "YYYY-MM-DD HH:mm",
+      "Asia/Kolkata"
+    );
+
+    // Subtract 15 minutes from the timestamp
+    let minus15mintimeStamp = timestamp.subtract(15, "minutes").format();
+
+    // Find the LiveClassNotification for the specified classRoomId
+    const LiveClassNotification = await LiveClassNotificationStatus.findOne({
+      where: { classRoomId: LiveClass.id },
+    });
+
+    if (!LiveClassNotification) {
+      return res
+        .status(404)
+        .json({ error: "Live class notification not found" });
+    }
+
+    // Add all new files to the LiveClassRoomFile table
+    const result = {
+      id: LiveClass.id,
+      roomId: LiveClass.roomId,
+    };
+    await uploadFilesAndCreateEntries(files, addFilesInArray, result);
+
+    // Remove all files from LiveClassRoomFile table that the teacher wants to delete
+    if (body.deletedFileIds && body.deletedFileIds.length > 0) {
+      let deletedFileIds;
+      try {
+        deletedFileIds = JSON.parse(body.deletedFileIds);
+      } catch (error) {
+        return res.status(400).json({ error: "Invalid deletedFileIds format" });
       }
-      if (!LiveClassNotification) {
-        return res.status(404).json({ error: "Live class notification found" });
-      }
 
-      const LiveClassRoomD = await LiveClassRoomDetail.findOne({
-        where: { classRoomId: LiveClass.id },
+      await LiveClassRoomFile.destroy({
+        where: {
+          id: {
+            [Op.in]: deletedFileIds,
+          },
+        },
       });
+    }
 
+    // Find the LiveClassRoomDetail for the specified classRoomId
+    const LiveClassRoomD = await LiveClassRoomDetail.findOne({
+      where: { classRoomId: LiveClass.id },
+    });
+
+    if (!LiveClassRoomD) {
+      return res
+        .status(404)
+        .json({ error: "Live class room detail not found" });
+    }
+
+    // Update the LiveClass with new values
+    try {
       await LiveClass.update({
         subjectId: JSON.parse(body.subject).value,
         subjectName: JSON.parse(body.subject).label,
@@ -313,6 +365,7 @@ const updateScheduleClassData = async (req, res) => {
         scheduledEndTime: body.scheduledEndTime,
       });
 
+      // Update the LiveClassRoomDetail with new values
       await LiveClassRoomD.update({
         chapterId: JSON.parse(body.chapter).value,
         chapterName: JSON.parse(body.chapter).label,
@@ -323,15 +376,18 @@ const updateScheduleClassData = async (req, res) => {
         lectureNo: body.lectureNo,
       });
 
+      // Update the LiveClassNotification with the new notification sending time
       await LiveClassNotification.update({
         notificationSendingTime: minus15mintimeStamp,
       });
-
-      return res.status(200).json({ message: "Class schedule change" });
-    } else {
-      return res.status(400).json({ error: "Some fields are missing!!" });
+    } catch (error) {
+      return res.status(400).json({ error: "Error updating class details" });
     }
+
+    // Return a success message
+    return res.status(200).json({ message: "Class schedule change" });
   } catch (err) {
+    // Return an error message if an exception occurs
     return res.status(500).json({ error: err.message });
   }
 };

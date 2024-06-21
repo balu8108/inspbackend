@@ -4,6 +4,7 @@ const router = express.Router();
 const { routesConstants } = require("../../constants");
 const {
   uploadAssignment,
+  updateAssignment,
   createAssignment,
   deleteAssignment,
   latestAssignments,
@@ -33,7 +34,7 @@ router.get(
   checkPaidStatusOrTeacher,
   allAssignmentsbytopicid
 );
-router.delete("routesConstants.DELETE_ASSIGNMENT/:id", deleteAssignment); // Not using anywhere at the moment
+router.delete(`${routesConstants.DELETE_ASSIGNMENT}/:id`, deleteAssignment);
 router.get(
   routesConstants.LATEST_ASSIGNMENT,
   isAuthenticated,
@@ -55,6 +56,12 @@ router.post(
   isAuthenticated,
   isTeacher,
   uploadAssignment
+);
+router.post(
+  routesConstants.UPDATE_ASSIGNMENT,
+  isAuthenticated,
+  isTeacher,
+  updateAssignment
 );
 router.get(
   routesConstants.ALL_ASSIGNMENT_WITH_FILES,

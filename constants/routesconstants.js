@@ -37,6 +37,7 @@ const routesConstants = Object.freeze({
   RECENT_ONE_ASSIGNMENT: "/recent-assignment", // for student home page.
   ALL_ASSIGNMENT_WITH_FILES: "/all-assignment-with-files",
   UPLOAD_ASSIGNMENT: "/upload-assignments",
+  UPDATE_ASSIGNMENT: "/update-assignments",
   GET_ASSIGNMENTS_BY_SUBJECTS: "/get-assignment-by-subject-id",
   GET_ASSIGNMENT_BY_TOPICID: "/get-assignment-by-topic-id",
   AUTH: "/auth",
