@@ -1,4 +1,6 @@
 const { Assignment } = require("../../models");
+const Sequelize = require("sequelize");
+const { Op } = Sequelize;
 const { uploadFilesToS3 } = require("../../utils");
 const { AssignmentFiles } = require("../../models");
 exports.createAssignment = async (req, res) => {
@@ -71,7 +73,7 @@ exports.deleteAssignment = async (req, res) => {
     await assignment.destroy();
 
     // Respond with a success message
-    res.status(204).send();
+    res.status(200).send({ message: "assignment deleted" });
   } catch (error) {
     console.error("Error deleting assignment:", error);
     res
@@ -116,61 +118,135 @@ exports.recentOneAssignments = async (req, res) => {
 // this is the controller where  assignement will be created.
 exports.uploadAssignment = async (req, res) => {
   try {
-    const { files } = req;
-
-    if (!files?.files) {
-      return res.status(400).json({ message: "No files were uploaded." });
-    }
+    const { body, files, plainAuthData } = req;
+    // Extract other data from the request
+    const { subject, topic, description } = body;
 
     let addFilesInArray = [];
-
     if (files) {
       addFilesInArray = Array.isArray(files?.files)
         ? files?.files
         : [files?.files];
     }
 
-    // Extract other data from the request
-    const { plainAuthData } = req;
-
-    const { subjectId, subjectName, topicName, topicId, description } =
-      req.body;
-
     // Save assignment information in the Assignment model
     const assignment = await Assignment.create({
-      subjectId,
-      subjectName,
-      topicName,
-      topicId,
+      subjectId: JSON.parse(subject)?.value,
+      subjectName: JSON.parse(subject)?.label,
+      topicName: JSON.parse(topic)?.label,
+      topicId: JSON.parse(topic)?.value,
       description,
       instructorName: plainAuthData.name,
     });
 
-    // Upload files to S3 or your desired storage
-    const filesUploading = await uploadFilesToS3(
-      addFilesInArray,
-      "assignments"
-    );
+    if (files) {
+      // Upload files to S3 or your desired storage
+      const filesUploading = await uploadFilesToS3(
+        addFilesInArray,
+        "assignments"
+      );
+      // Create AssignmentFiles records for each uploaded file
+      await Promise.all(
+        filesUploading.map(async (file) => {
+          const { key } = file;
 
-    // Create AssignmentFiles records for each uploaded file
-    const assignmentFiles = await Promise.all(
-      filesUploading.map(async (file) => {
-        const { key } = file;
+          // Create a new AssignmentFiles record
+          const assignmentFile = await AssignmentFiles.create({
+            key,
+            isDownloadable: false,
+            isShareable: false,
+            assignmentId: assignment.id,
+          });
 
-        // Create a new AssignmentFiles record
-        const assignmentFile = await AssignmentFiles.create({
-          key,
-          isDownloadable: false,
-          isShareable: false,
-          assignmentId: assignment.id,
-        });
-
-        return assignmentFile;
-      })
-    );
+          return assignmentFile;
+        })
+      );
+    }
 
     res.status(201).json({
       message: "Assignment and files uploaded successfully",
+      assignment,
+    });
+  } catch (error) {
+    console.error("Error uploading files:", error);
+    res.status(500).json({ error: "An error occurred while uploading files" });
+  }
+};
+
+// this is the controller where  assignement will be created.
+exports.updateAssignment = async (req, res) => {
+  try {
+    const { body, files } = req;
+    // Extract other data from the request
+    const { subject, topic, description } = body;
+
+    let addFilesInArray = [];
+    if (files) {
+      addFilesInArray = Array.isArray(files?.files)
+        ? files?.files
+        : [files?.files];
+    }
+
+    // Find the LiveClass using the provided classId
+    const assignment = await Assignment.findByPk(body.assignmentId);
+
+    if (!assignment) {
+      return res.status(404).json({ error: "Assignment not found" });
+    }
+
+    // Save assignment information in the Assignment model
+    await assignment.update({
+      subjectId: JSON.parse(subject)?.value,
+      subjectName: JSON.parse(subject)?.label,
+      topicName: JSON.parse(topic)?.label,
+      topicId: JSON.parse(topic)?.value,
+      description,
+    });
+
+    if (files) {
+      // Upload files to S3 or your desired storage
+      const filesUploading = await uploadFilesToS3(
+        addFilesInArray,
+        "assignments"
+      );
+      // Create AssignmentFiles records for each uploaded file
+      await Promise.all(
+        filesUploading.map(async (file) => {
+          const { key } = file;
+
+          // Create a new AssignmentFiles record
+          const assignmentFile = await AssignmentFiles.create({
+            key,
+            isDownloadable: false,
+            isShareable: false,
+            assignmentId: assignment.id,
+          });
+
+          return assignmentFile;
+        })
+      );
+    }
+
+    // Remove all files from AssignmentFiles table that the teacher wants to delete
+    if (body.deletedFileIds && body.deletedFileIds.length > 0) {
+      let deletedFileIds;
+      try {
+        deletedFileIds = JSON.parse(body.deletedFileIds);
+      } catch (error) {
+        return res.status(400).json({ error: "Invalid deletedFileIds format" });
+      }
+
+      await AssignmentFiles.destroy({
+        where: {
+          id: {
+            [Op.in]: deletedFileIds,
+          },
+        },
+      });
+    }
+
+    res.status(200).json({
+      message: "Assignment and files updated successfully",
       assignment,
     });
   } catch (error) {

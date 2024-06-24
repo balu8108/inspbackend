@@ -13,6 +13,14 @@ const validateCreationOfLiveClass = (data) => {
 const validateUpdateScheduleLiveClass = (data) => {
   return (
     data.classId &&
+    data.chapter &&
+    data.topic &&
+    data.subject &&
+    data.agenda &&
+    data.classType &&
+    data.classLevel &&
+    data.lectureNo &&
+    data.description &&
     data.scheduledDate &&
     data.scheduledStartTime &&
     data.scheduledEndTime
