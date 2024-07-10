@@ -16,10 +16,22 @@ module.exports = (sequelize, DataTypes) => {
   }
   LiveClassRoomDetail.init(
     {
-      chapterId: DataTypes.STRING,
-      chapterName: DataTypes.STRING,
-      topicId: DataTypes.STRING,
-      topicName: DataTypes.STRING,
+      chapterId: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      chapterName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      topicId: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      topicName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       agenda: DataTypes.TEXT,
       description: DataTypes.TEXT,
       classRoomId: DataTypes.INTEGER,
@@ -27,7 +39,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: "LiveClassRoomDetail",  
+      modelName: "LiveClassRoomDetail",
     }
   );
   return LiveClassRoomDetail;

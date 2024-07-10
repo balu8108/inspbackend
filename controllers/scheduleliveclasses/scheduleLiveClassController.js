@@ -159,7 +159,7 @@ const createLiveClass = async (req, res) => {
         plainAuthData
       );
       if (!success) {
-        throw new Error("Unable to create new class");
+        throw new Error(result);
       }
       if (result) {
         const { id } = result;
@@ -169,10 +169,10 @@ const createLiveClass = async (req, res) => {
           result
         );
         const liveClassRoomDetail = await LiveClassRoomDetail.create({
-          chapterId: JSON.parse(body.chapter).value,
-          chapterName: JSON.parse(body.chapter).label,
-          topicId: JSON.parse(body.topic).value,
-          topicName: JSON.parse(body.topic).label,
+          chapterId: JSON.parse(body.chapter)?.value,
+          chapterName: JSON.parse(body.chapter)?.label,
+          topicId: JSON.parse(body.topic)?.value,
+          topicName: JSON.parse(body.topic)?.label,
           agenda: body.agenda,
           description: body.description,
           classRoomId: id,
