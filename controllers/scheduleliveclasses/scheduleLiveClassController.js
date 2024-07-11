@@ -356,8 +356,8 @@ const updateScheduleClassData = async (req, res) => {
     // Update the LiveClass with new values
     try {
       await LiveClass.update({
-        subjectId: JSON.parse(body.subject).value,
-        subjectName: JSON.parse(body.subject).label,
+        subjectId: JSON.parse(body.subject)?.value,
+        subjectName: JSON.parse(body.subject)?.label,
         classType: body.classType,
         classLevel: body.classLevel,
         scheduledDate: body.scheduledDate,
@@ -367,10 +367,12 @@ const updateScheduleClassData = async (req, res) => {
 
       // Update the LiveClassRoomDetail with new values
       await LiveClassRoomD.update({
-        chapterId: JSON.parse(body.chapter).value,
-        chapterName: JSON.parse(body.chapter).label,
-        topicId: JSON.parse(body.topic).value,
-        topicName: JSON.parse(body.topic).label,
+        chapterId:
+          body.chapter === "null" ? null : JSON.parse(body.chapter)?.value,
+        chapterName:
+          body.chapter === "null" ? null : JSON.parse(body.chapter)?.label,
+        topicId: body.topic === "null" ? null : JSON.parse(body.topic)?.value,
+        topicName: body.topic === "null" ? null : JSON.parse(body.topic)?.label,
         agenda: body.agenda,
         description: body.description,
         lectureNo: body.lectureNo,
@@ -381,7 +383,8 @@ const updateScheduleClassData = async (req, res) => {
         notificationSendingTime: minus15mintimeStamp,
       });
     } catch (error) {
-      return res.status(400).json({ error: "Error updating class details" });
+      console.log(error);
+      return res.status(400).json({ error: error });
     }
 
     // Return a success message
