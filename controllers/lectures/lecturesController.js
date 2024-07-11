@@ -141,40 +141,53 @@ const getLectureById = async (req, res) => {
 const getLectureNo = async (req, res) => {
   try {
     const { subjectName, classType, classLevel, isSoloClass } = req.body;
-
-    // Validate required fields for non-solo classes
     if (
-      !isSoloClass &&
-      (!subjectName ||
-        !classType ||
-        (classType === "REGULARCLASS" && !classLevel))
+      classLevel === "General_Discussion" ||
+      classLevel === "JEE_Advanced_Mastery_Top_500"
     ) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
-
-    let numberOfLecture = 0;
-
-    if (isSoloClass) {
-      const soloClassRooms = await SoloClassRoom.count();
-      numberOfLecture = soloClassRooms;
+      const liveClassRooms = await LiveClassRoom.count({
+        where: { classLevel: classLevel },
+      });
+     
+      return res.status(200).json({
+        message: `Total number of lectures  is ${liveClassRooms}`,
+        data: liveClassRooms,
+      });
     } else {
-      const query = { subjectName, classType };
-      if (classType === "REGULARCLASS") {
-        query.classLevel = classLevel;
+      if (
+        !isSoloClass &&
+        (!subjectName ||
+          !classType ||
+          (classType === "REGULARCLASS" && !classLevel))
+      ) {
+        return res.status(400).json({ error: "Missing required fields" });
       }
-      const liveClassRooms = await LiveClassRoom.count({ where: query });
-      numberOfLecture = liveClassRooms;
-    }
 
-    return res.status(200).json({
-      message: `Total number of lectures for ${
-        isSoloClass ? "solo class" : "live class"
-      } is ${numberOfLecture}`,
-      data: numberOfLecture,
-    });
+      let numberOfLecture = 0;
+
+      if (isSoloClass) {
+        const soloClassRooms = await SoloClassRoom.count();
+        numberOfLecture = soloClassRooms;
+      } else {
+        const query = { subjectName, classType };
+        if (classType === "REGULARCLASS") {
+          query.classLevel = classLevel;
+        }
+        const liveClassRooms = await LiveClassRoom.count({ where: query });
+        numberOfLecture = liveClassRooms;
+      }
+
+      return res.status(200).json({
+        message: `Total number of lectures for ${
+          isSoloClass ? "solo class" : "live class"
+        } is ${numberOfLecture}`,
+        data: numberOfLecture,
+      });
+    }
   } catch (err) {
     return res.status(500).json({ error: `Server error: ${err.message}` });
   }
+  // Validate required fields for non-solo classes
 };
 
 module.exports = {
