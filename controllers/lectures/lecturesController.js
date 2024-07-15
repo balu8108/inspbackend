@@ -141,14 +141,11 @@ const getLectureById = async (req, res) => {
 const getLectureNo = async (req, res) => {
   try {
     const { subjectName, classType, classLevel, isSoloClass } = req.body;
-    if (
-      classLevel === "General_Discussion" ||
-      classLevel === "JEE_Advanced_Mastery_Top_500"
-    ) {
+    if (classLevel === "General_Discussion") {
       const liveClassRooms = await LiveClassRoom.count({
         where: { classLevel: classLevel },
       });
-     
+
       return res.status(200).json({
         message: `Total number of lectures  is ${liveClassRooms}`,
         data: liveClassRooms,
