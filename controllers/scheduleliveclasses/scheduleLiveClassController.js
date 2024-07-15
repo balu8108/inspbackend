@@ -90,7 +90,10 @@ const getAllCalenderClasses = async (req, res) => {
       liveClassesData.forEach((obj) => {
         const filteredData = {
           id: obj?.id,
-          title: obj?.LiveClassRoomDetail?.topicName,
+          title:
+            obj?.LiveClassRoomDetail?.topicName === null
+              ? "General"
+              : obj?.LiveClassRoomDetail?.topicName,
           classType: obj?.classType,
           classLevel: obj?.classLevel,
           start: `${extractDateInYYYMMDD(obj?.scheduledDate.toISOString())}T${
