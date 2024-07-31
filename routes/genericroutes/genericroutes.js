@@ -10,6 +10,7 @@ const {
   createFeedback,
   uploadTimeTable,
   getAllTimeTable,
+  createMauTracker,
 } = require("../../controllers");
 const {
   isAuthenticated,
@@ -60,6 +61,12 @@ router.get(
   isAuthenticated,
   checkPaidStatusOrTeacher,
   getTopicDetails
+);
+router.post(
+  `${routesConstants.CREATE_MAU_REPORT}`,
+  isAuthenticated,
+  checkPaidStatusOrTeacher,
+  createMauTracker
 );
 
 router.post(routesConstants.UPDATE_RECORDING_DATA, updateRecordingData);

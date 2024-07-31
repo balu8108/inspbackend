@@ -63,6 +63,8 @@ const routesConstants = Object.freeze({
   CREATE_STUDENT_FEEDBACK: "/create-student-feedback",
   GET_ALL_STUDENT_FEEDBACK: "/get-all-student-feedback",
   DELETE_STUDENT_FEEDBACK: "/delete-student-feedback/:id",
+
+  CREATE_MAU_REPORT: "/create-mau-report",
 });
 
 module.exports = routesConstants;

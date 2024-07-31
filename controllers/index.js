@@ -37,6 +37,8 @@ const {
   deleteFeedbackById,
 } = require("./studentfeedback/studentFeedbackController");
 
+const { createMauTracker } = require("./mautracker/mauController");
+
 module.exports = {
   loginHandler,
   getAllSubjects,
@@ -62,4 +64,5 @@ module.exports = {
   getAllStudentFeedback,
   deleteFeedbackById,
   loginWithUidHandler,
+  createMauTracker,
 };
