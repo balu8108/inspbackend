@@ -26,13 +26,10 @@ class RoomManager extends EventEmitter {
     this._producers = {}; // Producers for this room
     this._consumers = {}; // Consumers for this room
     this._testQuestions = {}; // For holding poll questions
-    this._testResponses = {}; // this will contains all the test/poll/tf/mcq answers by students
     this._leaderBoard = {}; // will contain the leaderboard of room
     this._pollTotalOptions = {};
     this._mediaSoupWorkers = mediaSoupWorkers;
     this._mediaSoupRouters = mediaSoupRouters;
-    this._roomPipeTransports = {}; // store the pipe transport that can consume from remote server
-    this._roomProducerPipeTransports = {}; // Store the pipe transport for the producers
   }
 
   static getLeastLoadedRouter(
@@ -129,7 +126,7 @@ class RoomManager extends EventEmitter {
       console.log("Erro in RManager least loaded Router", err);
     }
   }
-  static async create({ mediaSoupWorkers, roomId, newPeerDetails }) {
+  static async create({ mediaSoupWorkers, roomId }) {
     try {
       const mediaSoupRouters = new Map();
       for (const worker of mediaSoupWorkers.values()) {

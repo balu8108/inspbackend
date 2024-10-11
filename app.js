@@ -211,7 +211,7 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
   socket.on(SOCKET_EVENTS.TRANSPORT_PRODUCE, (data, callback) => {
     transportProduceSocketHandler(data, callback, socket);
   });
-  socket.on(SOCKET_EVENTS.GET_PRODUCERS, (callback) => {
+  socket.on(SOCKET_EVENTS.GET_PRODUCERS, (data, callback) => {
     getProducersSocketHandler(callback, socket);
   });
   socket.on(SOCKET_EVENTS.TRANSPORT_RECV_CONNECT, (data) => {

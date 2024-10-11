@@ -127,8 +127,6 @@ const createOrJoinRoomFunction = async (
         }
       }
 
-      // TODO - ADD Leaderboard later
-
       const leaderBoardData = await LeaderBoard.findAll({
         where: { classRoomId: liveClass?.id },
         order: [
@@ -162,14 +160,13 @@ const createOrJoinRoomFunction = async (
         room = await RoomManager.create({
           mediaSoupWorkers,
           roomId,
-          newPeerDetails,
         });
         allRooms.set(roomId, room);
         room.on("close", () => {
           allRooms.delete(roomId);
         });
-        // Now add this new peer to room
 
+        // Now add this new peer to room
         const { peer, routerId, leaderBoardArray, rtpCapabilities } =
           await room._joinRoomPeerHandler(newPeerDetails, leaderBoardData);
         return {
