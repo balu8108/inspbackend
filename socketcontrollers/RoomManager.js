@@ -669,10 +669,12 @@ class RoomManager extends EventEmitter {
         this._removePeer(authId, socketId);
         const peerCountInRoom = this._checkPeerCountInRoom();
         // TODO check peer count if 0 then close all router of this room
-        if (peerCountInRoom === 0) {
-          // Close all routers and delete all routers
-          this._removeAllRoutersOfRoom();
-          this._removeLeaderBoardOfRoom();
+        if (peerCountInRoom) {
+          if (peerCountInRoom === 0) {
+            // Close all routers and delete all routers
+            this._removeAllRoutersOfRoom();
+            this._removeLeaderBoardOfRoom();
+          }
         }
         return { peerCountInRoom, leavingPeer };
       }

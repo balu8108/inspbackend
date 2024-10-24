@@ -8,6 +8,7 @@ const {
   createFeedback,
   uploadTimeTable,
   getAllTimeTable,
+  deleteTimeTable,
 } = require("./genericcontrollers/genericController");
 const {
   createLiveClass,
@@ -45,6 +46,7 @@ module.exports = {
   openFile,
   uploadTimeTable,
   getAllTimeTable,
+  deleteTimeTable,
   createLiveClass,
   getAllLiveClasses,
   getAllCalenderClasses,

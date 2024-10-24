@@ -13,6 +13,7 @@ const routesConstants = Object.freeze({
   TOPIC_FEEDBACK_RATING_DETAILS: "/topic-feedback-rating-details",
   UPLOAD_TIMETABLE: "/upload-timetable",
   GET_ALL_TIMETABLE: "/get-all-timetable",
+  DELETE_TIMETABLE: "/delete-timetable",
   OPEN_FILE: "/open-file",
   IMAGE_TO_DOC: "/image-to-doc",
   UPLOAD_ASSIGNMENT_TO_CLASS_BY_ID: "/upload-assignment-to-class",

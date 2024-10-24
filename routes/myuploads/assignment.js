@@ -34,7 +34,12 @@ router.get(
   checkPaidStatusOrTeacher,
   allAssignmentsbytopicid
 );
-router.delete(`${routesConstants.DELETE_ASSIGNMENT}/:id`, deleteAssignment);
+router.delete(
+  `${routesConstants.DELETE_ASSIGNMENT}/:id`,
+  isAuthenticated,
+  isTeacher,
+  deleteAssignment
+);
 router.get(
   routesConstants.LATEST_ASSIGNMENT,
   isAuthenticated,

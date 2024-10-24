@@ -241,6 +241,28 @@ const getAllTimeTable = async (req, res) => {
   }
 };
 
+exports.deleteTimeTable = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const timeTableData = await TimeTableFile.findByPk(id);
+
+    if (!timeTableData) {
+      return res.status(404).json({ error: "Time table not found" });
+    }
+
+    // Delete the assignment
+    await timeTableData.destroy();
+
+    // Respond with a success message
+    res.status(200).send({ message: "Time table deleted" });
+  } catch (error) {
+    console.error("Error deleting time table:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while deleting the time table" });
+  }
+};
+
 const uploadTimeTable = async (req, res) => {
   try {
     const { files } = req;
@@ -283,4 +305,5 @@ module.exports = {
   updateRecordingData,
   uploadTimeTable,
   getAllTimeTable,
+  deleteTimeTable,
 };

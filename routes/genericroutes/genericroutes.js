@@ -11,6 +11,7 @@ const {
   uploadTimeTable,
   getAllTimeTable,
   createMauTracker,
+  deleteTimeTable,
 } = require("../../controllers");
 const {
   isAuthenticated,
@@ -42,6 +43,12 @@ router.get(
   isAuthenticated,
   checkPaidStatusOrTeacher,
   getAllTimeTable
+);
+router.delete(
+  `${routesConstants.DELETE_TIMETABLE}/:id`,
+  isAuthenticated,
+  isTeacher,
+  deleteTimeTable
 );
 router.post(
   routesConstants.CREATE_FEEDBACK,
